@@ -1,9 +1,0 @@
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
-.card{background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
-.card-media{height:160px;background:linear-gradient(135deg,#e9dfd3,#d6c9bf)}
-.card-body{padding:12px}
-.card-body h3{margin:0 0 8px;font-size:16px;color:#1f1f1f}
-.price{color:#8b5e3c;font-weight:700;margin-bottom:10px}
-.btn{padding:8px 12px;border-radius:6px;border:1px solid #8b5e3c;background:#8b5e3c;color:#fff;cursor:pointer}
-.btn.small{padding:6px 8px;font-size:13px}
-@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
