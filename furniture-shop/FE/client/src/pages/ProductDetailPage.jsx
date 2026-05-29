@@ -1,0 +1,451 @@
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import {
+  Heart, ShoppingCart, Share2, Truck, Shield, Headphones,
+  Star, ChevronLeft, ChevronRight, Minus, Plus, Scale, Search, ZoomIn
+} from 'lucide-react';
+import DauTrang from '../components/DauTrang';
+import ChanTrang from '../components/ChanTrang';
+import { formatCurrency } from '../utils/currency.util';
+import './ProductDetailPage.css';
+
+/* ── Mock data ── */
+const MOCK_PRODUCTS = {
+  1: {
+    id: 1, name: 'Sofa Heritage Royale', sku: 'LHC-001',
+    price: 78500000, rating: 4, reviewCount: 12,
+    subtitle: 'Vẻ đẹp hoàng gia, xứng tầm cao cấp',
+    description: 'Lấy cảm hứng từ phong cách Louis XV cổ điển, mẫu ghế bành này là sự kết hợp hoàn hảo giữa nghệ thuật chế tác tinh xảo và sắc nghĩ cao cấp, mang đến vẻ đẹp vượt thời gian đẳng cấp cho mọi không gian.',
+    dimensions: '92 x 88 x 118 cm',
+    material: 'Gỗ tự nhiên, nệm nhung cao cấp',
+    colors: [
+      { name: 'Đỏ rượu', hex: '#5c1a1a' },
+      { name: 'Xanh đêm', hex: '#1a2a3a' },
+      { name: 'Xanh rêu', hex: '#2a3a2a' },
+      { name: 'Be vàng', hex: '#c4aa8e' },
+    ],
+    images: [
+      '/images/anhghesofa.png',
+      '/images/anhghebandenkh.png',
+      '/images/anhbanghekh.png',
+      '/images/anhbobanghe.png',
+    ],
+    features: [
+      'Khung gỗ tự nhiên được chạm khắc tinh xảo bởi nghệ nhân lành nghề.',
+      'Nệm mút từ Đức đạt tiêu chuẩn cao cấp, êm ái và thư giãn.',
+      'Tay vịn nổi bật với họa tiết truyền thống độc đáo.',
+      'Phù hợp với phòng khách, phòng đọc sách hoặc không gian tiếp khách đẳng cấp.',
+    ],
+    specs: {
+      'Kích thước': '92 x 88 x 118 cm',
+      'Chất liệu khung': 'Gỗ tự nhiên cao cấp',
+      'Chất liệu bọc': 'Nhung cao cấp nhập khẩu',
+      'Màu sắc': 'Đỏ rượu / Xanh đêm / Xanh rêu / Be vàng',
+      'Trọng lượng': '45 kg',
+      'Xuất xứ': 'Việt Nam – Tiêu chuẩn Châu Âu',
+      'Bảo hành': '5 năm khung & kết cấu',
+    },
+    category: 'Ghế bành',
+  },
+  2: {
+    id: 2, name: 'Ghế Bành Louis XV', sku: 'LHC-001',
+    price: 24800000, rating: 4, reviewCount: 12,
+    subtitle: 'Vẻ đẹp hoàng gia, xứng tầm cao cấp',
+    description: 'Lấy cảm hứng từ phong cách Louis XV cổ điển, mẫu ghế bành này là sự kết hợp hoàn hảo giữa nghệ thuật chế tác tinh xảo và sắc nghĩ cao cấp, mang đến vẻ đẹp vượt thời gian đẳng cấp cho mọi không gian.',
+    dimensions: '92 x 88 x 118 cm',
+    material: 'Gỗ tự nhiên, nệm nhung cao cấp',
+    colors: [
+      { name: 'Đỏ rượu', hex: '#5c1a1a' },
+      { name: 'Xanh đêm', hex: '#1a2a3a' },
+      { name: 'Xanh rêu', hex: '#2a3a2a' },
+      { name: 'Be vàng', hex: '#c4aa8e' },
+    ],
+    images: [
+      '/images/anhghebandenkh.png',
+      '/images/anhghesofa.png',
+      '/images/anhbanghekh.png',
+      '/images/anhbobanghe.png',
+    ],
+    features: [
+      'Khung gỗ tự nhiên được chạm khắc tinh xảo bởi nghệ nhân lành nghề.',
+      'Nệm mút từ Đức đạt tiêu chuẩn cao cấp, êm ái và thư giãn.',
+      'Tay vịn nổi bật với họa tiết truyền thống độc đáo.',
+      'Phù hợp với phòng khách, phòng đọc sách hoặc không gian tiếp khách đẳng cấp.',
+    ],
+    specs: {
+      'Kích thước': '92 x 88 x 118 cm',
+      'Chất liệu khung': 'Gỗ tự nhiên cao cấp',
+      'Chất liệu bọc': 'Nhung cao cấp nhập khẩu',
+      'Màu sắc': 'Đỏ rượu / Xanh đêm / Xanh rêu / Be vàng',
+      'Trọng lượng': '45 kg',
+      'Xuất xứ': 'Việt Nam – Tiêu chuẩn Châu Âu',
+      'Bảo hành': '5 năm khung & kết cấu',
+    },
+    category: 'Ghế bành',
+  },
+};
+
+const RELATED = [
+  { id: 1,  name: 'Ghế Bành Heritage Royale', price: 29800000, image: '/images/anhghesofa.png' },
+  { id: 3,  name: 'Ghế Bành Imperial',        price: 25800000, image: '/images/anhghebandenkh.png' },
+  { id: 4,  name: 'Ghế Bành Grand Palace',    price: 26500000, image: '/images/anhbanghekh.png' },
+  { id: 5,  name: 'Ghế Bành Royal Majesty',   price: 27300000, image: '/images/anhbobanghe.png' },
+];
+
+const ProductDetailPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const product = MOCK_PRODUCTS[id] || MOCK_PRODUCTS[2];
+
+  const [activeImg, setActiveImg]       = useState(0);
+  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
+  const [quantity, setQuantity]         = useState(1);
+  const [activeTab, setActiveTab]       = useState('desc');
+  const [isFavorite, setIsFavorite]     = useState(false);
+  const [showModal, setShowModal]       = useState(false);
+  const [relFavs, setRelFavs]           = useState({});
+
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [id]);
+
+  const prevImg = () => setActiveImg(i => (i - 1 + product.images.length) % product.images.length);
+  const nextImg = () => setActiveImg(i => (i + 1) % product.images.length);
+
+  const TABS = [
+    { key: 'desc',     label: 'MÔ TẢ SẢN PHẨM' },
+    { key: 'specs',    label: 'CHI TIẾT KỸ THUẬT' },
+    { key: 'care',     label: 'HƯỚNG DẪN BẢO QUẢN' },
+    { key: 'reviews',  label: `ĐÁNH GIÁ (${product.reviewCount})` },
+  ];
+
+  return (
+    <div className="lavish-root">
+      <DauTrang />
+
+      <main className="pdp-main">
+        <div className="container">
+
+          {/* ── Breadcrumb ── */}
+          <nav className="pdp-breadcrumb">
+            <Link to="/">Trang chủ</Link>
+            <span>/</span>
+            <Link to="/collections">Bộ sưu tập</Link>
+            <span>/</span>
+            <Link to="/products">Ghế bành</Link>
+            <span>/</span>
+            <span>{product.name}</span>
+          </nav>
+
+          {/* ══════════════════════════════════
+              PRODUCT SECTION
+          ══════════════════════════════════ */}
+          <div className="pdp-grid">
+
+            {/* ── LEFT: Gallery ── */}
+            <div className="pdp-gallery">
+              {/* Main image */}
+              <div className="pdp-main-img-wrap">
+                <img
+                  src={product.images[activeImg]}
+                  alt={product.name}
+                  className="pdp-main-img"
+                />
+                {/* Zoom button */}
+                <button className="pdp-zoom-btn" onClick={() => setShowModal(true)}>
+                  <ZoomIn size={18} />
+                </button>
+                {/* Nav arrows */}
+                <button className="pdp-img-nav prev" onClick={prevImg}>
+                  <ChevronLeft size={22} />
+                </button>
+                <button className="pdp-img-nav next" onClick={nextImg}>
+                  <ChevronRight size={22} />
+                </button>
+              </div>
+
+              {/* Thumbnails */}
+              <div className="pdp-thumbs">
+                {product.images.map((img, i) => (
+                  <div
+                    key={i}
+                    className={`pdp-thumb ${activeImg === i ? 'active' : ''}`}
+                    onClick={() => setActiveImg(i)}
+                  >
+                    <img src={img} alt={`${product.name} ${i + 1}`} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── RIGHT: Info ── */}
+            <div className="pdp-info">
+              <h1 className="pdp-name">{product.name}</h1>
+
+              {/* SKU + Rating */}
+              <div className="pdp-meta">
+                <span className="pdp-sku">Mã sản phẩm: {product.sku}</span>
+                <div className="pdp-stars">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={15}
+                      fill={i < product.rating ? '#c9973a' : 'none'}
+                      stroke={i < product.rating ? '#c9973a' : '#ccc'}
+                    />
+                  ))}
+                  <span className="pdp-review-count">({product.reviewCount} đánh giá)</span>
+                </div>
+              </div>
+
+              {/* Price */}
+              <div className="pdp-price">{formatCurrency(product.price)}</div>
+
+              {/* Short desc */}
+              <p className="pdp-subtitle">{product.subtitle}</p>
+              <p className="pdp-desc">{product.description}</p>
+
+              <div className="pdp-divider" />
+
+              {/* Dimensions */}
+              <div className="pdp-spec-row">
+                <span className="pdp-spec-label">KÍCH THƯỚC:</span>
+                <span className="pdp-spec-val">{product.dimensions}</span>
+              </div>
+
+              {/* Material */}
+              <div className="pdp-spec-row">
+                <span className="pdp-spec-label">CHẤT LIỆU:</span>
+                <span className="pdp-spec-val">{product.material}</span>
+              </div>
+
+              {/* Colors */}
+              <div className="pdp-option-row">
+                <span className="pdp-spec-label">MÀU SẮC:</span>
+                <div className="pdp-colors">
+                  {product.colors.map((c, i) => (
+                    <button
+                      key={i}
+                      className={`pdp-color-btn ${selectedColor.name === c.name ? 'active' : ''}`}
+                      style={{ background: c.hex }}
+                      title={c.name}
+                      onClick={() => setSelectedColor(c)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Quantity */}
+              <div className="pdp-option-row">
+                <span className="pdp-spec-label">SỐ LƯỢNG:</span>
+                <div className="pdp-qty">
+                  <button className="pdp-qty-btn" onClick={() => setQuantity(q => Math.max(1, q - 1))}>
+                    <Minus size={14} />
+                  </button>
+                  <span className="pdp-qty-val">{quantity}</span>
+                  <button className="pdp-qty-btn" onClick={() => setQuantity(q => q + 1)}>
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="pdp-divider" />
+
+              {/* Action buttons row 1 */}
+              <div className="pdp-actions-row1">
+                <Link to="/compare" className="pdp-btn-outline">
+                  <Scale size={16} /> SO SÁNH SẢN PHẨM
+                </Link>
+                <button
+                  className={`pdp-btn-outline ${isFavorite ? 'active-fav' : ''}`}
+                  onClick={() => setIsFavorite(f => !f)}
+                >
+                  <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
+                  THÊM VÀO YÊU
+                </button>
+              </div>
+
+              {/* Kết hợp sản phẩm */}
+              <button className="pdp-btn-combine">
+                🪑 KẾT HỢP SẢN PHẨM
+              </button>
+
+              {/* Add to cart */}
+              <button className="pdp-btn-cart" onClick={() => alert('Đã thêm vào giỏ hàng!')}>
+                <ShoppingCart size={18} /> THÊM VÀO GIỎ HÀNG
+              </button>
+
+              {/* Secondary actions */}
+              <div className="pdp-secondary-actions">
+                <button className="pdp-sec-btn">
+                  <Heart size={14} /> Thêm vào yêu thích
+                </button>
+                <button className="pdp-sec-btn">
+                  <Scale size={14} /> So sánh sản phẩm
+                </button>
+                <button className="pdp-sec-btn">
+                  <Share2 size={14} /> Chia sẻ
+                </button>
+              </div>
+
+              {/* Service badges */}
+              <div className="pdp-services">
+                <div className="pdp-service">
+                  <Truck size={20} />
+                  <div>
+                    <strong>NHẬN PHÍ VẬN CHUYỂN</strong>
+                    <span>Áp dụng cho đơn hàng từ 10.000.000 đ</span>
+                  </div>
+                </div>
+                <div className="pdp-service">
+                  <Shield size={20} />
+                  <div>
+                    <strong>BẢO HÀNH DÀI HẠN</strong>
+                    <span>Bảo hành 5 năm về khung &amp; kết cấu</span>
+                  </div>
+                </div>
+                <div className="pdp-service">
+                  <Headphones size={20} />
+                  <div>
+                    <strong>HỖ TRỢ 24/7</strong>
+                    <span>Đội ngũ tư vấn viên sẵn sàng hỗ trợ</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ══════════════════════════════════
+              TABS
+          ══════════════════════════════════ */}
+          <div className="pdp-tabs-section">
+            <div className="pdp-tabs-header">
+              {TABS.map(t => (
+                <button
+                  key={t.key}
+                  className={`pdp-tab-btn ${activeTab === t.key ? 'active' : ''}`}
+                  onClick={() => setActiveTab(t.key)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="pdp-tab-body">
+              {activeTab === 'desc' && (
+                <div className="pdp-tab-desc">
+                  <div className="pdp-tab-desc-left">
+                    <h3>{product.name}</h3>
+                    <p>{product.description}</p>
+                    <ul>
+                      {product.features.map((f, i) => (
+                        <li key={i}>{f}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="pdp-tab-desc-right">
+                    <img src={product.images[1] || product.images[0]} alt={product.name} />
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'specs' && (
+                <div className="pdp-tab-specs">
+                  <table>
+                    <tbody>
+                      {Object.entries(product.specs).map(([k, v]) => (
+                        <tr key={k}>
+                          <td className="spec-key">{k}</td>
+                          <td className="spec-val">{v}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {activeTab === 'care' && (
+                <div className="pdp-tab-care">
+                  <h3>Hướng dẫn bảo quản</h3>
+                  <ul>
+                    <li>Lau chùi bằng khăn mềm ẩm, tránh dùng hóa chất tẩy rửa mạnh.</li>
+                    <li>Tránh đặt sản phẩm dưới ánh nắng trực tiếp trong thời gian dài.</li>
+                    <li>Định kỳ 6 tháng nên dùng dầu dưỡng gỗ chuyên dụng để bảo vệ bề mặt.</li>
+                    <li>Không để vật nặng lên tay vịn hoặc phần chạm khắc trang trí.</li>
+                    <li>Vệ sinh nệm bọc bằng máy hút bụi nhẹ, tránh giặt ướt trực tiếp.</li>
+                  </ul>
+                </div>
+              )}
+
+              {activeTab === 'reviews' && (
+                <div className="pdp-tab-reviews">
+                  <div className="review-summary">
+                    <div className="review-score">
+                      <span className="score-big">{product.rating}.0</span>
+                      <div className="score-stars">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={20}
+                            fill={i < product.rating ? '#c9973a' : 'none'}
+                            stroke={i < product.rating ? '#c9973a' : '#ccc'}
+                          />
+                        ))}
+                      </div>
+                      <span className="score-count">{product.reviewCount} đánh giá</span>
+                    </div>
+                  </div>
+                  <p className="review-placeholder">Chức năng đánh giá đang được phát triển...</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ══════════════════════════════════
+              RELATED PRODUCTS
+          ══════════════════════════════════ */}
+          <div className="pdp-related">
+            <h2 className="pdp-related-title">SẢN PHẨM LIÊN QUAN</h2>
+            <div className="pdp-related-grid">
+              {RELATED.map(r => (
+                <div key={r.id} className="pdp-rel-card">
+                  <div className="pdp-rel-img">
+                    <img src={r.image} alt={r.name} />
+                    <div className="pdp-rel-overlay">
+                      <Link to={`/products/${r.id}`} className="pdp-rel-view">Xem chi tiết</Link>
+                    </div>
+                  </div>
+                  <div className="pdp-rel-body">
+                    <h4>{r.name}</h4>
+                    <div className="pdp-rel-price">{formatCurrency(r.price)}</div>
+                    <div className="pdp-rel-actions">
+                      <button
+                        className={`pdp-rel-fav ${relFavs[r.id] ? 'active' : ''}`}
+                        onClick={() => setRelFavs(f => ({ ...f, [r.id]: !f[r.id] }))}
+                      >
+                        <Heart size={15} fill={relFavs[r.id] ? 'currentColor' : 'none'} />
+                      </button>
+                      <button className="pdp-rel-cart">
+                        <ShoppingCart size={15} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+      <ChanTrang />
+
+      {/* ── Zoom Modal ── */}
+      {showModal && (
+        <div className="pdp-modal" onClick={() => setShowModal(false)}>
+          <div className="pdp-modal-inner" onClick={e => e.stopPropagation()}>
+            <img src={product.images[activeImg]} alt={product.name} />
+            <button className="pdp-modal-close" onClick={() => setShowModal(false)}>×</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ProductDetailPage;

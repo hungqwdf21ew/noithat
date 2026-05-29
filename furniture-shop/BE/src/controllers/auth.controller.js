@@ -1,28 +1,50 @@
 const authService = require('../services/auth.service');
+const authMiddleware = require('../middlewares/auth.middleware');
 
+// POST /api/auth/register
 exports.register = async (req, res) => {
   try {
     const result = await authService.register(req.body);
-    return res.json(result);
+    const status = result.success ? 201 : 400;
+    return res.status(status).json(result);
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('[register]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi máy chủ, vui lòng thử lại sau.',
+    });
   }
 };
 
+// POST /api/auth/login
 exports.login = async (req, res) => {
   try {
     const result = await authService.login(req.body);
-    return res.json(result);
+    const status = result.success ? 200 : 401;
+    return res.status(status).json(result);
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('[login]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi máy chủ, vui lòng thử lại sau.',
+    });
   }
 };
 
+// GET /api/auth/me  (cần token)
 exports.me = async (req, res) => {
   try {
-    const user = req.user;
-    return res.json({ success: true, data: user });
+    // req.user được gán bởi authMiddleware
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Chưa đăng nhập.' });
+    }
+    const result = await authService.getMe(req.user.id);
+    return res.json(result);
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    console.error('[me]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi máy chủ, vui lòng thử lại sau.',
+    });
   }
 };
