@@ -57,9 +57,7 @@ const DauTrang = () => {
           <Link to="/collections">BỘ SƯU TẬP</Link>
           <Link to="/products">SẢN PHẨM</Link>
           <Link to="/compare">SO SÁNH SẢN PHẨM</Link>
-          <a href="#combine">KẾT HỢP SẢN PHẨM</a>
-          <a href="#personalize">CÁ NHÂN HÓA KHÔNG GIAN</a>
-        </nav>
+          <Link to="/bundle">KẾT HỢP SẢN PHẨM</Link>          <Link to="/design-room">CÁ NHÂN HÓA KHÔNG GIAN</Link>        </nav>
 
         <div className="header-actions">
           <button className="icon" aria-label="Tìm kiếm">🔍</button>

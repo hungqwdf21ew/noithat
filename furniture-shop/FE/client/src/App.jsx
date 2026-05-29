@@ -15,6 +15,8 @@ import ProfilePage from './pages/ProfilePage'
 import CartPage from './pages/CartPage'
 import FavoritePage from './pages/FavoritePage'
 import ComparePage from './pages/ComparePage'
+import DesignRoomPage from './pages/DesignRoomPage'
+import BundlePage from './pages/BundlePage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -35,6 +37,8 @@ function App() {
             <Route path="/cart" element={<CartPage />} />
             <Route path="/favorites" element={<FavoritePage />} />
             <Route path="/compare" element={<ComparePage />} />
+            <Route path="/design-room" element={<DesignRoomPage />} />
+            <Route path="/bundle" element={<BundlePage />} />
             <Route path="/profile" element={
               <ProtectedRoute>
                 <ProfilePage />
