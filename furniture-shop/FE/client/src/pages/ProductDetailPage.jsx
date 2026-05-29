@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
+import { useCart } from '../hooks/useCart';
+import { useFavorites } from '../hooks/useFavorites';
 import { formatCurrency } from '../utils/currency.util';
 import './ProductDetailPage.css';
 
@@ -95,6 +97,8 @@ const RELATED = [
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const product = MOCK_PRODUCTS[id] || MOCK_PRODUCTS[2];
 
@@ -102,9 +106,35 @@ const ProductDetailPage = () => {
   const [selectedColor, setSelectedColor] = useState(product.colors[0]);
   const [quantity, setQuantity]         = useState(1);
   const [activeTab, setActiveTab]       = useState('desc');
-  const [isFavorite, setIsFavorite]     = useState(false);
   const [showModal, setShowModal]       = useState(false);
-  const [relFavs, setRelFavs]           = useState({});
+  const [cartMsg, setCartMsg]           = useState('');
+
+  const handleToggleFavorite = () => {
+    toggleFavorite({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images[0],
+      category: product.category,
+      subtitle: product.subtitle,
+    });
+  };
+
+  const productFavorited = isFavorite(product.id);
+
+  const handleAddToCart = () => {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images[0],
+      sku: product.sku,
+      selectedColor: selectedColor.name,
+      quantity,
+    });
+    setCartMsg('Đã thêm vào giỏ hàng!');
+    setTimeout(() => setCartMsg(''), 2500);
+  };
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [id]);
 
@@ -250,15 +280,16 @@ const ProductDetailPage = () => {
 
               {/* Action buttons row 1 */}
               <div className="pdp-actions-row1">
-                <Link to="/compare" className="pdp-btn-outline">
+                <Link to={`/compare?add=${product.id}`} className="pdp-btn-outline">
                   <Scale size={16} /> SO SÁNH SẢN PHẨM
                 </Link>
                 <button
-                  className={`pdp-btn-outline ${isFavorite ? 'active-fav' : ''}`}
-                  onClick={() => setIsFavorite(f => !f)}
+                  type="button"
+                  className={`pdp-btn-outline ${productFavorited ? 'active-fav' : ''}`}
+                  onClick={handleToggleFavorite}
                 >
-                  <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
-                  THÊM VÀO YÊU
+                  <Heart size={16} fill={productFavorited ? 'currentColor' : 'none'} />
+                  {productFavorited ? 'ĐÃ YÊU THÍCH' : 'THÊM VÀO YÊU'}
                 </button>
               </div>
 
@@ -268,14 +299,15 @@ const ProductDetailPage = () => {
               </button>
 
               {/* Add to cart */}
-              <button className="pdp-btn-cart" onClick={() => alert('Đã thêm vào giỏ hàng!')}>
+              {cartMsg && <p className="pdp-cart-msg">{cartMsg}</p>}
+              <button type="button" className="pdp-btn-cart" onClick={handleAddToCart}>
                 <ShoppingCart size={18} /> THÊM VÀO GIỎ HÀNG
               </button>
 
               {/* Secondary actions */}
               <div className="pdp-secondary-actions">
-                <button className="pdp-sec-btn">
-                  <Heart size={14} /> Thêm vào yêu thích
+                <button type="button" className={`pdp-sec-btn ${productFavorited ? 'active-fav' : ''}`} onClick={handleToggleFavorite}>
+                  <Heart size={14} fill={productFavorited ? 'currentColor' : 'none'} /> {productFavorited ? 'Đã yêu thích' : 'Thêm vào yêu thích'}
                 </button>
                 <button className="pdp-sec-btn">
                   <Scale size={14} /> So sánh sản phẩm
@@ -415,10 +447,11 @@ const ProductDetailPage = () => {
                     <div className="pdp-rel-price">{formatCurrency(r.price)}</div>
                     <div className="pdp-rel-actions">
                       <button
-                        className={`pdp-rel-fav ${relFavs[r.id] ? 'active' : ''}`}
-                        onClick={() => setRelFavs(f => ({ ...f, [r.id]: !f[r.id] }))}
+                        type="button"
+                        className={`pdp-rel-fav ${isFavorite(r.id) ? 'active' : ''}`}
+                        onClick={() => toggleFavorite({ id: r.id, name: r.name, price: r.price, image: r.image })}
                       >
-                        <Heart size={15} fill={relFavs[r.id] ? 'currentColor' : 'none'} />
+                        <Heart size={15} fill={isFavorite(r.id) ? 'currentColor' : 'none'} />
                       </button>
                       <button className="pdp-rel-cart">
                         <ShoppingCart size={15} />

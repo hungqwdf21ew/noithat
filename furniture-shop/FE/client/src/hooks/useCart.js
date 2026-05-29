@@ -1,57 +1,51 @@
 import { useContext } from 'react';
 import { CartContext } from '../contexts/CartContext';
-import { getCart, saveCart } from '../helpers/cart.helper';
+import { getCart, saveCart, getCartLineKey } from '../helpers/cart.helper';
 
 export const useCart = () => {
   const context = useContext(CartContext);
 
+  const syncCart = (items) => {
+    saveCart(items);
+    context?.setCartItems?.([...items]);
+  };
+
   const addToCart = (product) => {
     const currentCart = getCart();
+    const lineKey = getCartLineKey(product);
     const existingIndex = currentCart.findIndex(
-      item => item.id === product.id &&
-              item.selectedColor === product.selectedColor &&
-              item.selectedSize === product.selectedSize
+      (item) => getCartLineKey(item) === lineKey
     );
 
     if (existingIndex >= 0) {
-      currentCart[existingIndex].quantity += (product.quantity || 1);
+      currentCart[existingIndex].quantity += product.quantity || 1;
     } else {
       currentCart.push({ ...product, quantity: product.quantity || 1 });
     }
 
-    saveCart(currentCart);
-
-    if (context?.setCartItems) {
-      context.setCartItems([...currentCart]);
-    }
+    syncCart(currentCart);
   };
 
-  const removeFromCart = (productId) => {
-    const currentCart = getCart().filter(item => item.id !== productId);
-    saveCart(currentCart);
-    if (context?.setCartItems) {
-      context.setCartItems([...currentCart]);
-    }
-  };
-
-  const updateQuantity = (productId, quantity) => {
-    const currentCart = getCart().map(item =>
-      item.id === productId ? { ...item, quantity } : item
+  const removeFromCart = (lineKey) => {
+    const currentCart = getCart().filter(
+      (item) => getCartLineKey(item) !== lineKey
     );
-    saveCart(currentCart);
-    if (context?.setCartItems) {
-      context.setCartItems([...currentCart]);
-    }
+    syncCart(currentCart);
+  };
+
+  const updateQuantity = (lineKey, quantity) => {
+    if (quantity < 1) return;
+    const currentCart = getCart().map((item) =>
+      getCartLineKey(item) === lineKey ? { ...item, quantity } : item
+    );
+    syncCart(currentCart);
   };
 
   const clearCart = () => {
-    saveCart([]);
-    if (context?.setCartItems) {
-      context.setCartItems([]);
-    }
+    syncCart([]);
   };
 
-  const cartItems = context?.cartItems || getCart();
+  const cartItems = context?.cartItems ?? getCart();
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   return {
@@ -60,6 +54,7 @@ export const useCart = () => {
     addToCart,
     removeFromCart,
     updateQuantity,
-    clearCart
+    clearCart,
+    getCartLineKey,
   };
 };

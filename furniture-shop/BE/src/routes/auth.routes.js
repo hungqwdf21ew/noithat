@@ -9,5 +9,6 @@ router.post('/login',    authController.login);
 
 // Protected route — cần JWT token
 router.get('/me', authMiddleware, authController.me);
+router.put('/profile', authMiddleware, authController.updateProfile);
 
 module.exports = router;

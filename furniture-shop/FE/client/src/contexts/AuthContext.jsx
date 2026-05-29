@@ -76,6 +76,11 @@ const AuthProvider = ({ children }) => {
     setUserState(null);
   };
 
+  const updateUser = (userData) => {
+    setUser(userData);
+    setUserState(userData);
+  };
+
   const isAdmin    = user?.role === 'ADMIN';
   const isStaff    = user?.role === 'NHAN_VIEN';
   const isLoggedIn = !!user;
@@ -84,7 +89,7 @@ const AuthProvider = ({ children }) => {
     <AuthContext.Provider value={{
       user, loading, initialized,
       isLoggedIn, isAdmin, isStaff,
-      login, register, logout,
+      login, register, logout, updateUser,
     }}>
       {children}
     </AuthContext.Provider>

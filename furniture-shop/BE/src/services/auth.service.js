@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const UserModel = require('../models/user.model');
 const generateToken = require('../utils/generateToken');
-const { validateRegister, validateLogin } = require('../validators/auth.validator');
+const { validateRegister, validateLogin, validateUpdateProfile } = require('../validators/auth.validator');
 
 const SALT_ROUNDS = 10;
 
@@ -138,6 +138,43 @@ exports.getMe = async (userId) => {
       role:      user.VaiTro,
       status:    user.TrangThai,
       createdAt: user.NgayTao,
+    },
+  };
+};
+
+// ── Cập nhật thông tin cá nhân ───────────────────────────
+exports.updateProfile = async (userId, data) => {
+  const payload = {
+    hoTen:       data.fullName || data.hoTen,
+    soDienThoai: data.phone ?? data.soDienThoai ?? null,
+  };
+
+  const { isValid, errors } = validateUpdateProfile(payload);
+  if (!isValid) {
+    return { success: false, message: Object.values(errors)[0], errors };
+  }
+
+  const updatedUser = await UserModel.updateProfile(userId, {
+    hoTen: payload.hoTen.trim(),
+    soDienThoai: payload.soDienThoai ? payload.soDienThoai.trim() : null,
+  });
+
+  if (!updatedUser) {
+    return { success: false, message: 'Không tìm thấy người dùng.' };
+  }
+
+  return {
+    success: true,
+    message: 'Cập nhật thông tin thành công!',
+    data: {
+      id:        updatedUser.MaNguoiDung,
+      fullName:  updatedUser.HoTen,
+      email:     updatedUser.Email,
+      phone:     updatedUser.SoDienThoai,
+      avatar:    updatedUser.AnhDaiDien,
+      role:      updatedUser.VaiTro,
+      status:    updatedUser.TrangThai,
+      createdAt: updatedUser.NgayTao,
     },
   };
 };

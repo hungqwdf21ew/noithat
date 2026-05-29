@@ -54,6 +54,26 @@ const UserModel = {
       .query(`SELECT COUNT(1) AS cnt FROM dbo.NguoiDung WHERE Email = @Email`);
     return result.recordset[0].cnt > 0;
   },
+
+  // Cập nhật thông tin cá nhân
+  updateProfile: async (id, { hoTen, soDienThoai }) => {
+    const pool = await connect();
+    const result = await pool.request()
+      .input('MaNguoiDung', sql.Int, id)
+      .input('HoTen', sql.NVarChar(100), hoTen)
+      .input('SoDienThoai', sql.NVarChar(20), soDienThoai || null)
+      .query(`
+        UPDATE dbo.NguoiDung
+        SET HoTen = @HoTen,
+            SoDienThoai = @SoDienThoai,
+            NgayCapNhat = SYSDATETIME()
+        OUTPUT INSERTED.MaNguoiDung, INSERTED.HoTen, INSERTED.Email,
+               INSERTED.SoDienThoai, INSERTED.AnhDaiDien, INSERTED.VaiTro,
+               INSERTED.TrangThai, INSERTED.NgayTao
+        WHERE MaNguoiDung = @MaNguoiDung
+      `);
+    return result.recordset[0] || null;
+  },
 };
 
 module.exports = UserModel;

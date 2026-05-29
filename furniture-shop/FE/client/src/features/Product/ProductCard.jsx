@@ -1,19 +1,17 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart, Eye, Scale } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency.util';
+import { useFavorites } from '../../hooks/useFavorites';
+import { useCompare } from '../../hooks/useCompare';
 import './ProductCard.css';
 
-const ProductCard = ({ product, onAddToCart, onAddToFavorite, onAddToCompare }) => {
+const ProductCard = ({ product, onAddToCart }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-
-  const handleFavoriteClick = (e) => {
-    e.preventDefault();
-    setIsFavorite(!isFavorite);
-    onAddToFavorite?.(product);
-  };
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const { addToCompare } = useCompare();
+  const navigate = useNavigate();
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -22,16 +20,25 @@ const ProductCard = ({ product, onAddToCart, onAddToFavorite, onAddToCompare }) 
 
   const handleCompare = (e) => {
     e.preventDefault();
-    onAddToCompare?.(product);
+    e.stopPropagation();
+    addToCompare(product);
+    navigate('/compare');
   };
 
   const productImage = product.images?.[0] || product.image || '/images/placeholder.png';
   const productName = product.name || product.title || 'Sản phẩm';
   const productPrice = product.price || 0;
   const productId = product.id || product._id;
+  const favorited = isFavorite(productId);
+
+  const handleFavoriteClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(product);
+  };
 
   return (
-    <div 
+    <div
       className={`product-card ${isHovered ? 'hovered' : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -119,11 +126,11 @@ const ProductCard = ({ product, onAddToCart, onAddToFavorite, onAddToCompare }) 
 
         {/* Favorite Button */}
         <button 
-          className={`favorite-btn ${isFavorite ? 'active' : ''}`}
+          className={`favorite-btn ${favorited ? 'active' : ''}`}
           onClick={handleFavoriteClick}
-          title={isFavorite ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
+          title={favorited ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
         >
-          <Heart size={18} fill={isFavorite ? 'currentColor' : 'none'} />
+          <Heart size={18} fill={favorited ? 'currentColor' : 'none'} />
         </button>
       </Link>
     </div>

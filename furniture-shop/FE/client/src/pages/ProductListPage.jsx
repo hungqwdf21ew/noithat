@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Search, Heart, Scale, Eye, ChevronRight, ChevronLeft, Phone } from 'lucide-react';
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
-import { useProducts } from '../hooks/useProducts';
+import { useFavorites } from '../hooks/useFavorites';
+import { useCompare } from '../hooks/useCompare';
 import { formatCurrency } from '../utils/currency.util';
 import './ProductListPage.css';
 
@@ -68,6 +69,7 @@ const BADGE_STYLE = {
 };
 
 const ProductListPage = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch]           = useState('');
   const [activeCategory, setActiveCategory] = useState('');
@@ -77,7 +79,8 @@ const ProductListPage = () => {
   const [activeColor, setActiveColor]       = useState('');
   const [sortBy, setSortBy]                 = useState('newest');
   const [page, setPage]                     = useState(1);
-  const [favorites, setFavorites]           = useState({});
+  const { isFavorite, toggleFavorite }      = useFavorites();
+  const { addToCompare }                    = useCompare();
   const PER_PAGE = 9;
 
   /* ── Filter logic ── */
@@ -102,7 +105,6 @@ const ProductListPage = () => {
 
   const toggleStyle    = s => setActiveStyles(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
   const toggleMaterial = m => setActiveMaterials(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
-  const toggleFav      = id => setFavorites(prev => ({ ...prev, [id]: !prev[id] }));
 
   const clearAll = () => {
     setSearch(''); setActiveCategory(''); setActiveStyles([]);
@@ -320,15 +322,24 @@ const ProductListPage = () => {
                           XEM CHI TIẾT
                         </Link>
                         <button
-                          className={`plp-icon-btn ${favorites[p.id] ? 'active' : ''}`}
-                          onClick={() => toggleFav(p.id)}
+                          type="button"
+                          className={`plp-icon-btn ${isFavorite(p.id) ? 'active' : ''}`}
+                          onClick={() => toggleFavorite(p)}
                           title="Yêu thích"
                         >
-                          <Heart size={16} fill={favorites[p.id] ? 'currentColor' : 'none'} />
+                          <Heart size={16} fill={isFavorite(p.id) ? 'currentColor' : 'none'} />
                         </button>
-                        <Link to={`/compare?add=${p.id}`} className="plp-icon-btn" title="So sánh">
+                        <button
+                          type="button"
+                          className="plp-icon-btn"
+                          title="So sánh"
+                          onClick={() => {
+                            addToCompare(p);
+                            navigate('/compare');
+                          }}
+                        >
                           <Scale size={16} />
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   </div>

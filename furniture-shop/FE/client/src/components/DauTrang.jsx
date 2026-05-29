@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useCart } from '../hooks/useCart'
+import { useFavorites } from '../hooks/useFavorites'
 
 const DauTrang = () => {
   const [scrolled, setScrolled]       = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const menuRef = useRef(null)
   const { isLoggedIn, user, logout, isAdmin } = useAuth()
+  const { cartCount } = useCart()
+  const { favoriteCount } = useFavorites()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -99,7 +103,7 @@ const DauTrang = () => {
                     📦 Đơn hàng của tôi
                   </Link>
                   <Link to="/favorites" className="hum-item" onClick={() => setShowUserMenu(false)}>
-                    ❤️ Sản phẩm yêu thích
+                    ❤️ Sản phẩm yêu thích{favoriteCount > 0 ? ` (${favoriteCount})` : ''}
                   </Link>
                   {isAdmin && (
                     <Link to="/admin" className="hum-item admin" onClick={() => setShowUserMenu(false)}>
@@ -116,12 +120,23 @@ const DauTrang = () => {
               )}
             </div>
           ) : (
-            <Link to="/login" className="icon header-login-btn" aria-label="Đăng nhập">
-              👤
-            </Link>
+            <>
+              <Link to="/favorites" className="icon header-fav-btn" aria-label="Yêu thích">
+                ❤️
+                {favoriteCount > 0 && (
+                  <span className="header-cart-badge">{favoriteCount > 99 ? '99+' : favoriteCount}</span>
+                )}
+              </Link>
+              <Link to="/login" className="icon header-login-btn" aria-label="Đăng nhập">
+                👤
+              </Link>
+            </>
           )}
 
-          <button className="icon" aria-label="Giỏ hàng">🛒</button>
+          <Link to="/cart" className="icon header-cart-btn" aria-label="Giỏ hàng">
+            🛒
+            {cartCount > 0 && <span className="header-cart-badge">{cartCount > 99 ? '99+' : cartCount}</span>}
+          </Link>
         </div>
       </div>
     </header>

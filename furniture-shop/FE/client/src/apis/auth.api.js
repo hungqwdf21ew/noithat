@@ -35,4 +35,14 @@ export const authApi = {
       throw error.response?.data || { success: false, message: 'Phiên đăng nhập hết hạn.' };
     }
   },
+
+  // Cập nhật thông tin cá nhân
+  updateProfile: async ({ fullName, phone }) => {
+    try {
+      const response = await axiosInstance.put('/auth/profile', { fullName, phone });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { success: false, message: 'Không thể cập nhật thông tin.' };
+    }
+  },
 };

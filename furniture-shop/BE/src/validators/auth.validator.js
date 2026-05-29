@@ -48,4 +48,22 @@ const validateLogin = (data) => {
   };
 };
 
-module.exports = { validateRegister, validateLogin };
+// Validate cập nhật profile
+const validateUpdateProfile = (data) => {
+  const errors = {};
+
+  if (!data.hoTen || data.hoTen.trim().length < 2) {
+    errors.hoTen = 'Họ tên phải có ít nhất 2 ký tự';
+  }
+
+  if (data.soDienThoai && !/^(0|\+84)[0-9]{9}$/.test(data.soDienThoai)) {
+    errors.soDienThoai = 'Số điện thoại không hợp lệ';
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  };
+};
+
+module.exports = { validateRegister, validateLogin, validateUpdateProfile };

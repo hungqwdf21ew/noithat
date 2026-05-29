@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './App.css'
 import AuthProvider from './contexts/AuthContext'
 import CartProvider from './contexts/CartContext'
+import FavoriteProvider from './contexts/FavoriteContext'
+import CompareProvider from './contexts/CompareContext'
 import HomePage from './pages/HomePage'
 import TrangBoSuuTap from './pages/TrangBoSuuTap'
 import TrangChiTietSanPham from './pages/TrangChiTietSanPham'
@@ -9,11 +11,18 @@ import ProductListPage from './pages/ProductListPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ProfilePage from './pages/ProfilePage'
+import CartPage from './pages/CartPage'
+import FavoritePage from './pages/FavoritePage'
+import ComparePage from './pages/ComparePage'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   return (
     <AuthProvider>
       <CartProvider>
+        <FavoriteProvider>
+        <CompareProvider>
         <Router>
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -23,13 +32,21 @@ function App() {
             <Route path="/products/:id" element={<ProductDetailPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/favorites" element={<FavoritePage />} />
+            <Route path="/compare" element={<ComparePage />} />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } />
           </Routes>
         </Router>
+        </CompareProvider>
+        </FavoriteProvider>
       </CartProvider>
     </AuthProvider>
   )
 }
-
-export default App
 
 export default App

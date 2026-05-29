@@ -1,5 +1,8 @@
 const CART_KEY = 'furniture_shop_cart';
 
+export const getCartLineKey = (item) =>
+  `${item.id}::${item.selectedColor || ''}::${item.selectedSize || ''}`;
+
 export const getCart = () => {
   const cart = localStorage.getItem(CART_KEY);
   return cart ? JSON.parse(cart) : [];

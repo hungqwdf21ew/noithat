@@ -48,3 +48,21 @@ exports.me = async (req, res) => {
     });
   }
 };
+
+// PUT /api/auth/profile  (cần token)
+exports.updateProfile = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'Chưa đăng nhập.' });
+    }
+    const result = await authService.updateProfile(req.user.id, req.body);
+    const status = result.success ? 200 : 400;
+    return res.status(status).json(result);
+  } catch (error) {
+    console.error('[updateProfile]', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi máy chủ, vui lòng thử lại sau.',
+    });
+  }
+};
