@@ -22,7 +22,7 @@ const BENTO_COLLECTIONS = [
     size: 'bento-large', // 2x2
     title: 'Minimalist Elegance',
     subtitle: 'Sự tĩnh lặng của không gian',
-    img: '/images/01_sofa_trang_cao_cap.png',
+    img: '/images/bst1.png',
     tags: ['Phòng khách', 'Hiện đại'],
     link: '/products',
   },
@@ -31,7 +31,7 @@ const BENTO_COLLECTIONS = [
     size: 'bento-tall', // 1x2
     title: 'Royal Oak',
     subtitle: 'Sắc xanh lục bảo & Gỗ óc chó',
-    img: '/images/03_go_oc_cho_xanh_luc_bao.png',
+    img: '/images/bst2.png',
     tags: ['Cổ điển', 'Phòng khách'],
     link: '/products',
   },
@@ -40,7 +40,7 @@ const BENTO_COLLECTIONS = [
     size: 'bento-wide', // 2x1
     title: 'Glass & Stone',
     subtitle: 'Nét chạm khắc từ thiên nhiên',
-    img: '/images/01_ban_tra_da_mat_kinh.png',
+    img: '/images/bst3.png',
     tags: ['Phòng khách', 'Hiện đại'],
     link: '/products',
   },
@@ -49,7 +49,7 @@ const BENTO_COLLECTIONS = [
     size: 'bento-small', // 1x1
     title: 'Cozy Terracotta',
     subtitle: 'Ấm áp & Gần gũi',
-    img: '/images/02_dat_nung_am_ap.png',
+    img: '/images/bst4.png',
     tags: ['Decor'],
     link: '/products',
   },
@@ -58,7 +58,7 @@ const BENTO_COLLECTIONS = [
     size: 'bento-small', // 1x1
     title: 'Navy Gold',
     subtitle: 'Quyền uy bóng tối',
-    img: '/images/04_xanh_navy_vang_dong.png',
+    img: '/images/bst5.png',
     tags: ['Cổ điển', 'Phòng khách'],
     link: '/products',
   },
@@ -67,7 +67,7 @@ const BENTO_COLLECTIONS = [
     size: 'bento-wide', // 2x1
     title: 'Luxe Bedroom',
     subtitle: 'Giấc ngủ của bậc đế vương',
-    img: '/images/01_giuong_ngu_go_cao_cap.png',
+    img: '/images/bst6.png',
     tags: ['Phòng ngủ', 'Cổ điển'],
     link: '/products',
   },
@@ -76,7 +76,7 @@ const BENTO_COLLECTIONS = [
     size: 'bento-tall', // 1x2
     title: 'Coastal Sage',
     subtitle: 'Hơi thở đại dương',
-    img: '/images/05_ven_bien_xanh_sage.png',
+    img: '/images/bst7.png',
     tags: ['Phòng khách', 'Hiện đại'],
     link: '/products',
   },
@@ -85,7 +85,7 @@ const BENTO_COLLECTIONS = [
     size: 'bento-large', // 2x2
     title: 'Black Marble',
     subtitle: 'Kỷ nguyên đương đại',
-    img: '/images/noi_that_cao_cap_boi_canh_03.png',
+    img: '/images/bst8.png',
     tags: ['Phòng khách', 'Hiện đại'],
     link: '/products',
   },
@@ -94,7 +94,7 @@ const BENTO_COLLECTIONS = [
     size: 'bento-small', // 1x1
     title: 'Modern Light',
     subtitle: 'Nghệ thuật chiếu sáng',
-    img: '/images/05_den_dung_hien_dai.png',
+    img: '/images/bst9.png',
     tags: ['Decor', 'Hiện đại'],
     link: '/products',
   },
@@ -103,7 +103,7 @@ const BENTO_COLLECTIONS = [
     size: 'bento-small', // 1x1
     title: 'Reading Nook',
     subtitle: 'Góc thư giãn êm ái',
-    img: '/images/05_goc_thu_gian_phong_ngu.png',
+    img: '/images/bst10.png',
     tags: ['Phòng ngủ', 'Decor'],
     link: '/products',
   }
@@ -114,14 +114,14 @@ const ROOMS = [
     id: 1,
     title: 'Phòng Khách',
     desc: 'Nơi khởi nguồn của những câu chuyện, với sofa da cao cấp, bàn trà mặt kính cường lực và hệ thống ánh sáng chuẩn hoàng gia.',
-    img: '/images/noi_that_cao_cap_boi_canh_01.png',
+    img: '/images/bst11.png',
     link: '/products',
   },
   {
     id: 2,
     title: 'Phòng Ngủ',
     desc: 'Không gian riêng tư tuyệt đối, tĩnh lặng và sang trọng với giường bọc nỉ tuyết và rèm cản sáng cao cấp.',
-    img: '/images/00_tong_the_phong_ngu.png',
+    img: '/images/bst12.png',
     link: '/products',
   },
 ];
@@ -148,7 +148,7 @@ const TrangBoSuuTap = () => {
       <main className="collections-page">
         {/* Creative Editorial Hero */}
         <section className="col-editorial-hero">
-          <div className="col-hero-background" style={{ backgroundImage: 'url(/images/noi_that_cao_cap_boi_canh_04.png)' }}></div>
+          <div className="col-hero-background" style={{ backgroundImage: 'url(/images/bst13.png)' }}></div>
           <div className="col-hero-overlay"></div>
           
           <div className="col-hero-content container">
