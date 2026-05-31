@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Package, ChevronDown, ChevronUp, Truck, CheckCircle,
-  Clock, XCircle, AlertCircle, ShoppingBag,
+  Clock, XCircle, ShoppingBag,
 } from 'lucide-react';
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
@@ -11,13 +11,12 @@ import { orderApi } from '../apis/order.api';
 import { formatCurrency } from '../utils/currency.util';
 import './OrdersPage.css';
 
-// ── Trạng thái đơn hàng ───────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  CHO_XAC_NHAN: { label: 'Chờ xác nhận', color: 'pending',   icon: Clock        },
-  DA_XAC_NHAN:  { label: 'Đã xác nhận',  color: 'confirmed', icon: CheckCircle  },
-  DANG_GIAO:    { label: 'Đang giao',     color: 'shipping',  icon: Truck        },
-  HOAN_THANH:   { label: 'Hoàn thành',   color: 'done',      icon: CheckCircle  },
-  DA_HUY:       { label: 'Đã huỷ',       color: 'cancelled', icon: XCircle      },
+  CHO_XAC_NHAN: { label: 'Chờ xác nhận', color: 'pending',   icon: Clock       },
+  DA_XAC_NHAN:  { label: 'Đã xác nhận',  color: 'confirmed', icon: CheckCircle },
+  DANG_GIAO:    { label: 'Đang giao',     color: 'shipping',  icon: Truck       },
+  HOAN_THANH:   { label: 'Hoàn thành',   color: 'done',      icon: CheckCircle },
+  DA_HUY:       { label: 'Đã huỷ',       color: 'cancelled', icon: XCircle     },
 };
 
 const STEPS = ['CHO_XAC_NHAN', 'DA_XAC_NHAN', 'DANG_GIAO', 'HOAN_THANH'];
@@ -41,17 +40,17 @@ const OrderProgress = ({ status }) => {
   return (
     <div className="op-progress">
       {STEPS.map((step, idx) => {
-        const cfg = STATUS_CONFIG[step];
+        const cfg  = STATUS_CONFIG[step];
         const Icon = cfg.icon;
-        const done    = idx < currentIdx;
-        const active  = idx === currentIdx;
+        const done   = idx < currentIdx;
+        const active = idx === currentIdx;
         return (
           <div key={step} className={`op-step ${done ? 'done' : ''} ${active ? 'active' : ''}`}>
-            <div className="op-step-dot">
-              <Icon size={14} />
-            </div>
+            <div className="op-step-dot"><Icon size={14} /></div>
             <span>{cfg.label}</span>
-            {idx < STEPS.length - 1 && <div className={`op-step-line ${done ? 'done' : ''}`} />}
+            {idx < STEPS.length - 1 && (
+              <div className={`op-step-line ${done ? 'done' : ''}`} />
+            )}
           </div>
         );
       })}
@@ -61,12 +60,12 @@ const OrderProgress = ({ status }) => {
 
 // ── Card đơn hàng ─────────────────────────────────────────────────────────────
 const OrderCard = ({ order, onCancel }) => {
-  const [expanded, setExpanded] = useState(false);
-  const [detail,   setDetail]   = useState(null);
-  const [loading,  setLoading]  = useState(false);
+  const [expanded,   setExpanded]   = useState(false);
+  const [detail,     setDetail]     = useState(null);
+  const [loading,    setLoading]    = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
-  const cfg = STATUS_CONFIG[order.TrangThaiDonHang] || STATUS_CONFIG.CHO_XAC_NHAN;
+  const cfg  = STATUS_CONFIG[order.TrangThaiDonHang] || STATUS_CONFIG.CHO_XAC_NHAN;
   const Icon = cfg.icon;
 
   const toggleDetail = async () => {
@@ -86,20 +85,19 @@ const OrderCard = ({ order, onCancel }) => {
     setCancelling(true);
     try {
       const res = await onCancel(order.MaDonHang);
-      if (res.success) {
-        // Reload detail nếu đang mở
-        if (detail) setDetail(prev => ({ ...prev, TrangThaiDonHang: 'DA_HUY' }));
+      if (res.success && detail) {
+        setDetail(prev => ({ ...prev, TrangThaiDonHang: 'DA_HUY' }));
       }
     } finally { setCancelling(false); }
   };
 
   const ngayTao = new Date(order.NgayTao).toLocaleDateString('vi-VN', {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
   });
 
   return (
     <article className="op-card">
-      {/* Header */}
       <div className="op-card-header">
         <div className="op-card-meta">
           <div className="op-code">
@@ -116,19 +114,18 @@ const OrderCard = ({ order, onCancel }) => {
         </div>
       </div>
 
-      {/* Thanh tiến trình */}
       <OrderProgress status={order.TrangThaiDonHang} />
 
-      {/* Thông tin nhanh */}
       <div className="op-quick-info">
         <span>📍 {order.DiaChiGiaoHang}</span>
         <span>💳 {PAYMENT_LABEL[order.PhuongThucThanhToan] || order.PhuongThucThanhToan}</span>
       </div>
 
-      {/* Actions */}
       <div className="op-card-actions">
         <button className="op-btn-toggle" onClick={toggleDetail}>
-          {expanded ? <><ChevronUp size={14} /> Ẩn chi tiết</> : <><ChevronDown size={14} /> Xem chi tiết</>}
+          {expanded
+            ? <><ChevronUp size={14} /> Ẩn chi tiết</>
+            : <><ChevronDown size={14} /> Xem chi tiết</>}
         </button>
         {order.TrangThaiDonHang === 'CHO_XAC_NHAN' && (
           <button className="op-btn-cancel" onClick={handleCancel} disabled={cancelling}>
@@ -137,7 +134,6 @@ const OrderCard = ({ order, onCancel }) => {
         )}
       </div>
 
-      {/* Chi tiết mở rộng */}
       {expanded && (
         <div className="op-detail">
           {loading ? (
@@ -165,7 +161,10 @@ const OrderCard = ({ order, onCancel }) => {
               <div className="op-detail-totals">
                 <div><span>Tạm tính</span><span>{formatCurrency(detail.TamTinh)}</span></div>
                 {detail.TienGiam > 0 && (
-                  <div className="op-discount"><span>Giảm giá</span><span>- {formatCurrency(detail.TienGiam)}</span></div>
+                  <div className="op-discount">
+                    <span>Giảm giá</span>
+                    <span>- {formatCurrency(detail.TienGiam)}</span>
+                  </div>
                 )}
                 <div>
                   <span>Phí vận chuyển</span>
@@ -192,7 +191,7 @@ const OrderCard = ({ order, onCancel }) => {
 
 // ── Trang chính ───────────────────────────────────────────────────────────────
 const OrdersPage = () => {
-  const { user } = useAuth();
+  const { user }  = useAuth();
   const [orders,  setOrders]  = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter,  setFilter]  = useState('ALL');
@@ -220,15 +219,21 @@ const OrdersPage = () => {
   };
 
   const FILTERS = [
-    { value: 'ALL',          label: 'Tất cả' },
-    { value: 'CHO_XAC_NHAN',label: 'Chờ xác nhận' },
-    { value: 'DA_XAC_NHAN', label: 'Đã xác nhận' },
-    { value: 'DANG_GIAO',   label: 'Đang giao' },
-    { value: 'HOAN_THANH',  label: 'Hoàn thành' },
-    { value: 'DA_HUY',      label: 'Đã huỷ' },
+    { value: 'ALL',           label: 'Tất cả' },
+    { value: 'CHO_XAC_NHAN', label: 'Chờ xác nhận' },
+    { value: 'DA_XAC_NHAN',  label: 'Đã xác nhận' },
+    { value: 'DANG_GIAO',    label: 'Đang giao' },
+    { value: 'HOAN_THANH',   label: 'Hoàn thành' },
+    { value: 'DA_HUY',       label: 'Đã huỷ' },
   ];
 
+<<<<<<< HEAD
   const filtered = filter === 'ALL' ? orders : orders.filter(o => o.TrangThaiDonHang === filter);
+=======
+  const filtered = filter === 'ALL'
+    ? orders
+    : orders.filter(o => o.TrangThaiDonHang === filter);
+>>>>>>> 736bd8043765e7a5256a3a4c908a1ed5812c66c5
 
   return (
     <div className="lavish-root">
@@ -247,7 +252,6 @@ const OrdersPage = () => {
             <p>Xin chào, <strong>{user?.fullName}</strong> — {orders.length} đơn hàng</p>
           </div>
 
-          {/* Filter tabs */}
           <div className="op-filters">
             {FILTERS.map(f => (
               <button
@@ -265,7 +269,6 @@ const OrdersPage = () => {
             ))}
           </div>
 
-          {/* Danh sách đơn hàng */}
           {loading ? (
             <div className="op-loading-state">
               <div className="op-spinner" />

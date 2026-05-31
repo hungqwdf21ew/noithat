@@ -19,7 +19,10 @@ import FavoritePage from './pages/FavoritePage'
 import ComparePage from './pages/ComparePage'
 import DesignRoomPage from './pages/DesignRoomPage'
 import BundlePage from './pages/BundlePage'
+<<<<<<< HEAD
 import OrderDetailPage from './pages/OrderDetailPage'
+=======
+>>>>>>> 736bd8043765e7a5256a3a4c908a1ed5812c66c5
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -27,6 +30,7 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <FavoriteProvider>
+<<<<<<< HEAD
         <CompareProvider>
         <Router>
           <Routes>
@@ -61,6 +65,37 @@ function App() {
           </Routes>
         </Router>
         </CompareProvider>
+=======
+          <CompareProvider>
+            <Router>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/collections" element={<TrangBoSuuTap />} />
+                <Route path="/product/:id" element={<TrangChiTietSanPham />} />
+                <Route path="/products" element={<ProductListPage />} />
+                <Route path="/products/:id" element={<ProductDetailPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/cart" element={<CartPage />} />
+                <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/orders" element={
+                  <ProtectedRoute>
+                    <OrdersPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/favorites" element={<FavoritePage />} />
+                <Route path="/compare" element={<ComparePage />} />
+                <Route path="/design-room" element={<DesignRoomPage />} />
+                <Route path="/bundle" element={<BundlePage />} />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </Router>
+          </CompareProvider>
+>>>>>>> 736bd8043765e7a5256a3a4c908a1ed5812c66c5
         </FavoriteProvider>
       </CartProvider>
     </AuthProvider>
