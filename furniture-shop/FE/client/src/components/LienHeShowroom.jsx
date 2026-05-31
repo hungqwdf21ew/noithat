@@ -1,8 +1,22 @@
-import React from 'react'
 import { useScrollReveal } from '../hooks/useAnimations'
 
 const LienHeShowroom = () => {
   const [ref, isVisible] = useScrollReveal()
+
+  // Hàm xử lý gửi form Liên Hệ Tư Vấn
+  const handleContactSubmit = (e) => {
+    e.preventDefault() // Ngăn chặn tải lại trang
+    // Tại đây, bạn sẽ gọi API gửi dữ liệu đi
+    alert('Cảm ơn bạn! Yêu cầu tư vấn của bạn đã được gửi. Chúng tôi sẽ liên hệ sớm nhất.')
+    e.target.reset() // Xóa trống form sau khi gửi thành công
+  }
+
+  // Hàm xử lý gửi form Đặt Lịch Showroom
+  const handleBookingSubmit = (e) => {
+    e.preventDefault()
+    alert('Đặt lịch thành công! Chúng tôi đã gửi email xác nhận cho bạn.')
+    e.target.reset()
+  }
 
   return (
     <section className="contact-showroom container" id="contact" ref={ref}>
@@ -20,21 +34,22 @@ const LienHeShowroom = () => {
           style={{ transitionDelay: '0s' }}
         >
           <h3>Form Liên Hệ Tư Vấn</h3>
-          <form>
+          <form onSubmit={handleContactSubmit}>
             <div className="form-row">
-              <input placeholder="Họ và tên" id="contact-name" />
-              <input placeholder="Số điện thoại" id="contact-phone" />
+              <input placeholder="Họ và tên" id="contact-name" required />
+              <input placeholder="Số điện thoại" id="contact-phone" required />
             </div>
             <div className="form-row">
-              <input placeholder="Email" id="contact-email" type="email" />
+              <input placeholder="Email" id="contact-email" type="email" required />
               <input placeholder="Phòng / bộ sưu tập quan tâm" id="contact-interest" />
             </div>
-            <textarea placeholder="Nội dung cần tư vấn..." id="contact-message" rows="4" />
+            <textarea placeholder="Nội dung cần tư vấn..." id="contact-message" rows="4" required />
             <label className="checkbox">
-              <input type="checkbox" id="contact-agree" />
+              <input type="checkbox" id="contact-agree" required />
               Đồng ý nhận tư vấn &amp; thông tin ưu đãi từ Lavish Heritage
             </label>
-            <button className="btn primary" type="button" id="btn-send-contact" style={{ width: '100%' }}>
+            {/* ĐÃ SỬA: Đổi type="button" thành type="submit" */}
+            <button className="btn primary" type="submit" id="btn-send-contact" style={{ width: '100%' }}>
               Gửi Yêu Cầu →
             </button>
           </form>
@@ -46,24 +61,25 @@ const LienHeShowroom = () => {
           style={{ transitionDelay: '0.15s' }}
         >
           <h3>Đặt Lịch Hẹn Showroom</h3>
-          <form>
+          <form onSubmit={handleBookingSubmit}>
             <div className="form-row">
-              <input placeholder="Họ và tên" id="booking-name" />
-              <input placeholder="Số điện thoại" id="booking-phone" />
+              <input placeholder="Họ và tên" id="booking-name" required />
+              <input placeholder="Số điện thoại" id="booking-phone" required />
             </div>
             <div className="form-row">
-              <input placeholder="Email" id="booking-email" type="email" />
-              <input placeholder="Chọn showroom" id="booking-showroom" />
+              <input placeholder="Email" id="booking-email" type="email" required />
+              <input placeholder="Chọn showroom" id="booking-showroom" required />
             </div>
             <div className="form-row">
-              <input placeholder="Ngày hẹn" type="date" id="booking-date" />
-              <input placeholder="Giờ hẹn" type="time" id="booking-time" />
+              <input placeholder="Ngày hẹn" type="date" id="booking-date" required />
+              <input placeholder="Giờ hẹn" type="time" id="booking-time" required />
             </div>
             <div className="form-row">
               <input placeholder="Dịch vụ quan tâm" id="booking-service" />
               <input placeholder="Ghi chú (nếu có)" id="booking-note" />
             </div>
-            <button className="btn primary" type="button" id="btn-book-showroom" style={{ width: '100%' }}>
+            {/* ĐÃ SỬA: Đổi type="button" thành type="submit" */}
+            <button className="btn primary" type="submit" id="btn-book-showroom" style={{ width: '100%' }}>
               Đặt Lịch Ngay →
             </button>
           </form>

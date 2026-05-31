@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../hooks/useCart'
@@ -7,7 +7,9 @@ import { useFavorites } from '../hooks/useFavorites'
 const DauTrang = () => {
   const [scrolled, setScrolled]       = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showSearch, setShowSearch] = useState(false) // Thêm state cho thanh tìm kiếm
   const menuRef = useRef(null)
+  const searchRef = useRef(null) // Ref cho thanh tìm kiếm
   const { isLoggedIn, user, logout, isAdmin } = useAuth()
   const { cartCount } = useCart()
   const { favoriteCount } = useFavorites()
@@ -19,11 +21,14 @@ const DauTrang = () => {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Đóng menu khi click ra ngoài
+  // Đóng menu và thanh tìm kiếm khi click ra ngoài
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setShowUserMenu(false)
+      }
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowSearch(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -34,6 +39,16 @@ const DauTrang = () => {
     logout()
     setShowUserMenu(false)
     navigate('/')
+  }
+
+  // Xử lý tìm kiếm (mẫu)
+  const handleSearchSubmit = (e) => {
+    e.preventDefault()
+    const query = e.target.searchQuery.value
+    if (query.trim()) {
+      navigate(`/products?search=${encodeURIComponent(query)}`)
+      setShowSearch(false)
+    }
   }
 
   // Lấy chữ cái đầu tên để hiển thị avatar
@@ -57,10 +72,57 @@ const DauTrang = () => {
           <Link to="/collections">BỘ SƯU TẬP</Link>
           <Link to="/products">SẢN PHẨM</Link>
           <Link to="/compare">SO SÁNH SẢN PHẨM</Link>
-          <Link to="/bundle">KẾT HỢP SẢN PHẨM</Link>          <Link to="/design-room">CÁ NHÂN HÓA KHÔNG GIAN</Link>        </nav>
+          <Link to="/bundle">KẾT HỢP SẢN PHẨM</Link>
+          <Link to="/design-room">CÁ NHÂN HÓA KHÔNG GIAN</Link>
+        </nav>
 
         <div className="header-actions">
-          <button className="icon" aria-label="Tìm kiếm">🔍</button>
+          {/* Nút Tìm kiếm */}
+          <div style={{ position: 'relative' }} ref={searchRef}>
+            <button 
+              className="icon" 
+              aria-label="Tìm kiếm"
+              onClick={() => setShowSearch(!showSearch)}
+            >
+              🔍
+            </button>
+            
+            {/* Box tìm kiếm hiện ra khi click */}
+            {showSearch && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: '10px',
+                background: '#fff',
+                padding: '10px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                zIndex: 1000,
+                display: 'flex',
+                gap: '8px'
+              }}>
+                <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '8px' }}>
+                  <input 
+                    name="searchQuery"
+                    type="text" 
+                    placeholder="Tìm kiếm..." 
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      outline: 'none',
+                      width: '200px'
+                    }}
+                    autoFocus
+                  />
+                  <button type="submit" className="btn primary" style={{ padding: '8px 16px', minWidth: 'auto' }}>
+                    Tìm
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
 
           {/* User button */}
           {isLoggedIn ? (

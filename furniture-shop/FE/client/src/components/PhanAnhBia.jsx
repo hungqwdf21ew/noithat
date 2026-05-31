@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Link } from 'react-router-dom'
 
 const slides = [
   {
@@ -7,12 +8,13 @@ const slides = [
     heading: 'ĐỊNH HÌNH\nĐẲNG CẤP',
     desc: 'Tinh hoa thiết kế châu Âu, kết hợp cùng vật liệu thượng hạng và chế tác thủ công – khẳng định vị thế của bạn.',
     btn: 'KHÁM PHÁ BỘ SƯU TẬP →',
+    path: '/collections', // Đường dẫn cho nút lớn
     bg: '/images/anhbanghekh.png',
     products: [
-      { id: 1, title: 'GHẾ BÀNH LOUIS XV', subtitle: 'Signature Collection', price: '79.800.000 ₫', img: '/images/anhghebanh.png' },
-      { id: 2, title: 'BÀN ĂN GRAND PALACE', subtitle: 'Không gian tiệc tùng', price: '125.000.000 ₫', img: '/images/anhbanandai.png' },
-      { id: 3, title: 'ĐÈN BÀN IMPERIAL', subtitle: 'Chi tiết mạ vàng 24K', price: '24.800.000 ₫', img: '/images/anhghebandenkh.png' },
-      { id: 4, title: 'BỘ SOFA HOÀNG GIA', subtitle: 'Bọc da cao cấp Ý', price: '95.000.000 ₫', img: '/images/anhsofadai.png' },
+      { id: 1, title: 'GHẾ BÀNH LOUIS XV', subtitle: 'Signature Collection', price: '79.800.000 ₫', img: '/images/anhghebanh.png', path: '/san-pham/1' },
+      { id: 2, title: 'BÀN ĂN GRAND PALACE', subtitle: 'Không gian tiệc tùng', price: '125.000.000 ₫', img: '/images/anhbanandai.png', path: '/san-pham/2' },
+      { id: 3, title: 'ĐÈN BÀN IMPERIAL', subtitle: 'Chi tiết mạ vàng 24K', price: '24.800.000 ₫', img: '/images/anhghebandenkh.png', path: '/san-pham/3' },
+      { id: 4, title: 'BỘ SOFA HOÀNG GIA', subtitle: 'Bọc da cao cấp Ý', price: '95.000.000 ₫', img: '/images/anhsofadai.png', path: '/san-pham/4' },
     ]
   },
   {
@@ -21,12 +23,13 @@ const slides = [
     heading: 'HOÀNG GIA\nCỔ ĐIỂN',
     desc: 'Khám phá bộ sưu tập nội thất cổ điển lấy cảm hứng từ cung điện hoàng gia châu Âu, mỗi sản phẩm là một tác phẩm nghệ thuật.',
     btn: 'XEM BỘ SƯU TẬP →',
+    path: '/collections',
     bg: '/images/anhghesofa.png',
     products: [
-      { id: 1, title: 'GIƯỜNG NGỦ HOÀNG GIA', subtitle: 'Royal Bedroom', price: '185.000.000 ₫', img: '/images/anhgiuong.png' },
-      { id: 2, title: 'BỘ BÀN GHẾ SANG TRỌNG', subtitle: 'Grand Collection', price: '145.000.000 ₫', img: '/images/anhbobanghe.png' },
-      { id: 3, title: 'GIƯỜNG ĐÈN TINH TẾ', subtitle: 'Classic Heritage', price: '168.000.000 ₫', img: '/images/anhgiuonghaiden.png' },
-      { id: 4, title: 'BÀN ĂN CỔ ĐIỂN', subtitle: 'Dining Masterpiece', price: '112.000.000 ₫', img: '/images/anhbanan.png' },
+      { id: 1, title: 'GIƯỜNG NGỦ HOÀNG GIA', subtitle: 'Royal Bedroom', price: '185.000.000 ₫', img: '/images/anhgiuong.png', path: '/san-pham/5' },
+      { id: 2, title: 'BỘ BÀN GHẾ SANG TRỌNG', subtitle: 'Grand Collection', price: '145.000.000 ₫', img: '/images/anhbobanghe.png', path: '/san-pham/6' },
+      { id: 3, title: 'GIƯỜNG ĐÈN TINH TẾ', subtitle: 'Classic Heritage', price: '168.000.000 ₫', img: '/images/anhgiuonghaiden.png', path: '/san-pham/7' },
+      { id: 4, title: 'BÀN ĂN CỔ ĐIỂN', subtitle: 'Dining Masterpiece', price: '112.000.000 ₫', img: '/images/anhbanan.png', path: '/san-pham/8' },
     ]
   },
   {
@@ -35,12 +38,13 @@ const slides = [
     heading: 'KHÔNG GIAN\nĐẲNG CẤP',
     desc: 'Ưu đãi lên đến 20% cho các bộ sưu tập nội thất cao cấp. Tận hưởng không gian sống hoàn hảo với mức giá ưu đãi.',
     btn: 'NHẬN ƯU ĐÃI NGAY →',
+    path: '/collections',
     bg: '/images/anhgiuong.png',
     products: [
-      { id: 1, title: 'SOFA DA Ý', subtitle: 'Premium Italian', price: '95.000.000 ₫', img: '/images/anhsofadai.png' },
-      { id: 2, title: 'GHẾ BÀNH LOUIS XV', subtitle: 'Signature Edition', price: '79.800.000 ₫', img: '/images/anhghebanh.png' },
-      { id: 3, title: 'BÀN ĂN GRAND PALACE', subtitle: 'Exclusive Design', price: '125.000.000 ₫', img: '/images/anhbanandai.png' },
-      { id: 4, title: 'BỘ PHÒNG KHÁCH', subtitle: 'Living Room Set', price: '210.000.000 ₫', img: '/images/anhbanghekh.png' },
+      { id: 1, title: 'SOFA DA Ý', subtitle: 'Premium Italian', price: '95.000.000 ₫', img: '/images/anhsofadai.png', path: '/san-pham/9' },
+      { id: 2, title: 'GHẾ BÀNH LOUIS XV', subtitle: 'Signature Edition', price: '79.800.000 ₫', img: '/images/anhghebanh.png', path: '/san-pham/10' },
+      { id: 3, title: 'BÀN ĂN GRAND PALACE', subtitle: 'Exclusive Design', price: '125.000.000 ₫', img: '/images/anhbanandai.png', path: '/san-pham/11' },
+      { id: 4, title: 'BỘ PHÒNG KHÁCH', subtitle: 'Living Room Set', price: '210.000.000 ₫', img: '/images/anhbanghekh.png', path: '/san-pham/12' },
     ]
   }
 ]
@@ -52,7 +56,6 @@ const PhanAnhBia = () => {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const timeoutRef = useRef(null)
-  const progressRef = useRef(null)
 
   const total = slides.length
 
@@ -109,7 +112,10 @@ const PhanAnhBia = () => {
                     </h1>
                     <p className="hero-desc" key={`dc-${s.id}-${current}`}>{s.desc}</p>
                     <div className="hero-actions" key={`ac-${s.id}-${current}`}>
-                      <button className="btn primary">{s.btn}</button>
+                      
+                      {/* ĐÃ SỬA: Thay button thành thẻ Link */}
+                      <Link to={s.path} className="btn primary">{s.btn}</Link>
+                      
                     </div>
                   </div>
                 </div>
@@ -168,7 +174,10 @@ const PhanAnhBia = () => {
                 <div className="mini-title">{p.title}</div>
                 <div className="mini-subtitle">{p.subtitle}</div>
                 {p.price && <div className="mini-price">{p.price}</div>}
-                <a className="mini-link" href="#">XEM CHI TIẾT →</a>
+                
+                {/* ĐÃ SỬA: Thay thẻ <a> thành thẻ Link */}
+                <Link to={p.path} className="mini-link">XEM CHI TIẾT →</Link>
+                
               </div>
             </div>
           ))}

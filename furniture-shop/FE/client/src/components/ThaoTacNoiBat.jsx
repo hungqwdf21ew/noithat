@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom';
 import { useScrollReveal } from '../hooks/useAnimations'
 
 const actions = [
@@ -7,21 +8,24 @@ const actions = [
     icon: '⚖️',
     title: 'So Sánh Sản Phẩm',
     desc: 'Dễ dàng đặt hai sản phẩm cạnh nhau để chọn ra món đồ hoàn hảo nhất cho không gian của bạn.',
-    btn: 'Bắt Đầu So Sánh →'
+    btn: 'Bắt Đầu So Sánh →',
+    path: '/compare' // <-- Chuyển đến trang So sánh
   },
   {
     id: 2,
     icon: '🧩',
     title: 'Kết Hợp Nội Thất',
     desc: 'Phối hợp hoàn hảo các bộ sưu tập để tạo nên không gian sống đẳng cấp mang dấu ấn châu Âu.',
-    btn: 'Khám Phá Ngay →'
+    btn: 'Khám Phá Ngay →',
+    path: '/design-room' // <-- Chuyển đến trang Thiết kế/Cảm hứng
   },
   {
     id: 3,
     icon: '🏠',
     title: 'Cá Nhân Hóa Không Gian',
     desc: 'Đội ngũ chuyên gia tư vấn riêng giúp bạn thiết kế không gian sống theo gu thẩm mỹ độc đáo.',
-    btn: 'Tư Vấn Miễn Phí →'
+    btn: 'Tư Vấn Miễn Phí →',
+    path: '/tu-van' // <-- Thay đổi đường dẫn này theo route liên hệ/tư vấn thực tế trong App.jsx của bạn
   }
 ]
 
@@ -41,7 +45,12 @@ const ThaoTacNoiBat = () => {
             <div className="action-icon">{a.icon}</div>
             <h3>{a.title}</h3>
             <p className="muted">{a.desc}</p>
-            <button className="btn outline">{a.btn}</button>
+            
+            {/* THAY BUTTON THÀNH LINK ĐỂ CHUYỂN TRANG */}
+            <Link to={a.path} className="btn outline">
+              {a.btn}
+            </Link>
+            
           </div>
         </div>
       ))}
