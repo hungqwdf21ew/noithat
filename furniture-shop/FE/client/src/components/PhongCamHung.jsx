@@ -8,7 +8,7 @@ const rooms = [
     desc: 'Đẳng cấp gia chủ',
     price: 'Từ 165.000.000 đ',
     tag: 'BEST SELLER',
-    img: '/images/anhbanghekh.png'
+    img: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&q=80&w=1000'
   },
   {
     id: 2,
@@ -16,7 +16,7 @@ const rooms = [
     desc: 'Riêng tư và đầy đẳng cấp',
     price: 'Từ 98.000.000 đ',
     tag: 'MỚI',
-    img: '/images/anhgiuonghaiden.png'
+    img: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&q=80&w=1000'
   },
   {
     id: 3,
@@ -24,7 +24,7 @@ const rooms = [
     desc: 'Gắn kết gia đình',
     price: 'Từ 85.500.000 đ',
     tag: 'ƯU ĐÃI',
-    img: '/images/anhbanan.png'
+    img: 'https://images.unsplash.com/photo-1617806118233-18e1c0945591?auto=format&fit=crop&q=80&w=1000'
   }
 ]
 

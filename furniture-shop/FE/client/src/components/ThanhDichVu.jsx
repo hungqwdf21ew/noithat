@@ -4,28 +4,28 @@ import { useScrollReveal } from '../hooks/useAnimations'
 const services = [
   {
     id: 1,
-    icon: '✦',
+    mark: '01',
     title: 'Thiết Kế Độc Quyền',
-    subtitle: 'Theo yêu cầu riêng của bạn'
+    subtitle: 'Theo yêu cầu riêng của bạn',
   },
   {
     id: 2,
-    icon: '🎨',
+    mark: '02',
     title: 'Phong Cách Riêng',
-    subtitle: 'Kết hợp nghệ thuật & cá tính'
+    subtitle: 'Kết hợp nghệ thuật & cá tính',
   },
   {
     id: 3,
-    icon: '🛡️',
+    mark: '03',
     title: 'Bảo Hành Dài Hạn',
-    subtitle: 'Lên đến 10 năm chính hãng'
+    subtitle: 'Lên đến 10 năm chính hãng',
   },
   {
     id: 4,
-    icon: '🚚',
+    mark: '04',
     title: 'Giao Hàng & Lắp Đặt',
-    subtitle: 'Toàn quốc & quốc tế'
-  }
+    subtitle: 'Toàn quốc & quốc tế',
+  },
 ]
 
 const ThanhDichVu = () => {
@@ -39,7 +39,9 @@ const ThanhDichVu = () => {
           key={s.id}
           style={{ transitionDelay: `${i * 0.1}s` }}
         >
-          <div className="service-icon">{s.icon}</div>
+          <div className="service-icon" aria-hidden="true">
+            <span className="service-mark">{s.mark}</span>
+          </div>
           <div className="service-text">
             <div className="service-title">{s.title}</div>
             <div className="service-sub">{s.subtitle}</div>

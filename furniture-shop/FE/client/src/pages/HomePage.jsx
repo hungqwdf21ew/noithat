@@ -65,16 +65,7 @@ const HomePage = () => {
             }}
           >
             <div>
-              <div style={{
-                color: 'var(--gold)',
-                fontSize: 12,
-                fontWeight: 600,
-                letterSpacing: '3px',
-                textTransform: 'uppercase',
-                marginBottom: 6
-              }}>
-                ✦ Không Gian Sống
-              </div>
+              <div className="section-eyebrow">Không Gian Sống</div>
               <h2 style={{ margin: 0, fontSize: 30, letterSpacing: 2 }}>
                 Không Gian Truyền Cảm Hứng
               </h2>

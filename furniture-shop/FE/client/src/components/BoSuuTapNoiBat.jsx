@@ -8,7 +8,7 @@ const collections = [
     title: 'Grand Palace',
     desc: 'Sang trọng và quyền uy',
     price: 'Từ 125.000.000 đ',
-    img: '/images/anhbanandai.png',
+    img: 'https://images.unsplash.com/photo-1595514535316-70e28f237efb?auto=format&fit=crop&q=80&w=800',
     tag: 'Bestseller'
   },
   {
@@ -16,7 +16,7 @@ const collections = [
     title: 'Louis Heritage',
     desc: 'Tinh tế, hoài cổ, đẳng cấp',
     price: 'Từ 98.000.000 đ',
-    img: '/images/anhghesofa.png',
+    img: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=800',
     tag: 'Mới nhất'
   },
   {
@@ -24,7 +24,7 @@ const collections = [
     title: 'Imperial Majesty',
     desc: 'Uy nghiêm và kiêu hãnh',
     price: 'Từ 115.000.000 đ',
-    img: '/images/anhghebandenkh.png',
+    img: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&q=80&w=800',
     tag: 'Cao cấp'
   },
   {
@@ -32,7 +32,7 @@ const collections = [
     title: 'Royal Moments',
     desc: 'Dấu ấn hoàng gia',
     price: 'Từ 78.500.000 đ',
-    img: '/images/anhbobanghe.png',
+    img: 'https://images.unsplash.com/photo-1593696140826-c58b021acf8b?auto=format&fit=crop&q=80&w=800',
     tag: 'Ưu đãi'
   }
 ]

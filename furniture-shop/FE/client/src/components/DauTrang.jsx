@@ -1,27 +1,45 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useCart } from '../hooks/useCart'
 import { useFavorites } from '../hooks/useFavorites'
+import {
+  IconSearch,
+  IconHeart,
+  IconUser,
+  IconCart,
+  IconProfile,
+  IconOrders,
+  IconSettings,
+  IconLogout,
+} from './icons/HeaderIcons'
+
+const NAV_ITEMS = [
+  { to: '/', label: 'Trang chủ', end: true },
+  { to: '/collections', label: 'Bộ sưu tập' },
+  { to: '/products', label: 'Sản phẩm' },
+  { to: '/compare', label: 'So sánh' },
+  { to: '/bundle', label: 'Kết hợp' },
+  { to: '/design-room', label: 'Thiết kế phòng' },
+]
 
 const DauTrang = () => {
-  const [scrolled, setScrolled]       = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [showSearch, setShowSearch] = useState(false) // Thêm state cho thanh tìm kiếm
+  const [showSearch, setShowSearch] = useState(false)
   const menuRef = useRef(null)
-  const searchRef = useRef(null) // Ref cho thanh tìm kiếm
+  const searchRef = useRef(null)
   const { isLoggedIn, user, logout, isAdmin } = useAuth()
   const { cartCount } = useCart()
   const { favoriteCount } = useFavorites()
   const navigate = useNavigate()
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 30)
+    const onScroll = () => setScrolled(window.scrollY > 24)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Đóng menu và thanh tìm kiếm khi click ra ngoài
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -41,7 +59,6 @@ const DauTrang = () => {
     navigate('/')
   }
 
-  // Xử lý tìm kiếm (mẫu)
   const handleSearchSubmit = (e) => {
     e.preventDefault()
     const query = e.target.searchQuery.value
@@ -51,9 +68,13 @@ const DauTrang = () => {
     }
   }
 
-  // Lấy chữ cái đầu tên để hiển thị avatar
   const initials = user?.fullName
-    ? user.fullName.split(' ').map(w => w[0]).slice(-2).join('').toUpperCase()
+    ? user.fullName
+        .split(' ')
+        .map((w) => w[0])
+        .slice(-2)
+        .join('')
+        .toUpperCase()
     : '?'
 
   return (
@@ -67,56 +88,42 @@ const DauTrang = () => {
           </div>
         </Link>
 
-        <nav className="main-nav" id="main-navigation">
-          <Link to="/">TRANG CHỦ</Link>
-          <Link to="/collections">BỘ SƯU TẬP</Link>
-          <Link to="/products">SẢN PHẨM</Link>
-          <Link to="/compare">SO SÁNH SẢN PHẨM</Link>
-          <Link to="/bundle">KẾT HỢP SẢN PHẨM</Link>
-          <Link to="/design-room">CÁ NHÂN HÓA KHÔNG GIAN</Link>
+        <nav className="main-nav glass-nav" id="main-navigation" aria-label="Menu chính">
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) => `nav-pill${isActive ? ' active' : ''}`}
+            >
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
 
         <div className="header-actions">
-          {/* Nút Tìm kiếm */}
-          <div style={{ position: 'relative' }} ref={searchRef}>
-            <button 
-              className="icon" 
+          <div className="header-search-wrap" ref={searchRef}>
+            <button
+              type="button"
+              className="header-icon-btn"
               aria-label="Tìm kiếm"
-              onClick={() => setShowSearch(!showSearch)}
+              aria-expanded={showSearch}
+              onClick={() => setShowSearch((v) => !v)}
             >
-              🔍
+              <IconSearch />
             </button>
-            
-            {/* Box tìm kiếm hiện ra khi click */}
+
             {showSearch && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                right: 0,
-                marginTop: '10px',
-                background: '#fff',
-                padding: '10px',
-                borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                zIndex: 1000,
-                display: 'flex',
-                gap: '8px'
-              }}>
-                <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '8px' }}>
-                  <input 
+              <div className="header-search-panel glass-panel">
+                <form onSubmit={handleSearchSubmit} className="header-search-form">
+                  <input
                     name="searchQuery"
-                    type="text" 
-                    placeholder="Tìm kiếm..." 
-                    style={{
-                      padding: '8px 12px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      outline: 'none',
-                      width: '200px'
-                    }}
+                    type="search"
+                    placeholder="Tìm sản phẩm, bộ sưu tập..."
+                    className="header-search-input"
                     autoFocus
                   />
-                  <button type="submit" className="btn primary" style={{ padding: '8px 16px', minWidth: 'auto' }}>
+                  <button type="submit" className="btn primary header-search-submit">
                     Tìm
                   </button>
                 </form>
@@ -124,28 +131,31 @@ const DauTrang = () => {
             )}
           </div>
 
-          {/* User button */}
           {isLoggedIn ? (
             <div className="header-user-wrap" ref={menuRef}>
               <button
+                type="button"
                 className="header-avatar-btn"
-                onClick={() => setShowUserMenu(v => !v)}
+                onClick={() => setShowUserMenu((v) => !v)}
                 aria-label="Tài khoản"
+                aria-expanded={showUserMenu}
               >
-                {user?.avatar
-                  ? <img src={user.avatar} alt={user.fullName} className="header-avatar-img" />
-                  : <span className="header-avatar-initials">{initials}</span>
-                }
+                {user?.avatar ? (
+                  <img src={user.avatar} alt={user.fullName} className="header-avatar-img" />
+                ) : (
+                  <span className="header-avatar-initials">{initials}</span>
+                )}
               </button>
 
               {showUserMenu && (
-                <div className="header-user-menu">
+                <div className="header-user-menu glass-panel">
                   <div className="hum-header">
                     <div className="hum-avatar">
-                      {user?.avatar
-                        ? <img src={user.avatar} alt={user.fullName} />
-                        : <span>{initials}</span>
-                      }
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt={user.fullName} />
+                      ) : (
+                        <span>{initials}</span>
+                      )}
                     </div>
                     <div>
                       <div className="hum-name">{user?.fullName}</div>
@@ -157,45 +167,55 @@ const DauTrang = () => {
                   <div className="hum-divider" />
 
                   <Link to="/profile" className="hum-item" onClick={() => setShowUserMenu(false)}>
-                    👤 Thông tin tài khoản
+                    <IconProfile />
+                    Thông tin tài khoản
                   </Link>
                   <Link to="/orders" className="hum-item" onClick={() => setShowUserMenu(false)}>
-                    📦 Đơn hàng của tôi
+                    <IconOrders />
+                    Đơn hàng của tôi
                   </Link>
                   <Link to="/favorites" className="hum-item" onClick={() => setShowUserMenu(false)}>
-                    ❤️ Sản phẩm yêu thích{favoriteCount > 0 ? ` (${favoriteCount})` : ''}
+                    <IconHeart />
+                    Sản phẩm yêu thích
+                    {favoriteCount > 0 ? ` (${favoriteCount})` : ''}
                   </Link>
                   {isAdmin && (
                     <Link to="/admin" className="hum-item admin" onClick={() => setShowUserMenu(false)}>
-                      ⚙️ Quản trị hệ thống
+                      <IconSettings />
+                      Quản trị hệ thống
                     </Link>
                   )}
 
                   <div className="hum-divider" />
 
-                  <button className="hum-item logout" onClick={handleLogout}>
-                    🚪 Đăng xuất
+                  <button type="button" className="hum-item logout" onClick={handleLogout}>
+                    <IconLogout />
+                    Đăng xuất
                   </button>
                 </div>
               )}
             </div>
           ) : (
             <>
-              <Link to="/favorites" className="icon header-fav-btn" aria-label="Yêu thích">
-                ❤️
+              <Link to="/favorites" className="header-icon-btn header-fav-btn" aria-label="Yêu thích">
+                <IconHeart />
                 {favoriteCount > 0 && (
-                  <span className="header-cart-badge">{favoriteCount > 99 ? '99+' : favoriteCount}</span>
+                  <span className="header-cart-badge">
+                    {favoriteCount > 99 ? '99+' : favoriteCount}
+                  </span>
                 )}
               </Link>
-              <Link to="/login" className="icon header-login-btn" aria-label="Đăng nhập">
-                👤
+              <Link to="/login" className="header-icon-btn header-login-btn" aria-label="Đăng nhập">
+                <IconUser />
               </Link>
             </>
           )}
 
-          <Link to="/cart" className="icon header-cart-btn" aria-label="Giỏ hàng">
-            🛒
-            {cartCount > 0 && <span className="header-cart-badge">{cartCount > 99 ? '99+' : cartCount}</span>}
+          <Link to="/cart" className="header-icon-btn header-cart-btn" aria-label="Giỏ hàng">
+            <IconCart />
+            {cartCount > 0 && (
+              <span className="header-cart-badge">{cartCount > 99 ? '99+' : cartCount}</span>
+            )}
           </Link>
         </div>
       </div>
