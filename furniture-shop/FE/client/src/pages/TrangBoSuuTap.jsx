@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Headphones, Phone } from 'lucide-react';
+import { ArrowRight, Headphones } from 'lucide-react';
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
 import { useScrollReveal } from '../hooks/useAnimations';
@@ -12,100 +12,10 @@ const FILTERS = ['Tất cả', 'Cổ điển', 'Tủ & Đèn', 'Phòng khách', 
 const COLLECTIONS = [
   {
     id: 1,
-<<<<<<< HEAD
-    size: 'bento-large', // 2x2
-    title: 'Minimalist Elegance',
-    subtitle: 'Sự tĩnh lặng của không gian',
-    img: '/images/bst1.png',
-    tags: ['Phòng khách', 'Hiện đại'],
-    link: '/products',
-  },
-  {
-    id: 2,
-    size: 'bento-tall', // 1x2
-    title: 'Royal Oak',
-    subtitle: 'Sắc xanh lục bảo & Gỗ óc chó',
-    img: '/images/bst2.png',
-    tags: ['Cổ điển', 'Phòng khách'],
-    link: '/products',
-  },
-  {
-    id: 3,
-    size: 'bento-wide', // 2x1
-    title: 'Glass & Stone',
-    subtitle: 'Nét chạm khắc từ thiên nhiên',
-    img: '/images/bst3.png',
-    tags: ['Phòng khách', 'Hiện đại'],
-    link: '/products',
-  },
-  {
-    id: 4,
-    size: 'bento-small', // 1x1
-    title: 'Cozy Terracotta',
-    subtitle: 'Ấm áp & Gần gũi',
-    img: '/images/bst4.png',
-    tags: ['Decor'],
-    link: '/products',
-  },
-  {
-    id: 5,
-    size: 'bento-small', // 1x1
-    title: 'Navy Gold',
-    subtitle: 'Quyền uy bóng tối',
-    img: '/images/bst5.png',
-    tags: ['Cổ điển', 'Phòng khách'],
-    link: '/products',
-  },
-  {
-    id: 6,
-    size: 'bento-wide', // 2x1
-    title: 'Luxe Bedroom',
-    subtitle: 'Giấc ngủ của bậc đế vương',
-    img: '/images/bst6.png',
-    tags: ['Phòng ngủ', 'Cổ điển'],
-    link: '/products',
-  },
-  {
-    id: 7,
-    size: 'bento-tall', // 1x2
-    title: 'Coastal Sage',
-    subtitle: 'Hơi thở đại dương',
-    img: '/images/bst7.png',
-    tags: ['Phòng khách', 'Hiện đại'],
-    link: '/products',
-  },
-  {
-    id: 8,
-    size: 'bento-large', // 2x2
-    title: 'Black Marble',
-    subtitle: 'Kỷ nguyên đương đại',
-    img: '/images/bst8.png',
-    tags: ['Phòng khách', 'Hiện đại'],
-    link: '/products',
-  },
-  {
-    id: 9,
-    size: 'bento-small', // 1x1
-    title: 'Modern Light',
-    subtitle: 'Nghệ thuật chiếu sáng',
-    img: '/images/bst9.png',
-    tags: ['Decor', 'Hiện đại'],
-    link: '/products',
-  },
-  {
-    id: 10,
-    size: 'bento-small', // 1x1
-    title: 'Reading Nook',
-    subtitle: 'Góc thư giãn êm ái',
-    img: '/images/bst10.png',
-    tags: ['Phòng ngủ', 'Decor'],
-    link: '/products',
-  }
-=======
     title: 'Heritage Royale',
     subtitle: 'Vẻ đẹp vương giả thời gian',
     desc: 'Bộ sưu tập tiêu biểu của Lavish Heritage với những đường nét chạm khắc tinh xảo, chất liệu cao cấp và phong cách châu Âu thế kỷ 18 đem đến không gian giàu giá trị di sản.',
-    img: '/images/noi_that_cao_cap_boi_canh_01.png',
+    img: '/images/bst1.png',
     tags: ['Cổ điển', 'Phòng khách', 'Luxury'],
     size: 'large',
   },
@@ -114,7 +24,7 @@ const COLLECTIONS = [
     title: 'Imperial Majesty',
     subtitle: 'Không gian nghỉ ngơi đẳng cấp quý tộc',
     desc: 'Sang trọng và đậm chất hoàng gia.',
-    img: '/images/01_giuong_ngu_go_cao_cap.png',
+    img: '/images/bst2.png',
     tags: ['Phòng ngủ', 'Cổ điển'],
     size: 'normal',
   },
@@ -123,7 +33,7 @@ const COLLECTIONS = [
     title: 'Grand Palace Dining',
     subtitle: 'Nghệ thuật ẩm thực đẳng cấp hoàng gia',
     desc: 'Thiết kế lộng lẫy, tỉ mỉ từng đường nét, tạo nên không gian ăn uống sang trọng và đẳng cấp.',
-    img: '/images/anhbanandai.png',
+    img: '/images/bst3.png',
     tags: ['Phòng khách', 'Cổ điển'],
     size: 'normal',
   },
@@ -132,7 +42,7 @@ const COLLECTIONS = [
     title: 'Royal Moments',
     subtitle: 'Điểm nhấn trang trí thượng lưu',
     desc: 'Những món decor tinh tuyển, chắt lọc từ nghệ thuật trang trí nội thất cổ điển châu Âu.',
-    img: '/images/03_den_dung_kinh_va_da.png',
+    img: '/images/bst4.png',
     tags: ['Decor', 'Luxury'],
     size: 'normal',
   },
@@ -141,7 +51,7 @@ const COLLECTIONS = [
     title: 'Louis Heritage',
     subtitle: 'Cổ điển Pháp — Vẻ đẹp trường tồn',
     desc: 'Cảm hứng từ phong cách Louis XV với đường cong mềm mại, chạm khắc tinh xảo và màu sắc ấm áp.',
-    img: '/images/07_go_oc_cho_xanh_luc_bao_khong_chu.png',
+    img: '/images/bst5.png',
     tags: ['Cổ điển', 'Luxury'],
     size: 'normal',
   },
@@ -150,7 +60,7 @@ const COLLECTIONS = [
     title: 'Velvet Noir',
     subtitle: 'Bí ẩn & Quyến rũ',
     desc: 'Tông màu tối huyền bí kết hợp nhung cao cấp và đồng thau.',
-    img: '/images/noi_that_cao_cap_boi_canh_03.png',
+    img: '/images/bst6.png',
     tags: ['Phòng khách', 'Luxury'],
     size: 'normal',
   },
@@ -159,7 +69,7 @@ const COLLECTIONS = [
     title: 'Cabinet Royale',
     subtitle: 'Tủ kính & Đá cẩm thạch',
     desc: 'Bộ tủ kính cao cấp với khung đồng thau và mặt đá cẩm thạch.',
-    img: '/images/05_tu_kinh_da_cao_cap.png',
+    img: '/images/bst7.png',
     tags: ['Tủ & Đèn', 'Cổ điển'],
     size: 'normal',
   },
@@ -168,43 +78,30 @@ const COLLECTIONS = [
     title: "Lumière d'Or",
     subtitle: 'Ánh sáng vàng son',
     desc: 'Bộ sưu tập đèn trang trí lấy cảm hứng từ đèn chùm cung điện Versailles.',
-    img: '/images/05_den_dung_hien_dai.png',
+    img: '/images/bst8.png',
     tags: ['Tủ & Đèn', 'Decor'],
     size: 'normal',
   },
->>>>>>> 736bd8043765e7a5256a3a4c908a1ed5812c66c5
 ];
 
 const ROOMS = [
   {
-<<<<<<< HEAD
     id: 1,
-    title: 'Phòng Khách',
-    desc: 'Nơi khởi nguồn của những câu chuyện, với sofa da cao cấp, bàn trà mặt kính cường lực và hệ thống ánh sáng chuẩn hoàng gia.',
+    title: 'PHÒNG KHÁCH',
+    sub: 'Sang trọng — Đẳng cấp — Tinh tế',
     img: '/images/bst11.png',
-    link: '/products',
   },
   {
     id: 2,
-    title: 'Phòng Ngủ',
-    desc: 'Không gian riêng tư tuyệt đối, tĩnh lặng và sang trọng với giường bọc nỉ tuyết và rèm cản sáng cao cấp.',
-    img: '/images/bst12.png',
-    link: '/products',
-=======
-    id: 1, title: 'PHÒNG KHÁCH',
-    sub: 'Sang trọng — Đẳng cấp — Tinh tế',
-    img: '/images/noi_that_cao_cap_boi_canh_01.png',
-  },
-  {
-    id: 2, title: 'PHÒNG NGỦ',
+    title: 'PHÒNG NGỦ',
     sub: 'Ấm áp — Tĩnh lặng — Đẳng cấp',
-    img: '/images/01_giuong_ngu_go_cao_cap.png',
+    img: '/images/bst12.png',
   },
   {
-    id: 3, title: 'PHÒNG ĂN',
+    id: 3,
+    title: 'PHÒNG ĂN',
     sub: 'Hoa lệ — Tinh tế — Hoàng gia',
-    img: '/images/anhbanandai.png',
->>>>>>> 736bd8043765e7a5256a3a4c908a1ed5812c66c5
+    img: '/images/bst9.png',
   },
 ];
 
@@ -225,43 +122,10 @@ const TrangBoSuuTap = () => {
     <div className="lavish-root">
       <DauTrang />
       <main className="bst-page">
-
-<<<<<<< HEAD
-      <main className="collections-page">
-        {/* Creative Editorial Hero */}
-        <section className="col-editorial-hero">
-          <div className="col-hero-background" style={{ backgroundImage: 'url(/images/bst13.png)' }}></div>
-          <div className="col-hero-overlay"></div>
-          
-          <div className="col-hero-content container">
-            <div className="col-hero-badge animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              <Sparkles size={14} /> NEW COLLECTION 2026
-            </div>
-            
-            <h1 className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              Nghệ Thuật <br/><span className="text-gold">Sắp Đặt Không Gian</span>
-            </h1>
-            
-            <p className="animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-              Khám phá ngôn ngữ của sự tĩnh lặng và xa xỉ qua các bộ sưu tập nội thất phiên bản giới hạn. 
-              Mỗi món đồ là một tác phẩm điêu khắc nghệ thuật đương đại.
-            </p>
-
-            <div className="col-hero-actions animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
-              <button className="btn-explore" onClick={() => {
-                document.getElementById('bento-grid').scrollIntoView({ behavior: 'smooth' });
-              }}>
-                Khám phá ngay <ArrowRight size={18} />
-              </button>
-              <button className="btn-play-video">
-                <span className="play-icon-wrapper"><Play fill="currentColor" size={14} /></span> Xem Video 
-              </button>
-            </div>
-=======
         {/* ══ HERO ══════════════════════════════════════════ */}
         <section className="bst-hero">
           <div className="bst-hero-bg"
-            style={{ backgroundImage: 'url(/images/noi_that_cao_cap_boi_canh_04.png)' }} />
+            style={{ backgroundImage: 'url(/images/bst13.png)' }} />
           <div className="bst-hero-veil" />
           <div className="bst-hero-inner container">
             <nav className="bst-breadcrumb">
@@ -272,7 +136,6 @@ const TrangBoSuuTap = () => {
             <h1>BỘ SƯU TẬP</h1>
             <div className="bst-hero-rule"><span /><span className="bst-hero-diamond" /><span /></div>
             <p>Trân trọng những bộ sưu tập nội thất tinh hoa, tôn vinh giá trị di sản và nghệ thuật sống đẳng cấp.</p>
->>>>>>> 736bd8043765e7a5256a3a4c908a1ed5812c66c5
           </div>
         </section>
 
@@ -396,7 +259,7 @@ const TrangBoSuuTap = () => {
               <h3>CẦN TƯ VẤN CHO KHÔNG GIAN CỦA BẠN?</h3>
               <p>Đội ngũ chuyên gia tại Lavish Heritage luôn sẵn lòng đồng hành cùng bạn.</p>
             </div>
-            <Link to="/#contact" className="bst-cta-btn">
+            <Link to="/#contact" className="col-cta-btn">
               LIÊN HỆ TƯ VẤN <ArrowRight size={14} />
             </Link>
           </div>

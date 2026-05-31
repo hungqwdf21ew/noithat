@@ -227,13 +227,9 @@ const OrdersPage = () => {
     { value: 'DA_HUY',       label: 'Đã huỷ' },
   ];
 
-<<<<<<< HEAD
-  const filtered = filter === 'ALL' ? orders : orders.filter(o => o.TrangThaiDonHang === filter);
-=======
   const filtered = filter === 'ALL'
     ? orders
     : orders.filter(o => o.TrangThaiDonHang === filter);
->>>>>>> 736bd8043765e7a5256a3a4c908a1ed5812c66c5
 
   return (
     <div className="lavish-root">
