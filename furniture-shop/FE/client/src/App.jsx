@@ -17,6 +17,8 @@ import FavoritePage from './pages/FavoritePage'
 import ComparePage from './pages/ComparePage'
 import DesignRoomPage from './pages/DesignRoomPage'
 import BundlePage from './pages/BundlePage'
+import OrdersPage from './pages/OrdersPage'
+import OrderDetailPage from './pages/OrderDetailPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -42,6 +44,16 @@ function App() {
             <Route path="/profile" element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/orders" element={
+              <ProtectedRoute>
+                <OrdersPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/orders/:id" element={
+              <ProtectedRoute>
+                <OrderDetailPage />
               </ProtectedRoute>
             } />
           </Routes>

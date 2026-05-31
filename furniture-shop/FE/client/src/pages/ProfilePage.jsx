@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Mail, Phone, Shield, Calendar, Loader, Save } from 'lucide-react';
+import { User, Mail, Phone, Shield, Calendar, Loader, Save, Package } from 'lucide-react';
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
 import { useAuth } from '../contexts/AuthContext';
@@ -133,6 +133,30 @@ const ProfilePage = () => {
                 <span className={`profile-status status-${profile?.status}`}>
                   {STATUS_LABELS[profile?.status] || profile?.status}
                 </span>
+                
+                <div style={{ marginTop: '24px', width: '100%' }}>
+                  <Link 
+                    to="/orders" 
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      padding: '12px',
+                      backgroundColor: 'var(--text-dark, #1a1a1a)',
+                      color: 'white',
+                      textDecoration: 'none',
+                      borderRadius: '8px',
+                      fontWeight: '500',
+                      transition: 'background 0.3s ease'
+                    }}
+                    onMouseOver={(e) => e.target.style.backgroundColor = 'var(--gold, #d4af37)'}
+                    onMouseOut={(e) => e.target.style.backgroundColor = 'var(--text-dark, #1a1a1a)'}
+                  >
+                    <Package size={18} />
+                    Quản lý Đơn Hàng
+                  </Link>
+                </div>
               </aside>
 
               <section className="profile-card profile-form-card">

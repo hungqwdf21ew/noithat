@@ -6,20 +6,8 @@ import ChanTrang from '../components/ChanTrang';
 import { useFavorites } from '../hooks/useFavorites';
 import { useCompare } from '../hooks/useCompare';
 import { formatCurrency } from '../utils/currency.util';
+import { MOCK_PRODUCTS } from '../data/mockProducts';
 import './ProductListPage.css';
-
-/* ── Mock data dùng khi chưa có API ── */
-const MOCK_PRODUCTS = [
-  { id: 1, name: 'Sofa Heritage Royale', subtitle: 'Sang trọng · Tinh tế · Quyền quý', price: 78500000, badge: 'MỚI', category: 'Sofa', style: 'Cổ điển châu Âu', material: 'Gỗ tự nhiên', image: '/images/anhghesofa.png' },
-  { id: 2, name: 'Ghế Bành Louis XV', subtitle: 'Vẻ đẹp hoàng gia vượt thời gian', price: 24800000, badge: 'BÁN CHẠY', category: 'Ghế bành', style: 'Tân cổ điển', material: 'Da thật', image: '/images/anhghebandenkh.png' },
-  { id: 3, name: 'Bàn Ăn Grand Palace', subtitle: 'Kiệt tác dành cho không gian đẳng cấp', price: 125000000, badge: 'ĐỘC QUYỀN', category: 'Bàn ăn', style: 'Hoàng gia', material: 'Gỗ tự nhiên', image: '/images/anhbanghekh.png' },
-  { id: 4, name: 'Đèn Bàn Imperial', subtitle: 'Ánh sáng của sự tinh tế', price: 18900000, badge: '', category: 'Đèn trang trí', style: 'Cổ điển châu Âu', material: 'Đồng mạ vàng', image: '/images/anhbobanghe.png' },
-  { id: 5, name: 'Bàn Console Majestic', subtitle: 'Tinh xảo trong từng chi tiết', price: 62000000, badge: '', category: 'Bàn console', style: 'Tân cổ điển', material: 'Gỗ tự nhiên', image: '/images/anhbanandai.png' },
-  { id: 6, name: 'Giường Imperial Majesty', subtitle: 'Giấc ngủ hoàng gia – Đẳng cấp đích thực', price: 98000000, badge: 'MỚI', category: 'Giường ngủ', style: 'Hoàng gia', material: 'Gỗ tự nhiên', image: '/images/anhgiuong.png' },
-  { id: 7, name: 'Tủ Trang Trí Royal Moments', subtitle: 'Trưng bày đẳng cấp – Giá trị vượt thời gian', price: 68000000, badge: 'BÁN CHẠY', category: 'Bàn console', style: 'Luxury Classic', material: 'Gỗ tự nhiên', image: '/images/anhbanandai.png' },
-  { id: 8, name: 'Bàn Trà Heritage', subtitle: 'Hài hòa · Tinh tế · Đặc sắc', price: 29800000, badge: '', category: 'Bàn ăn', style: 'Tân cổ điển', material: 'Vải cao cấp', image: '/images/anhbanan.png' },
-  { id: 9, name: 'Giường Trang Trí Imperial', subtitle: 'Phẩm chuẩn về đẳng cấp sống', price: 16500000, badge: 'ĐỘC QUYỀN', category: 'Giường ngủ', style: 'Cổ điển châu Âu', material: 'Gỗ tự nhiên', image: '/images/anhgiuonghaiden.png' },
-];
 
 const CATEGORIES = [
   { name: 'Sofa', count: 38 },

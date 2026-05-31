@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Headphones, ArrowRight } from 'lucide-react';
+import { Headphones, ArrowRight, Play, Sparkles } from 'lucide-react';
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
 import { useScrollReveal } from '../hooks/useAnimations';
@@ -9,90 +9,119 @@ import '../index.css';
 
 const FILTERS = [
   'Tất cả',
-  'Cổ điển',
-  'Tân cổ điển',
   'Phòng khách',
   'Phòng ngủ',
-  'Phòng ăn',
+  'Hiện đại',
+  'Cổ điển',
   'Decor',
-  'Luxury',
 ];
 
-const COLLECTIONS = [
+const BENTO_COLLECTIONS = [
   {
     id: 1,
-    layout: 'hero-wave',
-    title: 'Heritage Royale',
-    desc: 'Tinh hoa cổ điển châu Âu — nơi mỗi chi tiết chạm khắc kể một câu chuyện về quyền quý và phong cách sống đẳng cấp.',
-    img: '/images/anhghesofa.png',
-    tags: ['Cổ điển', 'Phòng khách', 'Luxury'],
+    size: 'bento-large', // 2x2
+    title: 'Minimalist Elegance',
+    subtitle: 'Sự tĩnh lặng của không gian',
+    img: '/images/01_sofa_trang_cao_cap.png',
+    tags: ['Phòng khách', 'Hiện đại'],
     link: '/products',
   },
   {
     id: 2,
-    layout: 'vertical',
-    title: 'Imperial Majesty',
-    desc: 'Không gian ngủ hoàng gia với điểm nhấn sang trọng, tinh tế và riêng tư tuyệt đối.',
-    img: '/images/anhgiuonghaiden.png',
-    tags: ['Luxury', 'Phòng ngủ'],
+    size: 'bento-tall', // 1x2
+    title: 'Royal Oak',
+    subtitle: 'Sắc xanh lục bảo & Gỗ óc chó',
+    img: '/images/03_go_oc_cho_xanh_luc_bao.png',
+    tags: ['Cổ điển', 'Phòng khách'],
     link: '/products',
   },
   {
     id: 3,
-    layout: 'wave',
-    title: 'Grand Palace Dining',
-    desc: 'Bữa tiệc gia đình trở thành nghi lễ — bàn ăn hoàng gia cho không gian sum họp đẳng cấp.',
-    img: '/images/anhbanandai.png',
-    tags: ['Tân cổ điển', 'Phòng ăn'],
+    size: 'bento-wide', // 2x1
+    title: 'Glass & Stone',
+    subtitle: 'Nét chạm khắc từ thiên nhiên',
+    img: '/images/01_ban_tra_da_mat_kinh.png',
+    tags: ['Phòng khách', 'Hiện đại'],
     link: '/products',
   },
   {
     id: 4,
-    layout: 'horizontal',
-    title: 'Royal Moments',
-    desc: 'Khoảnh khắc hoàng gia trong phòng khách.',
-    img: '/images/anhbobanghe.png',
-    tags: ['Decor', 'Phòng khách'],
+    size: 'bento-small', // 1x1
+    title: 'Cozy Terracotta',
+    subtitle: 'Ấm áp & Gần gũi',
+    img: '/images/02_dat_nung_am_ap.png',
+    tags: ['Decor'],
     link: '/products',
   },
   {
     id: 5,
-    layout: 'horizontal',
-    title: 'Louis Heritage',
-    desc: 'Tinh tế, hoài cổ, đẳng cấp vượt thời gian.',
-    img: '/images/anhghebandenkh.png',
+    size: 'bento-small', // 1x1
+    title: 'Navy Gold',
+    subtitle: 'Quyền uy bóng tối',
+    img: '/images/04_xanh_navy_vang_dong.png',
     tags: ['Cổ điển', 'Phòng khách'],
     link: '/products',
   },
   {
     id: 6,
-    layout: 'quote',
-    quote: 'Nội thất không chỉ là vật dụng — đó là ngôn ngữ của không gian, kể câu chuyện về chủ nhân và phong cách sống.',
-    author: 'Lavish Heritage',
-    tags: [],
+    size: 'bento-wide', // 2x1
+    title: 'Luxe Bedroom',
+    subtitle: 'Giấc ngủ của bậc đế vương',
+    img: '/images/01_giuong_ngu_go_cao_cap.png',
+    tags: ['Phòng ngủ', 'Cổ điển'],
+    link: '/products',
   },
+  {
+    id: 7,
+    size: 'bento-tall', // 1x2
+    title: 'Coastal Sage',
+    subtitle: 'Hơi thở đại dương',
+    img: '/images/05_ven_bien_xanh_sage.png',
+    tags: ['Phòng khách', 'Hiện đại'],
+    link: '/products',
+  },
+  {
+    id: 8,
+    size: 'bento-large', // 2x2
+    title: 'Black Marble',
+    subtitle: 'Kỷ nguyên đương đại',
+    img: '/images/noi_that_cao_cap_boi_canh_03.png',
+    tags: ['Phòng khách', 'Hiện đại'],
+    link: '/products',
+  },
+  {
+    id: 9,
+    size: 'bento-small', // 1x1
+    title: 'Modern Light',
+    subtitle: 'Nghệ thuật chiếu sáng',
+    img: '/images/05_den_dung_hien_dai.png',
+    tags: ['Decor', 'Hiện đại'],
+    link: '/products',
+  },
+  {
+    id: 10,
+    size: 'bento-small', // 1x1
+    title: 'Reading Nook',
+    subtitle: 'Góc thư giãn êm ái',
+    img: '/images/05_goc_thu_gian_phong_ngu.png',
+    tags: ['Phòng ngủ', 'Decor'],
+    link: '/products',
+  }
 ];
 
 const ROOMS = [
   {
     id: 1,
     title: 'Phòng Khách',
-    desc: 'Đẳng cấp gia chủ',
-    img: '/images/anhbanghekh.png',
+    desc: 'Nơi khởi nguồn của những câu chuyện, với sofa da cao cấp, bàn trà mặt kính cường lực và hệ thống ánh sáng chuẩn hoàng gia.',
+    img: '/images/noi_that_cao_cap_boi_canh_01.png',
     link: '/products',
   },
   {
     id: 2,
     title: 'Phòng Ngủ',
-    desc: 'Riêng tư và đầy đẳng cấp',
-    img: '/images/anhgiuong.png',
-    link: '/products',
-  },
-  {
-    id: 3,
-    title: 'Phòng Ăn',
-    desc: 'Gắn kết gia đình',
-    img: '/images/anhbanan.png',
+    desc: 'Không gian riêng tư tuyệt đối, tĩnh lặng và sang trọng với giường bọc nỉ tuyết và rèm cản sáng cao cấp.',
+    img: '/images/00_tong_the_phong_ngu.png',
     link: '/products',
   },
 ];
@@ -102,95 +131,13 @@ const matchesFilter = (item, filter) => {
   return item.tags?.includes(filter);
 };
 
-const CollectionCard = ({ item }) => {
-  if (item.layout === 'quote') {
-    return (
-      <article className="col-card col-card-quote">
-        <div className="col-quote-mark">"</div>
-        <p>{item.quote}</p>
-        <span>— {item.author}</span>
-      </article>
-    );
-  }
-
-  const inner = (
-    <>
-      {item.layout === 'hero-wave' && (
-        <>
-          <div className="col-card-media" style={{ backgroundImage: `url(${item.img})` }} />
-          <div className="col-card-wave-body">
-            <div className="col-card-logo">✦</div>
-            <h3>{item.title}</h3>
-            <p>{item.desc}</p>
-            <span className="col-card-link">
-              Khám phá bộ sưu tập <ArrowRight size={14} />
-            </span>
-          </div>
-        </>
-      )}
-
-      {item.layout === 'vertical' && (
-        <>
-          <div className="col-card-media col-card-media-tall" style={{ backgroundImage: `url(${item.img})` }} />
-          <div className="col-card-body">
-            <h3>{item.title}</h3>
-            <p>{item.desc}</p>
-            <span className="col-card-link">
-              Khám phá bộ sưu tập <ArrowRight size={14} />
-            </span>
-          </div>
-        </>
-      )}
-
-      {item.layout === 'wave' && (
-        <>
-          <div className="col-card-media col-card-media-md" style={{ backgroundImage: `url(${item.img})` }} />
-          <div className="col-card-wave-body col-card-wave-sm">
-            <h3>{item.title}</h3>
-            <p>{item.desc}</p>
-            <span className="col-card-link">
-              Khám phá bộ sưu tập <ArrowRight size={14} />
-            </span>
-          </div>
-        </>
-      )}
-
-      {item.layout === 'horizontal' && (
-        <div className="col-card-horizontal">
-          <div className="col-card-media-h" style={{ backgroundImage: `url(${item.img})` }} />
-          <div className="col-card-body-h">
-            <h3>{item.title}</h3>
-            <p>{item.desc}</p>
-            <span className="col-card-link">
-              Khám phá <ArrowRight size={14} />
-            </span>
-          </div>
-        </div>
-      )}
-    </>
-  );
-
-  const className = `col-card col-card-${item.layout}`;
-
-  return item.link ? (
-    <Link to={item.link} className={className}>
-      {inner}
-    </Link>
-  ) : (
-    <article className={className}>{inner}</article>
-  );
-};
-
 const TrangBoSuuTap = () => {
   const [activeFilter, setActiveFilter] = useState('Tất cả');
   const [gridRef, gridVisible] = useScrollReveal();
   const [roomsRef, roomsVisible] = useScrollReveal();
 
   const displayed = useMemo(
-    () => COLLECTIONS.filter((c) => {
-      if (c.layout === 'quote') return activeFilter === 'Tất cả';
-      return matchesFilter(c, activeFilter);
-    }),
+    () => BENTO_COLLECTIONS.filter((c) => matchesFilter(c, activeFilter)),
     [activeFilter]
   );
 
@@ -199,107 +146,129 @@ const TrangBoSuuTap = () => {
       <DauTrang />
 
       <main className="collections-page">
-        {/* Hero */}
-        <section className="col-hero">
-          <div className="col-hero-bg" />
+        {/* Creative Editorial Hero */}
+        <section className="col-editorial-hero">
+          <div className="col-hero-background" style={{ backgroundImage: 'url(/images/noi_that_cao_cap_boi_canh_04.png)' }}></div>
+          <div className="col-hero-overlay"></div>
+          
           <div className="col-hero-content container">
-            <nav className="col-breadcrumb">
-              <Link to="/">Trang chủ</Link>
-              <span>/</span>
-              <span>Bộ sưu tập</span>
-            </nav>
-            <h1>Bộ Sưu Tập</h1>
-            <p>
-              Khám phá những bộ sưu tập nội thất cao cấp được thiết kế riêng,
-              mang đậm tinh thần hoàng gia châu Âu và phong cách sống tinh hoa.
+            <div className="col-hero-badge animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <Sparkles size={14} /> NEW COLLECTION 2026
+            </div>
+            
+            <h1 className="animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+              Nghệ Thuật <br/><span className="text-gold">Sắp Đặt Không Gian</span>
+            </h1>
+            
+            <p className="animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+              Khám phá ngôn ngữ của sự tĩnh lặng và xa xỉ qua các bộ sưu tập nội thất phiên bản giới hạn. 
+              Mỗi món đồ là một tác phẩm điêu khắc nghệ thuật đương đại.
             </p>
+
+            <div className="col-hero-actions animate-fade-in-up" style={{ animationDelay: '0.7s' }}>
+              <button className="btn-explore" onClick={() => {
+                document.getElementById('bento-grid').scrollIntoView({ behavior: 'smooth' });
+              }}>
+                Khám phá ngay <ArrowRight size={18} />
+              </button>
+              <button className="btn-play-video">
+                <span className="play-icon-wrapper"><Play fill="currentColor" size={14} /></span> Xem Video 
+              </button>
+            </div>
           </div>
         </section>
 
-        {/* Featured collections */}
-        <section className="col-section container">
-          <div className="col-section-title">
-            <span className="col-ornament">✦ ✦ ✦</span>
-            <h2>Bộ Sưu Tập Nổi Bật</h2>
-            <span className="col-ornament">✦ ✦ ✦</span>
-          </div>
-
-          <div className="col-filters">
-            {FILTERS.map((f) => (
-              <button
-                key={f}
-                type="button"
-                className={`col-filter-btn${activeFilter === f ? ' active' : ''}`}
-                onClick={() => setActiveFilter(f)}
-              >
-                {f}
-              </button>
-            ))}
-          </div>
-
-          {displayed.length === 0 ? (
-            <div className="col-empty">
-              Chưa có bộ sưu tập trong danh mục này.
-            </div>
-          ) : (
-            <div
-              className={`col-masonry stagger-children${gridVisible ? ' visible' : ''}`}
-              ref={gridRef}
-            >
-              {displayed.map((item, i) => (
-                <div
-                  key={item.id}
-                  className={`col-masonry-item col-item-${item.layout} animate-on-scroll${gridVisible ? ' visible' : ''}`}
-                  style={{ transitionDelay: `${i * 0.08}s` }}
+        {/* Bento Grid Section */}
+        <section id="bento-grid" className="bento-section container">
+          <div className="col-section-header">
+            <h2>Kiệt Tác <span className="text-light">Thiết Kế</span></h2>
+            
+            <div className="bento-filters">
+              {FILTERS.map((f) => (
+                <button
+                  key={f}
+                  className={`bento-filter-btn ${activeFilter === f ? 'active' : ''}`}
+                  onClick={() => setActiveFilter(f)}
                 >
-                  <CollectionCard item={item} />
-                </div>
+                  {f}
+                </button>
               ))}
             </div>
-          )}
-        </section>
-
-        {/* Space inspiration */}
-        <section className="col-section col-inspiration container">
-          <div className="col-section-title">
-            <span className="col-ornament">✦ ✦ ✦</span>
-            <h2>Cảm Hứng Không Gian</h2>
-            <span className="col-ornament">✦ ✦ ✦</span>
           </div>
 
-          <div
-            className={`col-rooms-grid stagger-children${roomsVisible ? ' visible' : ''}`}
-            ref={roomsRef}
+          <div 
+            className={`bento-grid-container ${gridVisible ? 'animate-grid' : ''}`} 
+            ref={gridRef}
           >
+            {displayed.length === 0 ? (
+              <div className="bento-empty">
+                <p>Không tìm thấy sản phẩm nào trong danh mục này.</p>
+              </div>
+            ) : (
+              displayed.map((item, index) => (
+                <Link 
+                  to={item.link} 
+                  key={item.id} 
+                  className={`bento-item ${item.size}`}
+                  style={{ '--animation-order': index }}
+                >
+                  <div className="bento-item-bg" style={{ backgroundImage: `url(${item.img})` }}></div>
+                  <div className="bento-item-overlay"></div>
+                  <div className="bento-item-content">
+                    <span className="bento-badge">{item.tags[0]}</span>
+                    <div className="bento-text">
+                      <h3>{item.title}</h3>
+                      <p>{item.subtitle}</p>
+                    </div>
+                    <div className="bento-arrow">
+                      <ArrowRight size={20} />
+                    </div>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* Parallax Room Inspiration */}
+        <section className="parallax-rooms-section">
+          <div className="parallax-header container">
+            <h2>Cảm Hứng <br/><span className="text-light">Không Gian</span></h2>
+          </div>
+          
+          <div className="parallax-rooms-list" ref={roomsRef}>
             {ROOMS.map((room, i) => (
-              <Link
-                key={room.id}
-                to={room.link}
-                className={`col-room-card animate-on-scroll${roomsVisible ? ' visible' : ''}`}
-                style={{ transitionDelay: `${i * 0.12}s` }}
-              >
-                <div className="col-room-img" style={{ backgroundImage: `url(${room.img})` }} />
-                <div className="col-room-body">
+              <div key={room.id} className={`parallax-room ${roomsVisible ? 'visible' : ''}`} style={{ transitionDelay: `${i * 0.2}s` }}>
+                <div className="parallax-room-image">
+                  <div className="image-wrapper">
+                    <img src={room.img} alt={room.title} />
+                  </div>
+                </div>
+                <div className="parallax-room-content">
+                  <div className="room-number">0{i + 1}</div>
                   <h3>{room.title}</h3>
                   <p>{room.desc}</p>
-                  <span className="col-card-link">
-                    Xem thêm <ArrowRight size={14} />
-                  </span>
+                  <Link to={room.link} className="room-explore-link">
+                    Xem sản phẩm trong phòng <span className="line"></span>
+                  </Link>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </section>
 
-        {/* CTA */}
+        {/* CTA Banner */}
         <section className="col-cta">
           <div className="container col-cta-inner">
             <div className="col-cta-text">
-              <Headphones size={22} />
-              <span>Bạn cần tư vấn chọn bộ sưu tập phù hợp?</span>
+              <Headphones size={28} className="text-gold" />
+              <div>
+                <h4>Cần tư vấn thiết kế nội thất?</h4>
+                <p>Chuyên gia của chúng tôi luôn sẵn sàng lắng nghe và kiến tạo không gian sống mơ ước cho bạn.</p>
+              </div>
             </div>
             <Link to="/#contact" className="col-cta-btn">
-              Liên hệ tư vấn <ArrowRight size={16} />
+              Đặt Lịch Hẹn Ngay <ArrowRight size={16} />
             </Link>
           </div>
         </section>

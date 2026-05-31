@@ -9,83 +9,8 @@ import ChanTrang from '../components/ChanTrang';
 import { useCart } from '../hooks/useCart';
 import { useFavorites } from '../hooks/useFavorites';
 import { formatCurrency } from '../utils/currency.util';
+import { MOCK_PRODUCTS } from '../data/mockProducts';
 import './ProductDetailPage.css';
-
-/* ── Mock data ── */
-const MOCK_PRODUCTS = {
-  1: {
-    id: 1, name: 'Sofa Heritage Royale', sku: 'LHC-001',
-    price: 78500000, rating: 4, reviewCount: 12,
-    subtitle: 'Vẻ đẹp hoàng gia, xứng tầm cao cấp',
-    description: 'Lấy cảm hứng từ phong cách Louis XV cổ điển, mẫu ghế bành này là sự kết hợp hoàn hảo giữa nghệ thuật chế tác tinh xảo và sắc nghĩ cao cấp, mang đến vẻ đẹp vượt thời gian đẳng cấp cho mọi không gian.',
-    dimensions: '92 x 88 x 118 cm',
-    material: 'Gỗ tự nhiên, nệm nhung cao cấp',
-    colors: [
-      { name: 'Đỏ rượu', hex: '#5c1a1a' },
-      { name: 'Xanh đêm', hex: '#1a2a3a' },
-      { name: 'Xanh rêu', hex: '#2a3a2a' },
-      { name: 'Be vàng', hex: '#c4aa8e' },
-    ],
-    images: [
-      '/images/anhghesofa.png',
-      '/images/anhghebandenkh.png',
-      '/images/anhbanghekh.png',
-      '/images/anhbobanghe.png',
-    ],
-    features: [
-      'Khung gỗ tự nhiên được chạm khắc tinh xảo bởi nghệ nhân lành nghề.',
-      'Nệm mút từ Đức đạt tiêu chuẩn cao cấp, êm ái và thư giãn.',
-      'Tay vịn nổi bật với họa tiết truyền thống độc đáo.',
-      'Phù hợp với phòng khách, phòng đọc sách hoặc không gian tiếp khách đẳng cấp.',
-    ],
-    specs: {
-      'Kích thước': '92 x 88 x 118 cm',
-      'Chất liệu khung': 'Gỗ tự nhiên cao cấp',
-      'Chất liệu bọc': 'Nhung cao cấp nhập khẩu',
-      'Màu sắc': 'Đỏ rượu / Xanh đêm / Xanh rêu / Be vàng',
-      'Trọng lượng': '45 kg',
-      'Xuất xứ': 'Việt Nam – Tiêu chuẩn Châu Âu',
-      'Bảo hành': '5 năm khung & kết cấu',
-    },
-    category: 'Ghế bành',
-  },
-  2: {
-    id: 2, name: 'Ghế Bành Louis XV', sku: 'LHC-001',
-    price: 24800000, rating: 4, reviewCount: 12,
-    subtitle: 'Vẻ đẹp hoàng gia, xứng tầm cao cấp',
-    description: 'Lấy cảm hứng từ phong cách Louis XV cổ điển, mẫu ghế bành này là sự kết hợp hoàn hảo giữa nghệ thuật chế tác tinh xảo và sắc nghĩ cao cấp, mang đến vẻ đẹp vượt thời gian đẳng cấp cho mọi không gian.',
-    dimensions: '92 x 88 x 118 cm',
-    material: 'Gỗ tự nhiên, nệm nhung cao cấp',
-    colors: [
-      { name: 'Đỏ rượu', hex: '#5c1a1a' },
-      { name: 'Xanh đêm', hex: '#1a2a3a' },
-      { name: 'Xanh rêu', hex: '#2a3a2a' },
-      { name: 'Be vàng', hex: '#c4aa8e' },
-    ],
-    images: [
-      '/images/anhghebandenkh.png',
-      '/images/anhghesofa.png',
-      '/images/anhbanghekh.png',
-      '/images/anhbobanghe.png',
-    ],
-    features: [
-      'Khung gỗ tự nhiên được chạm khắc tinh xảo bởi nghệ nhân lành nghề.',
-      'Nệm mút từ Đức đạt tiêu chuẩn cao cấp, êm ái và thư giãn.',
-      'Tay vịn nổi bật với họa tiết truyền thống độc đáo.',
-      'Phù hợp với phòng khách, phòng đọc sách hoặc không gian tiếp khách đẳng cấp.',
-    ],
-    specs: {
-      'Kích thước': '92 x 88 x 118 cm',
-      'Chất liệu khung': 'Gỗ tự nhiên cao cấp',
-      'Chất liệu bọc': 'Nhung cao cấp nhập khẩu',
-      'Màu sắc': 'Đỏ rượu / Xanh đêm / Xanh rêu / Be vàng',
-      'Trọng lượng': '45 kg',
-      'Xuất xứ': 'Việt Nam – Tiêu chuẩn Châu Âu',
-      'Bảo hành': '5 năm khung & kết cấu',
-    },
-    category: 'Ghế bành',
-  },
-};
 
 const RELATED = [
   { id: 1,  name: 'Ghế Bành Heritage Royale', price: 29800000, image: '/images/anhghesofa.png' },
@@ -100,7 +25,7 @@ const ProductDetailPage = () => {
   const { addToCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  const product = MOCK_PRODUCTS[id] || MOCK_PRODUCTS[2];
+  const product = MOCK_PRODUCTS.find(p => p.id === parseInt(id)) || MOCK_PRODUCTS[0];
 
   const [activeImg, setActiveImg]       = useState(0);
   const [selectedColor, setSelectedColor] = useState(product.colors[0]);
