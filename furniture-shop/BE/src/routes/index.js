@@ -11,6 +11,8 @@ const userRoutes = require('./user.routes');
 const uploadRoutes = require('./upload.routes');
 const collectionRoutes = require('./collection.routes');
 const couponRoutes = require('./coupon.routes');
+const aiRoutes = require('./ai.routes');
+const designRoomRoutes = require('./designRoom.routes');
 
 const router = express.Router();
 
@@ -26,5 +28,7 @@ router.use('/users', userRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/collections', collectionRoutes);
 router.use('/coupons', couponRoutes);
+router.use('/ai', aiRoutes);
+router.use('/design-room', designRoomRoutes);
 
 module.exports = router;

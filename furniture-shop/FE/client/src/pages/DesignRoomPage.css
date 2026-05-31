@@ -774,3 +774,153 @@
   .drp-samples-slider { flex-direction: column; }
   .drp-slider-nav { display: none; }
 }
+
+/* ══════════════════════════════════════════
+   FABRIC CANVAS CONTAINER
+══════════════════════════════════════════ */
+.drp-canvas-container {
+  position: relative;
+  width: 820px;
+  height: 500px;
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  background: #f5f0e8;
+}
+.drp-canvas-container canvas {
+  display: block;
+  border-radius: 10px;
+}
+.drp-canvas-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1;
+}
+.drp-canvas-empty-icon { font-size: 56px; opacity: 0.25; margin-bottom: 12px; }
+.drp-canvas-empty p { font-size: 14px; color: var(--text-muted); text-align: center; line-height: 1.7; }
+
+/* ── Toolbar ── */
+.drp-canvas-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.drp-tool-btn {
+  width: 36px;
+  height: 36px;
+  background: var(--bg-light);
+  border: 1.5px solid var(--border-light);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-mid);
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.drp-tool-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(201,151,58,0.06); }
+.drp-tool-btn.danger:hover { border-color: #e74c3c; color: #e74c3c; background: rgba(231,76,60,0.06); }
+.drp-tool-sep { width: 1px; height: 24px; background: var(--border-light); margin: 0 4px; }
+
+/* ── Footer canvas ── */
+.drp-canvas-footer {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.drp-placed-summary {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-mid);
+  padding: 10px 14px;
+  background: var(--bg-light);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+}
+.drp-placed-count { font-weight: 700; color: var(--gold); }
+.drp-placed-total strong { color: var(--gold); }
+.drp-placed-hint { color: var(--text-muted); font-style: italic; }
+
+.drp-save-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.drp-project-name {
+  flex: 1;
+  min-width: 160px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--bg-main);
+  color: var(--text-dark);
+  font-family: var(--sans);
+}
+.drp-project-name:focus { outline: none; border-color: var(--gold); }
+
+.drp-save-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #2a1f15, #3d2e1e);
+  color: var(--gold-light);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.drp-save-btn:hover:not(:disabled) { background: linear-gradient(135deg, #3d2e1e, #5c3d2e); transform: translateY(-1px); }
+.drp-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.drp-add-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: var(--brown);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.drp-add-all-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(201,151,58,0.4); }
+.drp-add-all-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.drp-save-msg {
+  font-size: 13px;
+  padding: 8px 14px;
+  background: var(--bg-light);
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  color: var(--text-mid);
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .drp-canvas-container { width: 100%; height: 380px; }
+  .drp-canvas-container canvas { width: 100% !important; height: 380px !important; }
+}
