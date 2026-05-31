@@ -10,6 +10,8 @@ import userApi from '../../apis/user.api';
 import productApi from '../../apis/product.api';
 import collectionApi from '../../apis/collection.api';
 import { orderApi } from '../../apis/order.api';
+import couponApi from '../../apis/coupon.api';
+import AdminCouponManage from './AdminCouponManage';
 import { getImageUrl } from '../../helpers/image.helper';
 import './AdminDashboard.css';
 
@@ -42,6 +44,7 @@ const DashboardPage = ({ initialTab = 'overview' }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [coupons, setCoupons] = useState([]);
 
   // ── MOCK DATA FOR THE MODULES ──
 
@@ -292,6 +295,9 @@ const DashboardPage = ({ initialTab = 'overview' }) => {
     fetchProducts();
     fetchCollections();
     fetchOrders();
+    couponApi.getAll()
+      .then((res) => { if (res?.success) setCoupons(res.data || []); })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -590,21 +596,6 @@ const DashboardPage = ({ initialTab = 'overview' }) => {
     }
   };
 
-  // 6. Coupon Setup
-  const [coupons, setCoupons] = useState([
-    { code: 'LAVISH2026', value: 20, type: 'PERCENTAGE', limit: 100, used: 45, status: 'ACTIVE' },
-    { code: 'HERITAGE100', value: 100000, type: 'FIXED', limit: 50, used: 12, status: 'ACTIVE' },
-    { code: 'ROYAL50', value: 50, type: 'PERCENTAGE', limit: 10, used: 10, status: 'EXPIRED' }
-  ]);
-
-  const [newCoupon, setNewCoupon] = useState(null);
-
-  const saveNewCoupon = (e) => {
-    e.preventDefault();
-    setCoupons(prev => [...prev, { ...newCoupon, used: 0, status: 'ACTIVE' }]);
-    setNewCoupon(null);
-  };
-
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -735,7 +726,7 @@ const DashboardPage = ({ initialTab = 'overview' }) => {
                 <div className="admin-stat-icon"><Tag size={24} /></div>
                 <div className="admin-stat-info">
                   <small>Mã giảm giá hoạt động</small>
-                  <strong>{coupons.filter(c => c.status === 'ACTIVE').length} mã coupon</strong>
+                  <strong>{coupons.filter(c => c.status === 'HOAT_DONG').length} mã coupon</strong>
                 </div>
               </div>
             </div>
@@ -1659,132 +1650,8 @@ const DashboardPage = ({ initialTab = 'overview' }) => {
           </>
         )}
 
-        {/* ── TAB: COUPON SETUP ── */}
         {activeTab === 'coupons' && (
-          <>
-            <div className="admin-content-header">
-              <div>
-                <h1>Thiết lập giảm giá</h1>
-                <p>Tạo và quản lý các mã giảm giá khuyến mãi (Coupons) cho khách hàng</p>
-              </div>
-            </div>
-
-            <div className="admin-data-card">
-              <div className="admin-table-actions">
-                <div style={{ color: 'var(--admin-text-muted)', fontSize: '13px' }}>
-                  Tổng cộng: {coupons.length} mã giảm giá
-                </div>
-                <button
-                  className="admin-btn-add"
-                  onClick={() => setNewCoupon({ code: '', value: '', type: 'PERCENTAGE', limit: '' })}
-                >
-                  <Plus size={16} /> Tạo mã mới
-                </button>
-              </div>
-
-              <div className="admin-table-container">
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Mã giảm giá</th>
-                      <th>Mức giảm</th>
-                      <th>Phân loại</th>
-                      <th>Lượt sử dụng</th>
-                      <th>Trạng thái</th>
-                      <th>Thao tác</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {coupons.map((c, i) => (
-                      <tr key={i}>
-                        <td><strong>{c.code}</strong></td>
-                        <td>
-                          {c.type === 'PERCENTAGE' ? `${c.value}%` : `${c.value.toLocaleString('vi-VN')} ₫`}
-                        </td>
-                        <td>
-                          <span className={`admin-badge ${c.type === 'PERCENTAGE' ? 'info' : 'warning'}`}>
-                            {c.type === 'PERCENTAGE' ? 'Tỉ lệ %' : 'Khấu trừ cố định'}
-                          </span>
-                        </td>
-                        <td>{c.used} / {c.limit} lượt</td>
-                        <td>
-                          <span className={`admin-badge ${c.status === 'ACTIVE' ? 'success' : 'danger'}`}>
-                            {c.status === 'ACTIVE' ? 'Hoạt động' : 'Hết hạn'}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className="admin-btn-action reject"
-                            onClick={() => setCoupons(prev => prev.filter((_, idx) => idx !== i))}
-                          >
-                            Xoá mã
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Modal Add Coupon */}
-            {newCoupon && (
-              <div className="admin-modal-overlay">
-                <div className="admin-modal">
-                  <h3>Tạo mã giảm giá mới</h3>
-                  <form onSubmit={saveNewCoupon}>
-                    <div className="admin-form-group">
-                      <label>Mã giảm giá (Viết hoa liền)</label>
-                      <input
-                        type="text"
-                        placeholder="VD: GIAMGIA10"
-                        value={newCoupon.code}
-                        onChange={e => setNewCoupon({ ...newCoupon, code: e.target.value.toUpperCase() })}
-                        required
-                      />
-                    </div>
-                    <div className="admin-form-group">
-                      <label>Loại giảm giá</label>
-                      <select
-                        value={newCoupon.type}
-                        onChange={e => setNewCoupon({ ...newCoupon, type: e.target.value })}
-                      >
-                        <option value="PERCENTAGE">Giảm theo tỉ lệ (%)</option>
-                        <option value="FIXED">Giảm số tiền cố định (₫)</option>
-                      </select>
-                    </div>
-                    <div className="admin-form-group">
-                      <label>Giá trị giảm</label>
-                      <input
-                        type="number"
-                        placeholder={newCoupon.type === 'PERCENTAGE' ? 'VD: 15' : 'VD: 50000'}
-                        value={newCoupon.value}
-                        onChange={e => setNewCoupon({ ...newCoupon, value: Number(e.target.value) })}
-                        required
-                      />
-                    </div>
-                    <div className="admin-form-group">
-                      <label>Giới hạn lượt dùng</label>
-                      <input
-                        type="number"
-                        value={newCoupon.limit}
-                        onChange={e => setNewCoupon({ ...newCoupon, limit: Number(e.target.value) })}
-                        required
-                      />
-                    </div>
-                    <div className="admin-modal-buttons">
-                      <button type="button" className="admin-btn-cancel" onClick={() => setNewCoupon(null)}>
-                        Hủy
-                      </button>
-                      <button type="submit" className="admin-btn-submit">
-                        Tạo Coupon
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            )}
-          </>
+          <AdminCouponManage onDataChange={setCoupons} />
         )}
 
         {/* ── TAB: ORDER MANAGEMENT ── */}

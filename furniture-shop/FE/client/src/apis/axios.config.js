@@ -29,8 +29,14 @@ axiosInstance.interceptors.response.use(
       || error.config?.url?.includes('/auth/register');
 
     if (error.response?.status === 401 && !isAuthRequest) {
-      removeToken();
-      window.location.href = '/login';
+      const path = window.location.pathname;
+      const isProtectedPage = path.startsWith('/profile')
+        || path.startsWith('/orders')
+        || path.startsWith('/admin');
+      if (isProtectedPage) {
+        removeToken();
+        window.location.href = '/login';
+      }
     }
 
     return Promise.reject(error);
