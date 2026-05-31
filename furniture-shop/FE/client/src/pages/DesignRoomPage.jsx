@@ -1,153 +1,360 @@
-import { useState, useRef, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { fabric } from 'fabric';
 import {
-  Upload, Plus, Minus, RotateCcw, ShoppingCart,
-  ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Move
+  Upload, Plus, RotateCcw, ShoppingCart,
+  ChevronLeft, ChevronRight, Download, Save,
+  Trash2, ArrowUp, ArrowDown, ZoomIn, ZoomOut
 } from 'lucide-react';
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
 import { formatCurrency } from '../utils/currency.util';
 import './DesignRoomPage.css';
 
-/* ── Dữ liệu mẫu ── */
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+/* ══════════════════════════════════════════
+   1. HELPER FUNCTIONS
+══════════════════════════════════════════ */
+const getThumbnail  = (name) => `/images/${name}`;
+const getTransparent = (name) => `/images/${name}`; // dùng cùng thư mục, thay bằng /images_nen/ nếu có ảnh nền trong suốt
+
+/* ══════════════════════════════════════════
+   2. DỮ LIỆU MẪU
+══════════════════════════════════════════ */
 const ROOM_PRESETS = [
-  { id: 1, name: 'Phòng Ngủ Hiện Đại',    style: 'Modern',         image: '/images/noi_that_01_hang1_cot1.png' },
-  { id: 2, name: 'Phòng Ngủ Cổ Điển Pháp', style: 'French Classic', image: '/images/noi_that_02_hang1_cot2.png' },
-  { id: 3, name: 'Phòng Khách Tân Cổ Điển', style: 'Neo Classic',   image: '/images/noi_that_03_hang1_cot3.png' },
-  { id: 4, name: 'Phòng Khách Hiện Đại Sang Trọng', style: 'Modern Luxury', image: '/images/noi_that_04_hang1_cot4.png' },
-  { id: 5, name: 'Phòng Ăn',              style: 'Luxury',          image: '/images/noi_that_05_hang1_cot5.png' },
-  { id: 6, name: 'Góc Làm Việc',          style: 'Indochine',       image: '/images/noi_that_06_hang1_cot6.png' },
+  { id: 1, name: 'Phòng Ngủ Hiện Đại',          style: 'Modern',         image: '/images/noi_that_01_hang1_cot1.png' },
+  { id: 2, name: 'Phòng Ngủ Cổ Điển Pháp',       style: 'French Classic', image: '/images/noi_that_02_hang1_cot2.png' },
+  { id: 3, name: 'Phòng Khách Tân Cổ Điển',      style: 'Neo Classic',    image: '/images/noi_that_03_hang1_cot3.png' },
+  { id: 4, name: 'Phòng Khách Sang Trọng',        style: 'Modern Luxury',  image: '/images/noi_that_05_hang1_cot5.png' },
+  { id: 5, name: 'Phòng Ăn',                      style: 'Luxury',         image: '/images/noi_that_06_hang1_cot6.png' },
+  { id: 6, name: 'Góc Làm Việc',                  style: 'Indochine',      image: '/images/noi_that_07_hang1_cot7.png' },
 ];
 
-const ROOM_TABS = ['Tất cả', 'Phòng khách', 'Phòng ngủ', 'Phòng ăn', 'Góc làm việc', 'Vệ sinh', 'Tủ & Kệ đầu', 'Cổ điển Thâm', 'Indochine', 'Luxury'];
+const SAMPLE_ROOMS = ROOM_PRESETS;
+
+const ROOM_TABS = ['Tất cả', 'Phòng khách', 'Phòng ngủ', 'Phòng ăn', 'Góc làm việc', 'Luxury'];
 
 const FURNITURE_CATEGORIES = [
   {
-    name: 'PHÒNG KHÁCH (30)',
+    name: 'PHÒNG KHÁCH',
     items: [
-      { id: 1, name: 'Phòng Khách Tân Cổ Điển', sub: 'Sofa Cổ / Bàn', price: 45000000, image: '/images/anhghesofa.png' },
-      { id: 2, name: 'Phòng Ngủ (18)', sub: '', price: 0, isCategory: true },
-    ]
+      { id: 1,  name: 'Sofa Heritage',        price: 45000000,  file: 'anhghesofa.png',        maSanPham: 1 },
+      { id: 2,  name: 'Bàn Trà Gỗ',           price: 12000000,  file: 'anhbanan.png',           maSanPham: 3 },
+      { id: 3,  name: 'Ghế Bành Louis XV',     price: 24800000,  file: 'anhghebandenkh.png',     maSanPham: 5 },
+      { id: 4,  name: 'Bàn Console',           price: 18000000,  file: 'anhbanghekh.png',        maSanPham: 2 },
+    ],
   },
   {
-    name: 'PHÒNG NGỦ (18)',
+    name: 'PHÒNG NGỦ',
     items: [
-      { id: 3, name: 'Giường Ngọc Bảo Đa Giường', sub: '', price: 98000000, image: '/images/anhgiuong.png' },
-      { id: 4, name: 'Tập Đèn Giường Cổ Điển Pháp Tủ Đỡ', sub: '', price: 28000000, image: '/images/anhgiuonghaiden.png' },
-    ]
+      { id: 5,  name: 'Giường Imperial',       price: 98000000,  file: 'anhgiuong.png',          maSanPham: 6 },
+      { id: 6,  name: 'Giường + Đèn Ngủ',      price: 28000000,  file: 'anhgiuonghaiden.png',    maSanPham: 7 },
+    ],
   },
   {
-    name: 'PHÒNG ĂN (34)',
+    name: 'PHÒNG ĂN',
     items: [
-      { id: 5, name: 'Bàn Ăn Cổ Điển Gỗ Tự Nhiên Bàn Ăn', sub: '', price: 125000000, image: '/images/anhbanan.png' },
-      { id: 6, name: 'Đèn Chùm Pha Lê Crystal Đèn Trang Trí', sub: '', price: 18900000, image: '/images/anhbanandai.png' },
-    ]
+      { id: 7,  name: 'Bàn Ăn Grand Palace',   price: 125000000, file: 'anhbobanghe.png',        maSanPham: 4 },
+      { id: 8,  name: 'Bàn Ăn Dài',            price: 62000000,  file: 'anhbanandai.png',        maSanPham: 8 },
+    ],
   },
   {
-    name: 'THẢM (12)',
+    name: 'TRANG TRÍ',
     items: [
-      { id: 7, name: 'Thảm Cổ Điển Hoa Văn Thảm', sub: '', price: 8500000, image: '/images/noi_that_07_hang1_cot7.png' },
-    ]
-  },
-  {
-    name: 'PHỤ KIỆN TRANG TRÍ (51)',
-    items: [
-      { id: 8, name: 'Bình Hoa Trang Trí Decorative Vase Tủ Decor', sub: '', price: 3200000, image: '/images/noi_that_08_hang2_cot1.png' },
-    ]
+      { id: 9,  name: 'Đèn Sàn',               price: 8500000,   file: 'dendung.png',            maSanPham: 8 },
+      { id: 10, name: 'Đèn Ngủ',               price: 3200000,   file: 'denngu.png',             maSanPham: 8 },
+    ],
   },
 ];
 
-const SAMPLE_ROOMS = [
-  { id: 1, name: 'Phòng Ngủ Hiện Đại',    style: 'Modern',         image: '/images/noi_that_01_hang1_cot1.png' },
-  { id: 2, name: 'Phòng Ngủ Cổ Điển Pháp', style: 'French Classic', image: '/images/noi_that_02_hang1_cot2.png' },
-  { id: 3, name: 'Phòng Khách Tân Cổ Điển', style: 'Neo Classic',   image: '/images/noi_that_03_hang1_cot3.png' },
-  { id: 4, name: 'Phòng Khách Sang Trọng', style: 'Modern Luxury',  image: '/images/noi_that_04_hang1_cot4.png' },
-  { id: 5, name: 'Phòng Ăn Hoa Hiện Đại', style: 'Modern Luxury',   image: '/images/noi_that_05_hang1_cot5.png' },
-  { id: 6, name: 'Góc Làm Việc Indochine', style: 'Indochine',      image: '/images/noi_that_06_hang1_cot6.png' },
-];
-
+/* ══════════════════════════════════════════
+   3. COMPONENT CHÍNH
+══════════════════════════════════════════ */
 const DesignRoomPage = () => {
-  const fileInputRef = useRef(null);
-  const canvasRef    = useRef(null);
+  const fileInputRef  = useRef(null);
+  const canvasElRef   = useRef(null);   // <canvas> DOM element
+  const fabricRef     = useRef(null);   // fabric.Canvas instance
 
-  const [uploadedImage, setUploadedImage]   = useState(null);
+  const [activeRoomTab,  setActiveRoomTab]  = useState('Tất cả');
   const [selectedPreset, setSelectedPreset] = useState(null);
-  const [activeRoomTab, setActiveRoomTab]   = useState('Tất cả');
-  const [placedItems, setPlacedItems]       = useState([]);
-  const [selectedItem, setSelectedItem]     = useState(null);
-  const [isDragging, setIsDragging]         = useState(false);
-  const [dragOver, setDragOver]             = useState(false);
-  const [samplePage, setSamplePage]         = useState(0);
-  const SAMPLES_PER_PAGE = 3;
+  const [samplePage,     setSamplePage]     = useState(0);
+  const [hasBackground,  setHasBackground]  = useState(false);
+  const [placedCount,    setPlacedCount]    = useState(0);
+  const [totalPrice,     setTotalPrice]     = useState(0);
+  const [saving,         setSaving]         = useState(false);
+  const [saveMsg,        setSaveMsg]        = useState('');
+  const [projectName,    setProjectName]    = useState('Thiết kế của tôi');
+  const [zoom,           setZoom]           = useState(1);
 
-  /* ── Upload ảnh ── */
+  const SAMPLES_PER_PAGE = 3;
+  const CANVAS_W = 820;
+  const CANVAS_H = 500;
+
+  /* ── Khởi tạo Fabric Canvas ── */
+  useEffect(() => {
+    const canvas = new fabric.Canvas(canvasElRef.current, {
+      width:               CANVAS_W,
+      height:              CANVAS_H,
+      backgroundColor:     '#f5f0e8',
+      preserveObjectStacking: true,
+      selection:           true,
+    });
+    fabricRef.current = canvas;
+
+    // Cập nhật tổng giá khi thêm/xóa object
+    const updateStats = () => {
+      const objs = canvas.getObjects().filter(o => o._furniturePrice);
+      setPlacedCount(objs.length);
+      setTotalPrice(objs.reduce((s, o) => s + (o._furniturePrice || 0), 0));
+    };
+    canvas.on('object:added',   updateStats);
+    canvas.on('object:removed', updateStats);
+
+    return () => {
+      canvas.off('object:added');
+      canvas.off('object:removed');
+      canvas.dispose();
+    };
+  }, []);
+
+  /* ── Đặt ảnh nền vào Canvas ── */
+  const setCanvasBackground = useCallback((imgSrc) => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
+    fabric.Image.fromURL(imgSrc, (img) => {
+      const scaleX = CANVAS_W / img.width;
+      const scaleY = CANVAS_H / img.height;
+      const scale  = Math.max(scaleX, scaleY);
+      canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+        scaleX: scale,
+        scaleY: scale,
+        originX: 'left',
+        originY: 'top',
+      });
+      setHasBackground(true);
+    }, { crossOrigin: 'anonymous' });
+  }, []);
+
+  /* ── Upload ảnh phòng ── */
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      setUploadedImage(ev.target.result);
-      setSelectedPreset(null);
-    };
+    reader.onload = (ev) => setCanvasBackground(ev.target.result);
     reader.readAsDataURL(file);
   };
 
   const handleDrop = useCallback((e) => {
     e.preventDefault();
-    setDragOver(false);
     const file = e.dataTransfer.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      setUploadedImage(ev.target.result);
-      setSelectedPreset(null);
-    };
+    reader.onload = (ev) => setCanvasBackground(ev.target.result);
     reader.readAsDataURL(file);
-  }, []);
+  }, [setCanvasBackground]);
 
-  /* ── Chọn preset phòng ── */
+  /* ── Chọn preset ── */
   const handleSelectPreset = (preset) => {
     setSelectedPreset(preset);
-    setUploadedImage(null);
+    setCanvasBackground(preset.image);
   };
 
-  /* ── Thêm nội thất vào canvas ── */
-  const handleAddFurniture = (item) => {
-    const newItem = {
-      ...item,
-      instanceId: Date.now(),
-      x: 100 + Math.random() * 200,
-      y: 100 + Math.random() * 150,
-      scale: 1,
-      rotation: 0,
-    };
-    setPlacedItems(prev => [...prev, newItem]);
-    setSelectedItem(newItem.instanceId);
+  /* ── Thêm nội thất vào Canvas (Fabric.js) ── */
+  const handleAddFurniture = useCallback((item) => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
+
+    const imgSrc = getTransparent(item.file);
+    fabric.Image.fromURL(imgSrc, (img) => {
+      // Scale vừa phải (~200px chiều rộng)
+      const maxW = 200;
+      const scale = maxW / img.width;
+      img.set({
+        left:          CANVAS_W / 2 - (img.width * scale) / 2 + (Math.random() - 0.5) * 80,
+        top:           CANVAS_H / 2 - (img.height * scale) / 2 + (Math.random() - 0.5) * 60,
+        scaleX:        scale,
+        scaleY:        scale,
+        cornerColor:   '#c9973a',
+        cornerSize:    10,
+        transparentCorners: false,
+        borderColor:   '#c9973a',
+        // Metadata
+        _furnitureName:  item.name,
+        _furniturePrice: item.price,
+        _furnitureFile:  item.file,
+        _maSanPham:      item.maSanPham,
+      });
+      canvas.add(img);
+      canvas.setActiveObject(img);
+      canvas.renderAll();
+    }, { crossOrigin: 'anonymous' });
+  }, []);
+
+  /* ── Toolbar: Xóa object đang chọn ── */
+  const handleDeleteSelected = () => {
+    const canvas = fabricRef.current;
+    const obj = canvas?.getActiveObject();
+    if (obj) { canvas.remove(obj); canvas.renderAll(); }
   };
 
-  /* ── Xóa item ── */
-  const handleRemoveItem = (instanceId) => {
-    setPlacedItems(prev => prev.filter(i => i.instanceId !== instanceId));
-    if (selectedItem === instanceId) setSelectedItem(null);
+  /* ── Toolbar: Đưa lên trước ── */
+  const handleBringForward = () => {
+    const canvas = fabricRef.current;
+    const obj = canvas?.getActiveObject();
+    if (obj) { obj.bringForward(); canvas.renderAll(); }
   };
 
-  /* ── Thêm tất cả vào giỏ ── */
-  const handleAddAllToCart = () => {
-    if (placedItems.length === 0) {
-      alert('Chưa có sản phẩm nào trong không gian!');
-      return;
+  /* ── Toolbar: Đưa ra sau ── */
+  const handleSendBackward = () => {
+    const canvas = fabricRef.current;
+    const obj = canvas?.getActiveObject();
+    if (obj) { obj.sendBackwards(); canvas.renderAll(); }
+  };
+
+  /* ── Toolbar: Reset canvas ── */
+  const handleReset = () => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
+    canvas.getObjects().forEach(o => canvas.remove(o));
+    canvas.backgroundImage = null;
+    canvas.backgroundColor = '#f5f0e8';
+    canvas.renderAll();
+    setHasBackground(false);
+    setSelectedPreset(null);
+  };
+
+  /* ── Zoom ── */
+  const handleZoom = (delta) => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
+    const newZoom = Math.min(3, Math.max(0.3, zoom + delta));
+    canvas.setZoom(newZoom);
+    setZoom(newZoom);
+  };
+
+  /* ── Snapshot: Xuất ảnh ── */
+  const handleSnapshot = () => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
+    const dataUrl = canvas.toDataURL({ format: 'png', quality: 1, multiplier: 2 });
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `${projectName.replace(/\s+/g, '-')}.png`;
+    a.click();
+  };
+
+  /* ── Lưu thiết kế lên BE ── */
+  const handleSaveDesign = async () => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
+    setSaving(true);
+    setSaveMsg('');
+
+    try {
+      // Lấy snapshot base64
+      const hinhAnhBase64 = canvas.toDataURL({ format: 'png', quality: 0.8 });
+
+      // Lấy tọa độ tất cả objects
+      const items = canvas.getObjects()
+        .filter(o => o._maSanPham)
+        .map(o => ({
+          maSanPham: o._maSanPham,
+          soLuong:   1,
+          viTriX:    Math.round(o.left),
+          viTriY:    Math.round(o.top),
+          tiLe:      parseFloat((o.scaleX).toFixed(3)),
+          gocXoay:   Math.round(o.angle || 0),
+        }));
+
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/design-room`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ tenDuAn: projectName, hinhAnhBase64, items }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setSaveMsg(`✅ Đã lưu! Mã dự án: #${data.data.maDuAn}`);
+      } else {
+        setSaveMsg(`❌ ${data.message}`);
+      }
+    } catch (e) {
+      setSaveMsg('❌ Lỗi kết nối máy chủ.');
+    } finally {
+      setSaving(false);
     }
-    alert(`Đã thêm ${placedItems.length} sản phẩm vào giỏ hàng!`);
   };
 
-  const currentBg = uploadedImage || selectedPreset?.image || null;
-  const totalPrice = placedItems.reduce((s, i) => s + (i.price || 0), 0);
+  /* ── Load thiết kế từ BE ── */
+  const handleLoadDesign = async (id) => {
+    const canvas = fabricRef.current;
+    if (!canvas) return;
+
+    try {
+      const res  = await fetch(`${API_BASE}/design-room/${id}`);
+      const data = await res.json();
+      if (!data.success) return alert(data.message);
+
+      const { duAn, items } = data.data;
+
+      // Xóa canvas cũ
+      canvas.getObjects().forEach(o => canvas.remove(o));
+
+      // Đặt ảnh nền nếu có
+      if (duAn.HinhAnhKhongGian) {
+        setCanvasBackground(`http://localhost:5000${duAn.HinhAnhKhongGian}`);
+      }
+
+      // Load từng sản phẩm theo tọa độ đã lưu
+      for (const item of items) {
+        await new Promise((resolve) => {
+          const imgSrc = item.HinhAnhChinh || '/images/anhghesofa.png';
+          fabric.Image.fromURL(imgSrc, (img) => {
+            img.set({
+              left:   item.ViTriX,
+              top:    item.ViTriY,
+              scaleX: item.TiLe,
+              scaleY: item.TiLe,
+              angle:  item.GocXoay,
+              _furnitureName:  item.TenSanPham,
+              _furniturePrice: item.GiaBan,
+              _maSanPham:      item.MaSanPham,
+              cornerColor:     '#c9973a',
+              borderColor:     '#c9973a',
+            });
+            canvas.add(img);
+            resolve();
+          }, { crossOrigin: 'anonymous' });
+        });
+      }
+      canvas.renderAll();
+    } catch (e) {
+      alert('Không thể tải thiết kế: ' + e.message);
+    }
+  };
+
+  /* ── Filter furniture theo tab ── */
+  const filteredCategories = FURNITURE_CATEGORIES.filter(cat => {
+    if (activeRoomTab === 'Tất cả') return true;
+    if (activeRoomTab === 'Phòng khách') return cat.name === 'PHÒNG KHÁCH';
+    if (activeRoomTab === 'Phòng ngủ')  return cat.name === 'PHÒNG NGỦ';
+    if (activeRoomTab === 'Phòng ăn')   return cat.name === 'PHÒNG ĂN';
+    if (activeRoomTab === 'Luxury')     return cat.name === 'TRANG TRÍ';
+    return true;
+  });
 
   const visibleSamples = SAMPLE_ROOMS.slice(
     samplePage * SAMPLES_PER_PAGE,
     samplePage * SAMPLES_PER_PAGE + SAMPLES_PER_PAGE
   );
 
+  /* ══════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════ */
   return (
     <div className="lavish-root">
       <DauTrang />
@@ -160,43 +367,30 @@ const DesignRoomPage = () => {
           <div className="drp-hero-content container">
             <div className="drp-hero-eyebrow">✦ Trải Nghiệm Độc Quyền</div>
             <h1 className="drp-hero-title">CÁ NHÂN HÓA KHÔNG GIAN</h1>
-            <p className="drp-hero-sub">Tải ảnh phòng của bạn hoặc chọn mẫu có sẵn, sau đó thêm nội thất để xem trước không gian sống trong mơ</p>
+            <p className="drp-hero-sub">
+              Tải ảnh phòng của bạn hoặc chọn mẫu có sẵn, kéo thả nội thất để xem trước không gian sống trong mơ
+            </p>
           </div>
         </div>
 
         <div className="container">
 
-          {/* ══════════════════════════════════
-              SECTION A+B: Upload + Preset
-          ══════════════════════════════════ */}
+          {/* ══ A+B: Upload + Preset ══ */}
           <div className="drp-setup-grid">
 
-            {/* A. Tải ảnh */}
+            {/* A. Upload */}
             <div className="drp-upload-panel">
               <div className="drp-panel-label">A. TẢI ẢNH PHÒNG CỦA BẠN</div>
               <div
-                className={`drp-dropzone ${dragOver ? 'drag-over' : ''} ${uploadedImage ? 'has-image' : ''}`}
-                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
+                className="drp-dropzone"
+                onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
-                onClick={() => !uploadedImage && fileInputRef.current?.click()}
+                onClick={() => fileInputRef.current?.click()}
               >
-                {uploadedImage ? (
-                  <>
-                    <img src={uploadedImage} alt="Phòng của bạn" className="drp-preview-img" />
-                    <button
-                      className="drp-remove-img"
-                      onClick={(e) => { e.stopPropagation(); setUploadedImage(null); }}
-                    >×</button>
-                  </>
-                ) : (
-                  <div className="drp-dropzone-inner">
-                    <div className="drp-upload-icon">
-                      <Upload size={36} />
-                    </div>
-                    <p>Kéo và thả ảnh vào đây<br />hoặc nhấp để chọn ảnh</p>
-                  </div>
-                )}
+                <div className="drp-dropzone-inner">
+                  <div className="drp-upload-icon"><Upload size={36} /></div>
+                  <p>Kéo và thả ảnh vào đây<br />hoặc nhấp để chọn ảnh</p>
+                </div>
               </div>
               <input
                 ref={fileInputRef}
@@ -211,14 +405,14 @@ const DesignRoomPage = () => {
               <p className="drp-upload-hint">Hỗ trợ JPG, PNG.</p>
             </div>
 
-            {/* Divider "hoặc" */}
+            {/* Divider */}
             <div className="drp-or-divider">
               <div className="drp-or-line" />
               <div className="drp-or-circle">hoặc</div>
               <div className="drp-or-line" />
             </div>
 
-            {/* B. Chọn mẫu có sẵn */}
+            {/* B. Preset */}
             <div className="drp-preset-panel">
               <div className="drp-panel-label">B. CHỌN MẪU CÓ SẴN</div>
               <div className="drp-preset-grid">
@@ -229,10 +423,8 @@ const DesignRoomPage = () => {
                     onClick={() => handleSelectPreset(preset)}
                   >
                     <div className="drp-preset-img">
-                      <img src={preset.image} alt={preset.name} />
-                      {selectedPreset?.id === preset.id && (
-                        <div className="drp-preset-check">✓</div>
-                      )}
+                      <img src={getThumbnail(preset.image.replace('/images/', ''))} alt={preset.name} />
+                      {selectedPreset?.id === preset.id && <div className="drp-preset-check">✓</div>}
                     </div>
                     <div className="drp-preset-name">{preset.name}</div>
                     <div className="drp-preset-style">{preset.style}</div>
@@ -242,9 +434,7 @@ const DesignRoomPage = () => {
             </div>
           </div>
 
-          {/* ══════════════════════════════════
-              SECTION: TRẢI NGHIỆM NỘI THẤT
-          ══════════════════════════════════ */}
+          {/* ══ CANVAS WORKSPACE ══ */}
           <div className="drp-experience-section">
             <h2 className="drp-section-title">TRẢI NGHIỆM PHỐI NỘI THẤT</h2>
 
@@ -255,34 +445,30 @@ const DesignRoomPage = () => {
                   key={tab}
                   className={`drp-room-tab ${activeRoomTab === tab ? 'active' : ''}`}
                   onClick={() => setActiveRoomTab(tab)}
-                >
-                  {tab}
-                </button>
+                >{tab}</button>
               ))}
             </div>
 
             <div className="drp-workspace">
 
-              {/* Left: Furniture list */}
+              {/* Left: Danh sách nội thất */}
               <div className="drp-furniture-list">
-                {FURNITURE_CATEGORIES.map((cat, ci) => (
+                {filteredCategories.map((cat, ci) => (
                   <div key={ci} className="drp-fcat">
                     <div className="drp-fcat-title">{cat.name}</div>
                     {cat.items.map(item => (
                       <div key={item.id} className="drp-fitem">
                         <div className="drp-fitem-img">
-                          <img src={item.image} alt={item.name} />
+                          <img src={getThumbnail(item.file)} alt={item.name} />
                         </div>
                         <div className="drp-fitem-info">
                           <div className="drp-fitem-name">{item.name}</div>
-                          {item.price > 0 && (
-                            <div className="drp-fitem-price">{formatCurrency(item.price)}</div>
-                          )}
+                          <div className="drp-fitem-price">{formatCurrency(item.price)}</div>
                         </div>
                         <button
                           className="drp-fitem-add"
                           onClick={() => handleAddFurniture(item)}
-                          title="Thêm vào không gian"
+                          title="Thêm vào canvas"
                         >
                           <Plus size={14} />
                         </button>
@@ -292,113 +478,84 @@ const DesignRoomPage = () => {
                 ))}
               </div>
 
-              {/* Right: Canvas */}
+              {/* Right: Fabric Canvas */}
               <div className="drp-canvas-wrap">
-                {/* Canvas area */}
-                <div
-                  className="drp-canvas"
-                  style={{
-                    backgroundImage: currentBg ? `url(${currentBg})` : 'none',
-                  }}
-                >
-                  {!currentBg && (
+
+                {/* Toolbar trên */}
+                <div className="drp-canvas-toolbar">
+                  <button className="drp-tool-btn" title="Phóng to"    onClick={() => handleZoom(0.1)}><ZoomIn size={16} /></button>
+                  <button className="drp-tool-btn" title="Thu nhỏ"     onClick={() => handleZoom(-0.1)}><ZoomOut size={16} /></button>
+                  <div className="drp-tool-sep" />
+                  <button className="drp-tool-btn" title="Lên trước"   onClick={handleBringForward}><ArrowUp size={16} /></button>
+                  <button className="drp-tool-btn" title="Ra sau"      onClick={handleSendBackward}><ArrowDown size={16} /></button>
+                  <button className="drp-tool-btn danger" title="Xóa đang chọn" onClick={handleDeleteSelected}><Trash2 size={16} /></button>
+                  <div className="drp-tool-sep" />
+                  <button className="drp-tool-btn" title="Làm mới"     onClick={handleReset}><RotateCcw size={16} /></button>
+                  <button className="drp-tool-btn" title="Xuất ảnh"    onClick={handleSnapshot}><Download size={16} /></button>
+                </div>
+
+                {/* Canvas element */}
+                <div className="drp-canvas-container">
+                  <canvas ref={canvasElRef} />
+                  {!hasBackground && (
                     <div className="drp-canvas-empty">
                       <div className="drp-canvas-empty-icon">🏠</div>
                       <p>Tải ảnh phòng hoặc chọn mẫu có sẵn<br />để bắt đầu phối nội thất</p>
                     </div>
                   )}
-
-                  {/* Placed furniture items */}
-                  {placedItems.map(item => (
-                    <div
-                      key={item.instanceId}
-                      className={`drp-placed-item ${selectedItem === item.instanceId ? 'selected' : ''}`}
-                      style={{
-                        left: item.x,
-                        top:  item.y,
-                        transform: `scale(${item.scale}) rotate(${item.rotation}deg)`,
-                      }}
-                      onClick={() => setSelectedItem(item.instanceId)}
-                    >
-                      <img src={item.image} alt={item.name} />
-                      {selectedItem === item.instanceId && (
-                        <button
-                          className="drp-item-remove"
-                          onClick={(e) => { e.stopPropagation(); handleRemoveItem(item.instanceId); }}
-                        >×</button>
-                      )}
-                    </div>
-                  ))}
-
-                  {/* Canvas hint */}
-                  {currentBg && placedItems.length === 0 && (
-                    <div className="drp-canvas-hint">
-                      💡 Nhấn <strong>+</strong> bên trái để thêm nội thất vào không gian
-                    </div>
-                  )}
-
-                  {/* Canvas toolbar */}
-                  {currentBg && (
-                    <div className="drp-canvas-toolbar">
-                      <button className="drp-tool-btn" title="Phóng to"><ZoomIn size={16} /></button>
-                      <button className="drp-tool-btn" title="Thu nhỏ"><ZoomOut size={16} /></button>
-                      <button className="drp-tool-btn" title="Di chuyển"><Move size={16} /></button>
-                      <button className="drp-tool-btn" title="Đặt lại" onClick={() => setPlacedItems([])}><RotateCcw size={16} /></button>
-                    </div>
-                  )}
                 </div>
 
-                {/* Placed items summary */}
-                {placedItems.length > 0 && (
+                {/* Summary + Save */}
+                <div className="drp-canvas-footer">
                   <div className="drp-placed-summary">
-                    <div className="drp-placed-list">
-                      {placedItems.map(item => (
-                        <div key={item.instanceId} className="drp-placed-tag">
-                          <img src={item.image} alt={item.name} />
-                          <span>{item.name}</span>
-                          <button onClick={() => handleRemoveItem(item.instanceId)}>×</button>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="drp-placed-total">
-                      Tổng: <strong>{formatCurrency(totalPrice)}</strong>
-                    </div>
+                    {placedCount > 0 ? (
+                      <>
+                        <span className="drp-placed-count">{placedCount} sản phẩm</span>
+                        <span className="drp-placed-total">Tổng: <strong>{formatCurrency(totalPrice)}</strong></span>
+                      </>
+                    ) : (
+                      <span className="drp-placed-hint">💡 Nhấn <strong>+</strong> để thêm nội thất</span>
+                    )}
                   </div>
-                )}
 
-                {/* Add all to cart */}
-                <button
-                  className="drp-add-all-btn"
-                  onClick={handleAddAllToCart}
-                  disabled={placedItems.length === 0}
-                >
-                  <ShoppingCart size={20} />
-                  THÊM TẤT CẢ VÀO GIỎ
-                  {placedItems.length > 0 && (
-                    <span className="drp-cart-count">{placedItems.length}</span>
-                  )}
-                </button>
+                  <div className="drp-save-row">
+                    <input
+                      className="drp-project-name"
+                      value={projectName}
+                      onChange={e => setProjectName(e.target.value)}
+                      placeholder="Tên dự án..."
+                    />
+                    <button
+                      className="drp-save-btn"
+                      onClick={handleSaveDesign}
+                      disabled={saving}
+                    >
+                      <Save size={16} />
+                      {saving ? 'Đang lưu...' : 'LƯU THIẾT KẾ'}
+                    </button>
+                    <button className="drp-add-all-btn" onClick={() => alert(`Đã thêm ${placedCount} sản phẩm vào giỏ!`)} disabled={placedCount === 0}>
+                      <ShoppingCart size={16} /> THÊM VÀO GIỎ
+                    </button>
+                  </div>
+
+                  {saveMsg && <div className="drp-save-msg">{saveMsg}</div>}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* ══════════════════════════════════
-              SECTION: MẪU KHÔNG GIAN CÓ SẴN
-          ══════════════════════════════════ */}
+          {/* ══ MẪU KHÔNG GIAN ══ */}
           <div className="drp-samples-section">
             <h2 className="drp-section-title">MẪU KHÔNG GIAN CÓ SẴN</h2>
-
             <div className="drp-samples-slider">
               <button
                 className="drp-slider-nav prev"
                 onClick={() => setSamplePage(p => Math.max(0, p - 1))}
                 disabled={samplePage === 0}
-              >
-                <ChevronLeft size={22} />
-              </button>
+              ><ChevronLeft size={22} /></button>
 
               <div className="drp-samples-grid">
-                {SAMPLE_ROOMS.map((room, idx) => (
+                {visibleSamples.map((room, idx) => (
                   <div
                     key={room.id}
                     className="drp-sample-card"
@@ -423,9 +580,7 @@ const DesignRoomPage = () => {
                 className="drp-slider-nav next"
                 onClick={() => setSamplePage(p => p + 1)}
                 disabled={(samplePage + 1) * SAMPLES_PER_PAGE >= SAMPLE_ROOMS.length}
-              >
-                <ChevronRight size={22} />
-              </button>
+              ><ChevronRight size={22} /></button>
             </div>
           </div>
 
