@@ -8,6 +8,7 @@ const favoriteRoutes = require('./favorite.routes');
 const compareRoutes = require('./compare.routes');
 const dbRoutes = require('./db.routes');
 const userRoutes = require('./user.routes');
+const uploadRoutes = require('./upload.routes');
 
 const router = express.Router();
 
@@ -20,5 +21,6 @@ router.use('/favorites', favoriteRoutes);
 router.use('/compare', compareRoutes);
 router.use('/db', dbRoutes);
 router.use('/users', userRoutes);
+router.use('/upload', uploadRoutes);
 
 module.exports = router;

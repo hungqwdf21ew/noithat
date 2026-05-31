@@ -1,53 +1,127 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Package, Truck, CheckCircle, CreditCard, MapPin, Receipt, Download, ArrowLeft } from 'lucide-react';
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
+import { orderApi } from '../apis/order.api';
+import { getImageUrl } from '../helpers/image.helper';
 import './OrderDetailPage.css';
 
-// Mock data (In real app, fetch from API using ID)
-const mockOrderDetails = {
-  id: '#ORD-2026-001',
-  date: '28-05-2026 14:30',
-  status: 'DELIVERED', // PROCESSING, SHIPPED, DELIVERED
-  paymentMethod: 'Thanh toán qua VNPAY',
-  paymentStatus: 'Đã thanh toán',
-  shippingAddress: {
-    name: 'Nguyễn Văn A',
-    phone: '0901234567',
-    address: '123 Đường Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh'
-  },
-  timeline: [
-    { status: 'Đặt hàng thành công', date: '28-05-2026 14:30', completed: true },
-    { status: 'Đang xử lý', date: '28-05-2026 15:00', completed: true },
-    { status: 'Đang giao hàng', date: '29-05-2026 08:30', completed: true },
-    { status: 'Giao hàng thành công', date: '30-05-2026 10:15', completed: true }
-  ],
-  items: [
-    {
-      name: 'Sofa Da Cao Cấp - Milano',
-      quantity: 1,
-      price: 10500000,
-      image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=200&q=80'
-    },
-    {
-      name: 'Bàn Trà Kính Cường Lực',
-      quantity: 1,
-      price: 2000000,
-      image: 'https://images.unsplash.com/photo-1533090481720-856c6e3c1fdc?auto=format&fit=crop&w=200&q=80'
-    }
-  ],
-  summary: {
-    subtotal: 12500000,
-    shipping: 150000,
-    discount: -150000,
-    total: 12500000
+const PAYMENT_LABEL = {
+  THANH_TOAN_KHI_NHAN_HANG: 'Thanh toán khi nhận hàng (COD)',
+  CHUYEN_KHOAN: 'Chuyển khoản ngân hàng',
+  MOMO: 'Ví MoMo',
+  VNPAY: 'Cổng VNPAY',
+};
+
+const getTimeline = (status, dateStr) => {
+  const date = new Date(dateStr).toLocaleDateString('vi-VN', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+
+  if (status === 'DA_HUY') {
+    return [
+      { status: 'Đặt hàng thành công', date, completed: true },
+      { status: 'Đã hủy đơn hàng', date, completed: true }
+    ];
   }
+
+  return [
+    { status: 'Đặt hàng thành công', date, completed: true },
+    { status: 'Đang xử lý', date: '', completed: ['DA_XAC_NHAN', 'DANG_GIAO', 'HOAN_THANH'].includes(status) },
+    { status: 'Đang giao hàng', date: '', completed: ['DANG_GIAO', 'HOAN_THANH'].includes(status) },
+    { status: 'Giao hàng thành công', date: '', completed: status === 'HOAN_THANH' }
+  ];
+};
+
+const mapOrderData = (raw) => {
+  return {
+    id: raw.MaDonHangCode,
+    date: new Date(raw.NgayTao).toLocaleDateString('vi-VN', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    }),
+    status: raw.TrangThaiDonHang,
+    paymentMethod: PAYMENT_LABEL[raw.PhuongThucThanhToan] || raw.PhuongThucThanhToan,
+    paymentStatus: raw.TrangThaiThanhToan === 'DA_THANH_TOAN' ? 'Đã thanh toán' : 'Chưa thanh toán',
+    shippingAddress: {
+      name: raw.TenKhachHang,
+      phone: raw.SoDienThoai,
+      address: raw.DiaChiGiaoHang
+    },
+    timeline: getTimeline(raw.TrangThaiDonHang, raw.NgayTao),
+    items: (raw.chiTiet || []).map(item => ({
+      name: item.TenSanPham,
+      quantity: item.SoLuong,
+      price: Number(item.DonGia),
+      image: getImageUrl(item.HinhAnhChinh)
+    })),
+    summary: {
+      subtotal: Number(raw.TamTinh),
+      shipping: Number(raw.PhiVanChuyen),
+      discount: -Number(raw.TienGiam || 0),
+      total: Number(raw.TongTien)
+    }
+  };
 };
 
 const OrderDetailPage = () => {
   const { id } = useParams();
-  const order = mockOrderDetails; // Ideally: fetchOrderById(id)
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await orderApi.getOrderDetail(id);
+        if (res.success) {
+          setOrder(mapOrderData(res.data));
+        } else {
+          setError(res.message || 'Không thể tải chi tiết đơn hàng.');
+        }
+      } catch (err) {
+        console.error('[fetchOrder]', err);
+        setError(err.message || 'Không thể tải chi tiết đơn hàng.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrder();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="lavish-root">
+        <DauTrang />
+        <main className="order-detail-page" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ color: 'var(--text-light)', fontSize: 16 }}>Đang tải thông tin đơn hàng...</div>
+        </main>
+        <ChanTrang />
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className="lavish-root">
+        <DauTrang />
+        <main className="order-detail-page" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ textAlign: 'center' }}>
+            <h2 style={{ color: 'var(--text-light)', marginBottom: 12 }}>Có lỗi xảy ra</h2>
+            <p style={{ color: 'var(--text-muted)', marginBottom: 20 }}>{error || 'Không tìm thấy đơn hàng.'}</p>
+            <Link to="/orders" className="co-btn-outline" style={{ display: 'inline-flex', padding: '10px 20px', borderRadius: '4px', textDecoration: 'none' }}>
+              Quay lại danh sách đơn hàng
+            </Link>
+          </div>
+        </main>
+        <ChanTrang />
+      </div>
+    );
+  }
 
   return (
     <div className="lavish-root">

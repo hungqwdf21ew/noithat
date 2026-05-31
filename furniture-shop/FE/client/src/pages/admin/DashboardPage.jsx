@@ -7,6 +7,8 @@ import {
   Star, Home, DollarSign, TrendingUp, UserCheck, X
 } from 'lucide-react';
 import userApi from '../../apis/user.api';
+import productApi from '../../apis/product.api';
+import { getImageUrl } from '../../helpers/image.helper';
 import './AdminDashboard.css';
 
 const DashboardPage = () => {
@@ -50,8 +52,24 @@ const DashboardPage = () => {
     }
   };
 
+  const [dbCategories, setDbCategories] = useState([]);
+  const [editingProd, setEditingProd] = useState(null);
+
+  const fetchProducts = async () => {
+    try {
+      const res = await productApi.getAll();
+      if (res && res.success) {
+        setProducts(res.data.products);
+        setDbCategories(res.data.categories);
+      }
+    } catch (err) {
+      console.error('Error fetching products:', err);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchProducts();
   }, []);
 
   const handleToggleRole = async (id) => {
@@ -199,22 +217,108 @@ const DashboardPage = () => {
   };
 
   // 5. Products Setup
-  const [products, setProducts] = useState([
-    { id: 'SP-101', name: 'Sofa Da Milano', category: 'Phòng khách', price: 10500000, stock: 12 },
-    { id: 'SP-102', name: 'Giường Ngủ Hoàng Gia', category: 'Phòng ngủ', price: 8900000, stock: 8 },
-    { id: 'SP-103', name: 'Bàn Trà Kính Cường Lực', category: 'Phòng khách', price: 2000000, stock: 24 },
-    { id: 'SP-104', name: 'Ghế Thư Giãn Đọc Sách', category: 'Decor', price: 3400000, stock: 15 },
-    { id: 'SP-105', name: 'Đèn Bàn Trang Trí Gold', category: 'Tủ & Đèn', price: 750000, stock: 30 }
-  ]);
-
+  const [products, setProducts] = useState([]);
   const [searchProduct, setSearchProduct] = useState('');
   const [newProd, setNewProd] = useState(null);
 
-  const saveNewProduct = (e) => {
+  const saveNewProduct = async (e) => {
     e.preventDefault();
-    const newId = 'SP-' + (Math.floor(Math.random() * 900) + 100);
-    setProducts(prev => [...prev, { ...newProd, id: newId }]);
-    setNewProd(null);
+    try {
+      const res = await productApi.create({
+        name: newProd.name,
+        categoryId: Number(newProd.categoryId || dbCategories[0]?.id || 1),
+        price: Number(newProd.price),
+        stock: Number(newProd.stock),
+        image: newProd.image || '',
+        description: newProd.description || '',
+        material: newProd.material || '',
+        color: newProd.color || '',
+        size: newProd.size || '',
+        status: newProd.status || 'ACTIVE'
+      });
+      if (res.success) {
+        alert('Đã thêm sản phẩm mới thành công!');
+        fetchProducts();
+        setNewProd(null);
+      } else {
+        alert(res.message || 'Không thể thêm sản phẩm.');
+      }
+    } catch (err) {
+      alert(err.message || 'Có lỗi xảy ra khi thêm sản phẩm.');
+    }
+  };
+
+  const saveEditingProduct = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await productApi.update(editingProd.id, {
+        name: editingProd.name,
+        categoryId: Number(editingProd.categoryId),
+        price: Number(editingProd.price),
+        stock: Number(editingProd.stock),
+        image: editingProd.image || '',
+        description: editingProd.description || '',
+        material: editingProd.material || '',
+        color: editingProd.color || '',
+        size: editingProd.size || '',
+        status: editingProd.status || 'ACTIVE',
+        sku: editingProd.sku
+      });
+      if (res.success) {
+        alert('Cập nhật sản phẩm thành công!');
+        fetchProducts();
+        setEditingProd(null);
+      } else {
+        alert(res.message || 'Không thể cập nhật sản phẩm.');
+      }
+    } catch (err) {
+      alert(err.message || 'Có lỗi xảy ra khi cập nhật sản phẩm.');
+    }
+  };
+
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleImageUpload = async (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      setUploadingImage(true);
+      const res = await productApi.uploadImage(formData);
+      if (res.success) {
+        if (type === 'new') {
+          setNewProd(prev => ({ ...prev, image: res.url }));
+        } else {
+          setEditingProd(prev => ({ ...prev, image: res.url }));
+        }
+        alert('Tải hình ảnh lên thành công!');
+      } else {
+        alert(res.message || 'Lỗi khi tải hình ảnh.');
+      }
+    } catch (err) {
+      alert(err.message || 'Lỗi khi tải hình ảnh lên server.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleDeleteProduct = async (id) => {
+    if (window.confirm('Bạn có chắc muốn xóa sản phẩm này khỏi hệ thống kho?')) {
+      try {
+        const res = await productApi.delete(id);
+        if (res.success) {
+          alert('Xóa sản phẩm thành công!');
+          setProducts(prev => prev.filter(p => p.id !== id));
+        } else {
+          alert(res.message || 'Không thể xóa sản phẩm.');
+        }
+      } catch (err) {
+        alert(err.message || 'Có lỗi xảy ra khi xóa sản phẩm.');
+      }
+    }
   };
 
   // 6. Coupon Setup
@@ -788,7 +892,7 @@ const DashboardPage = () => {
                 </div>
                 <button
                   className="admin-btn-add"
-                  onClick={() => setNewProd({ name: '', category: 'Phòng khách', price: '', stock: '' })}
+                  onClick={() => setNewProd({ name: '', categoryId: dbCategories[0]?.id || '', price: '', stock: '', image: '', material: '', color: '', size: '', description: '' })}
                 >
                   <Plus size={16} /> Thêm sản phẩm
                 </button>
@@ -798,6 +902,7 @@ const DashboardPage = () => {
                 <table className="admin-table">
                   <thead>
                     <tr>
+                      <th>Ảnh</th>
                       <th>Mã sản phẩm</th>
                       <th>Tên sản phẩm</th>
                       <th>Danh mục</th>
@@ -811,18 +916,40 @@ const DashboardPage = () => {
                       .filter(p => p.name.toLowerCase().includes(searchProduct.toLowerCase()))
                       .map(p => (
                         <tr key={p.id}>
-                          <td><code>{p.id}</code></td>
-                          <td><strong>{p.name}</strong></td>
+                          <td>
+                            <img
+                              src={getImageUrl(p.image)}
+                              alt={p.name}
+                              style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--admin-border)' }}
+                              onError={e => { e.target.src = 'https://placehold.co/100x100?text=No+Image'; }}
+                            />
+                          </td>
+                          <td><code>SP-{p.id}</code></td>
+                          <td>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <strong>{p.name}</strong>
+                              {p.material && <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)' }}>Chất liệu: {p.material}</span>}
+                              {p.size && <span style={{ fontSize: '11px', color: 'var(--admin-text-muted)' }}>Size: {p.size}</span>}
+                            </div>
+                          </td>
                           <td>{p.category}</td>
                           <td>{p.price.toLocaleString('vi-VN')} ₫</td>
                           <td>{p.stock} cái</td>
                           <td>
-                            <button
-                              className="admin-btn-action reject"
-                              onClick={() => setProducts(prev => prev.filter(x => x.id !== p.id))}
-                            >
-                              Xoá sản phẩm
-                            </button>
+                            <div className="admin-action-buttons">
+                              <button
+                                className="admin-btn-action toggle-role"
+                                onClick={() => setEditingProd({ ...p })}
+                              >
+                                Sửa
+                              </button>
+                              <button
+                                className="admin-btn-action reject"
+                                onClick={() => handleDeleteProduct(p.id)}
+                              >
+                                Xoá
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -834,7 +961,7 @@ const DashboardPage = () => {
             {/* Modal Add Product */}
             {newProd && (
               <div className="admin-modal-overlay">
-                <div className="admin-modal">
+                <div className="admin-modal" style={{ maxWidth: '550px', maxHeight: '90vh', overflowY: 'auto' }}>
                   <h3>Thêm sản phẩm mới</h3>
                   <form onSubmit={saveNewProduct}>
                     <div className="admin-form-group">
@@ -849,31 +976,102 @@ const DashboardPage = () => {
                     <div className="admin-form-group">
                       <label>Danh mục</label>
                       <select
-                        value={newProd.category}
-                        onChange={e => setNewProd({ ...newProd, category: e.target.value })}
+                        value={newProd.categoryId || ''}
+                        onChange={e => setNewProd({ ...newProd, categoryId: e.target.value })}
+                        required
                       >
-                        <option value="Phòng khách">Phòng khách</option>
-                        <option value="Phòng ngủ">Phòng ngủ</option>
-                        <option value="Tủ & Đèn">Tủ & Đèn</option>
-                        <option value="Decor">Decor</option>
+                        <option value="">-- Chọn danh mục --</option>
+                        {dbCategories.map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
                       </select>
                     </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div className="admin-form-group">
+                        <label>Đơn giá (₫)</label>
+                        <input
+                          type="number"
+                          value={newProd.price}
+                          onChange={e => setNewProd({ ...newProd, price: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="admin-form-group">
+                        <label>Số lượng tồn kho</label>
+                        <input
+                          type="number"
+                          value={newProd.stock}
+                          onChange={e => setNewProd({ ...newProd, stock: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
                     <div className="admin-form-group">
-                      <label>Đơn giá (₫)</label>
+                      <label>Đường dẫn hình ảnh chính</label>
                       <input
-                        type="number"
-                        value={newProd.price}
-                        onChange={e => setNewProd({ ...newProd, price: Number(e.target.value) })}
-                        required
+                        type="text"
+                        placeholder="Ví dụ: /uploads/products/sofa-1.jpg"
+                        value={newProd.image || ''}
+                        onChange={e => setNewProd({ ...newProd, image: e.target.value })}
                       />
                     </div>
                     <div className="admin-form-group">
-                      <label>Số lượng tồn kho</label>
+                      <label>Hoặc Tải ảnh từ thiết bị</label>
                       <input
-                        type="number"
-                        value={newProd.stock}
-                        onChange={e => setNewProd({ ...newProd, stock: Number(e.target.value) })}
-                        required
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleImageUpload(e, 'new')}
+                        disabled={uploadingImage}
+                        style={{ display: 'block', marginTop: '6px' }}
+                      />
+                      {uploadingImage && <small style={{ color: 'var(--admin-gold)', display: 'block', marginTop: '4px' }}>Đang tải ảnh lên...</small>}
+                      {newProd.image && (
+                        <div style={{ marginTop: '8px' }}>
+                          <img
+                            src={getImageUrl(newProd.image)}
+                            alt="Preview"
+                            style={{ maxWidth: '100px', maxHeight: '100px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--admin-border)' }}
+                            onError={e => { e.target.style.display = 'none'; }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                      <div className="admin-form-group">
+                        <label>Chất liệu</label>
+                        <input
+                          type="text"
+                          placeholder="Gỗ, Vải..."
+                          value={newProd.material || ''}
+                          onChange={e => setNewProd({ ...newProd, material: e.target.value })}
+                        />
+                      </div>
+                      <div className="admin-form-group">
+                        <label>Màu sắc</label>
+                        <input
+                          type="text"
+                          placeholder="Xám, Nâu..."
+                          value={newProd.color || ''}
+                          onChange={e => setNewProd({ ...newProd, color: e.target.value })}
+                        />
+                      </div>
+                      <div className="admin-form-group">
+                        <label>Kích thước</label>
+                        <input
+                          type="text"
+                          placeholder="200x80x80 cm..."
+                          value={newProd.size || ''}
+                          onChange={e => setNewProd({ ...newProd, size: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="admin-form-group">
+                      <label>Mô tả chi tiết sản phẩm</label>
+                      <textarea
+                        rows={3}
+                        placeholder="Nhập mô tả sản phẩm..."
+                        value={newProd.description || ''}
+                        onChange={e => setNewProd({ ...newProd, description: e.target.value })}
                       />
                     </div>
                     <div className="admin-modal-buttons">
@@ -882,6 +1080,130 @@ const DashboardPage = () => {
                       </button>
                       <button type="submit" className="admin-btn-submit">
                         Thêm mới
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Edit Product */}
+            {editingProd && (
+              <div className="admin-modal-overlay">
+                <div className="admin-modal" style={{ maxWidth: '550px', maxHeight: '90vh', overflowY: 'auto' }}>
+                  <h3>Chỉnh sửa sản phẩm</h3>
+                  <form onSubmit={saveEditingProduct}>
+                    <div className="admin-form-group">
+                      <label>Tên sản phẩm</label>
+                      <input
+                        type="text"
+                        value={editingProd.name}
+                        onChange={e => setEditingProd({ ...editingProd, name: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="admin-form-group">
+                      <label>Danh mục</label>
+                      <select
+                        value={editingProd.categoryId || ''}
+                        onChange={e => setEditingProd({ ...editingProd, categoryId: e.target.value })}
+                        required
+                      >
+                        <option value="">-- Chọn danh mục --</option>
+                        {dbCategories.map(c => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div className="admin-form-group">
+                        <label>Đơn giá (₫)</label>
+                        <input
+                          type="number"
+                          value={editingProd.price}
+                          onChange={e => setEditingProd({ ...editingProd, price: e.target.value })}
+                          required
+                        />
+                      </div>
+                      <div className="admin-form-group">
+                        <label>Số lượng tồn kho</label>
+                        <input
+                          type="number"
+                          value={editingProd.stock}
+                          onChange={e => setEditingProd({ ...editingProd, stock: e.target.value })}
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="admin-form-group">
+                      <label>Đường dẫn hình ảnh chính</label>
+                      <input
+                        type="text"
+                        value={editingProd.image || ''}
+                        onChange={e => setEditingProd({ ...editingProd, image: e.target.value })}
+                      />
+                    </div>
+                    <div className="admin-form-group">
+                      <label>Hoặc Tải ảnh mới từ thiết bị</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleImageUpload(e, 'edit')}
+                        disabled={uploadingImage}
+                        style={{ display: 'block', marginTop: '6px' }}
+                      />
+                      {uploadingImage && <small style={{ color: 'var(--admin-gold)', display: 'block', marginTop: '4px' }}>Đang tải ảnh lên...</small>}
+                      {editingProd.image && (
+                        <div style={{ marginTop: '8px' }}>
+                          <img
+                            src={getImageUrl(editingProd.image)}
+                            alt="Preview"
+                            style={{ maxWidth: '100px', maxHeight: '100px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--admin-border)' }}
+                            onError={e => { e.target.style.display = 'none'; }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                      <div className="admin-form-group">
+                        <label>Chất liệu</label>
+                        <input
+                          type="text"
+                          value={editingProd.material || ''}
+                          onChange={e => setEditingProd({ ...editingProd, material: e.target.value })}
+                        />
+                      </div>
+                      <div className="admin-form-group">
+                        <label>Màu sắc</label>
+                        <input
+                          type="text"
+                          value={editingProd.color || ''}
+                          onChange={e => setEditingProd({ ...editingProd, color: e.target.value })}
+                        />
+                      </div>
+                      <div className="admin-form-group">
+                        <label>Kích thước</label>
+                        <input
+                          type="text"
+                          value={editingProd.size || ''}
+                          onChange={e => setEditingProd({ ...editingProd, size: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="admin-form-group">
+                      <label>Mô tả chi tiết sản phẩm</label>
+                      <textarea
+                        rows={3}
+                        value={editingProd.description || ''}
+                        onChange={e => setEditingProd({ ...editingProd, description: e.target.value })}
+                      />
+                    </div>
+                    <div className="admin-modal-buttons">
+                      <button type="button" className="admin-btn-cancel" onClick={() => setEditingProd(null)}>
+                        Hủy
+                      </button>
+                      <button type="submit" className="admin-btn-submit">
+                        Lưu thay đổi
                       </button>
                     </div>
                   </form>

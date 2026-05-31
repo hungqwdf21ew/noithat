@@ -10,6 +10,7 @@ import { useCart } from '../hooks/useCart';
 import { useAuth } from '../contexts/AuthContext';
 import { orderApi } from '../apis/order.api';
 import { formatCurrency, calculateCartTotal } from '../utils/currency.util';
+import { getImageUrl } from '../helpers/image.helper';
 import './CheckoutPage.css';
 
 const FREE_SHIP_MIN = 10000000;
@@ -349,7 +350,7 @@ const CheckoutPage = () => {
                     {cartItems.map(item => (
                       <div key={`${item.id}-${item.selectedColor}-${item.selectedSize}`} className="co-item">
                         <div className="co-item-img">
-                          <img src={item.image || '/images/anhghesofa.png'} alt={item.name} />
+                          <img src={getImageUrl(item.image)} alt={item.name} />
                           <span className="co-item-qty">{item.quantity}</span>
                         </div>
                         <div className="co-item-info">

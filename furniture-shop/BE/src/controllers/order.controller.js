@@ -38,7 +38,7 @@ exports.getMyOrders = async (req, res) => {
 exports.getDetail = async (req, res) => {
   try {
     const userId = req.user?.id || null;
-    const result = await orderService.getOrderDetail(Number(req.params.id), userId);
+    const result = await orderService.getOrderDetail(req.params.id, userId);
     return res.status(result.success ? 200 : 404).json(result);
   } catch (error) {
     console.error('[order.getDetail]', error);

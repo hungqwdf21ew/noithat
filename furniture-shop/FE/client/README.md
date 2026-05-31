@@ -36,7 +36,7 @@ Dự án tuân theo kiến trúc **Feature-based** kết hợp với **Clean Arc
 ### Database
 
 - SQL Server
-- File script database: `server/database/furniture_shop_sqlserver.sql`
+- File script database: `server/database/QLNT.sql`
 
 ---
 
@@ -124,7 +124,7 @@ PORT=5000
 DB_USER=sa
 DB_PASSWORD=your_password
 DB_SERVER=localhost
-DB_DATABASE=FurnitureShopDB
+DB_DATABASE=QLNT
 DB_PORT=1433
 
 JWT_SECRET=furniture_shop_secret_key

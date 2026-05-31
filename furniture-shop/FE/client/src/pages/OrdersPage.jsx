@@ -9,6 +9,7 @@ import ChanTrang from '../components/ChanTrang';
 import { useAuth } from '../contexts/AuthContext';
 import { orderApi } from '../apis/order.api';
 import { formatCurrency } from '../utils/currency.util';
+import { getImageUrl } from '../helpers/image.helper';
 import './OrdersPage.css';
 
 const STATUS_CONFIG = {
@@ -145,7 +146,7 @@ const OrderCard = ({ order, onCancel }) => {
                 {detail.chiTiet?.map(item => (
                   <div key={item.MaChiTietDonHang} className="op-detail-item">
                     <div className="op-detail-img">
-                      <img src={item.HinhAnhChinh || '/images/anhghesofa.png'} alt={item.TenSanPham} />
+                      <img src={getImageUrl(item.HinhAnhChinh)} alt={item.TenSanPham} />
                     </div>
                     <div className="op-detail-info">
                       <p className="op-detail-name">{item.TenSanPham}</p>

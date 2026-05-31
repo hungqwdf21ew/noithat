@@ -242,11 +242,18 @@ exports.getMyOrders = async (userId) => {
 };
 
 // ── Lấy chi tiết 1 đơn hàng (user chỉ xem được đơn của mình) ─────────────────
-exports.getOrderDetail = async (maDonHang, userId = null) => {
+exports.getOrderDetail = async (idOrCode, userId = null) => {
   const pool = await connect();
 
+  const isNumeric = !isNaN(Number(idOrCode));
+
   // Lấy header đơn hàng
-  const orderReq = pool.request().input('MaDonHang', sql.Int, maDonHang);
+  const orderReq = pool.request();
+  if (isNumeric) {
+    orderReq.input('MaDonHang', sql.Int, Number(idOrCode));
+  } else {
+    orderReq.input('MaDonHangCode', sql.NVarChar(30), idOrCode);
+  }
   if (userId) orderReq.input('MaNguoiDung', sql.Int, userId);
 
   const orderRes = await orderReq.query(`
@@ -257,7 +264,7 @@ exports.getOrderDetail = async (maDonHang, userId = null) => {
       dh.TrangThaiDonHang, dh.PhuongThucThanhToan, dh.TrangThaiThanhToan,
       dh.NgayTao, dh.NgayCapNhat
     FROM dbo.DonHang dh
-    WHERE dh.MaDonHang = @MaDonHang
+    WHERE ${isNumeric ? 'dh.MaDonHang = @MaDonHang' : 'dh.MaDonHangCode = @MaDonHangCode'}
     ${userId ? 'AND dh.MaNguoiDung = @MaNguoiDung' : ''}
   `);
 
@@ -266,7 +273,7 @@ exports.getOrderDetail = async (maDonHang, userId = null) => {
 
   // Lấy chi tiết sản phẩm
   const itemsRes = await pool.request()
-    .input('MaDonHang', sql.Int, maDonHang)
+    .input('MaDonHang', sql.Int, order.MaDonHang)
     .query(`
       SELECT ct.MaChiTietDonHang, ct.MaSanPham, ct.TenSanPham, ct.DonGia, ct.SoLuong,
              sp.HinhAnhChinh, sp.DuongDan

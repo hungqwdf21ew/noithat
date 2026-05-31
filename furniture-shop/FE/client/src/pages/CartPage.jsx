@@ -6,6 +6,7 @@ import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
 import { useCart } from '../hooks/useCart';
 import { formatCurrency, calculateCartTotal } from '../utils/currency.util';
+import { getImageUrl } from '../helpers/image.helper';
 import './CartPage.css';
 
 const FREE_SHIP_MIN = 10000000;
@@ -87,7 +88,7 @@ const CartPage = () => {
                   <article key={lineKey} className="cart-item">
                     <div className="cart-item-product">
                       <Link to={`/products/${item.id}`} className="cart-item-img">
-                        <img src={item.image || '/images/anhghesofa.png'} alt={item.name} />
+                        <img src={getImageUrl(item.image)} alt={item.name} />
                       </Link>
                       <div className="cart-item-info">
                         <Link to={`/products/${item.id}`} className="cart-item-name">

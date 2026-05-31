@@ -9,7 +9,8 @@ import ChanTrang from '../components/ChanTrang';
 import { useCart } from '../hooks/useCart';
 import { useFavorites } from '../hooks/useFavorites';
 import { formatCurrency } from '../utils/currency.util';
-import { MOCK_PRODUCTS } from '../data/mockProducts';
+import productApi from '../apis/product.api';
+import { getImageUrl } from '../helpers/image.helper';
 import './ProductDetailPage.css';
 
 const RELATED = [
@@ -25,16 +26,66 @@ const ProductDetailPage = () => {
   const { addToCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
 
-  const product = MOCK_PRODUCTS.find(p => p.id === parseInt(id)) || MOCK_PRODUCTS[0];
-
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeImg, setActiveImg]       = useState(0);
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
+  const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity]         = useState(1);
   const [activeTab, setActiveTab]       = useState('desc');
   const [showModal, setShowModal]       = useState(false);
   const [cartMsg, setCartMsg]           = useState('');
 
+  useEffect(() => {
+    const loadProduct = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await productApi.getById(id);
+        if (res.success) {
+          const raw = res.data;
+          const mapped = {
+            id: raw.id,
+            name: raw.name,
+            subtitle: raw.material || 'Tối giản & Đẳng cấp',
+            price: raw.price,
+            badge: raw.status === 'OUT_OF_STOCK' ? 'HẾT HÀNG' : '',
+            category: raw.category,
+            style: 'Hiện đại',
+            material: raw.material || 'Gỗ / Vải cao cấp',
+            image: getImageUrl(raw.image),
+            images: [getImageUrl(raw.image)],
+            sku: raw.sku || `SP-${raw.id}`,
+            rating: 5,
+            reviewCount: 12,
+            description: raw.description || 'Mô tả sản phẩm đang được cập nhật.',
+            dimensions: raw.size || 'N/A',
+            colors: [{ name: raw.color || 'Mặc định', hex: '#d4c5a9' }],
+            features: [raw.material || 'Chất liệu cao cấp', raw.size || 'Kích thước tiêu chuẩn'],
+            specs: {
+              'Kích thước': raw.size || 'N/A',
+              'Chất liệu': raw.material || 'N/A',
+              'Màu sắc': raw.color || 'N/A',
+              'Trạng thái': raw.status === 'ACTIVE' ? 'Sẵn hàng' : 'Hết hàng'
+            }
+          };
+          setProduct(mapped);
+          setSelectedColor(mapped.colors[0]);
+        } else {
+          setError(res.message || 'Không tìm thấy sản phẩm.');
+        }
+      } catch (err) {
+        console.error('Error loading product:', err);
+        setError(err.message || 'Không thể kết nối máy chủ.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProduct();
+  }, [id]);
+
   const handleToggleFavorite = () => {
+    if (!product) return;
     toggleFavorite({
       id: product.id,
       name: product.name,
@@ -45,16 +96,17 @@ const ProductDetailPage = () => {
     });
   };
 
-  const productFavorited = isFavorite(product.id);
+  const productFavorited = product ? isFavorite(product.id) : false;
 
   const handleAddToCart = () => {
+    if (!product) return;
     addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
       image: product.images[0],
       sku: product.sku,
-      selectedColor: selectedColor.name,
+      selectedColor: selectedColor?.name || 'Mặc định',
       quantity,
     });
     setCartMsg('Đã thêm vào giỏ hàng!');
@@ -62,6 +114,51 @@ const ProductDetailPage = () => {
   };
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [id]);
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        background: '#120d08',
+        color: '#d4af37',
+        fontFamily: 'system-ui, sans-serif'
+      }}>
+        <div style={{
+          width: '50px',
+          height: '50px',
+          border: '3px solid #332211',
+          borderTopColor: '#d4af37',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+          marginBottom: '16px'
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <h2>ĐANG TẢI CHI TIẾT SẢN PHẨM...</h2>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="lavish-root">
+        <DauTrang />
+        <main style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#120d08', color: '#d4af37', fontFamily: 'system-ui, sans-serif' }}>
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <h2 style={{ marginBottom: '12px' }}>Không Tìm Thấy Sản Phẩm</h2>
+            <p style={{ color: '#a68f70', marginBottom: '20px' }}>{error || 'Sản phẩm này không tồn tại hoặc đã bị xóa khỏi hệ thống.'}</p>
+            <Link to="/products" className="cmp-btn-gold" style={{ display: 'inline-flex', padding: '10px 20px', borderRadius: '4px', textDecoration: 'none', background: '#c9973a', color: '#fff', fontWeight: 'bold' }}>
+              Quay lại danh sách sản phẩm
+            </Link>
+          </div>
+        </main>
+        <ChanTrang />
+      </div>
+    );
+  }
 
   const prevImg = () => setActiveImg(i => (i - 1 + product.images.length) % product.images.length);
   const nextImg = () => setActiveImg(i => (i + 1) % product.images.length);
@@ -362,7 +459,7 @@ const ProductDetailPage = () => {
               {RELATED.map(r => (
                 <div key={r.id} className="pdp-rel-card">
                   <div className="pdp-rel-img">
-                    <img src={r.image} alt={r.name} />
+                    <img src={getImageUrl(r.image)} alt={r.name} />
                     <div className="pdp-rel-overlay">
                       <Link to={`/products/${r.id}`} className="pdp-rel-view">Xem chi tiết</Link>
                     </div>

@@ -12,6 +12,7 @@ import { useCart } from '../hooks/useCart';
 import { useFavorites } from '../hooks/useFavorites';
 import { getCompareProduct, COMPARE_SUGGESTIONS, SPEC_LABELS } from '../data/compareProducts';
 import { formatCurrency } from '../utils/currency.util';
+import { getImageUrl } from '../helpers/image.helper';
 import './ComparePage.css';
 
 const SPEC_ICONS = {
@@ -129,7 +130,7 @@ const ComparePage = () => {
                       <X size={16} />
                     </button>
                     <div className="cmp-product-img">
-                      <img src={item.image} alt={item.name} />
+                      <img src={getImageUrl(item.image)} alt={item.name} />
                     </div>
                     <h3>{item.name}</h3>
                     <p className="cmp-product-sub">{item.subtitle}</p>
@@ -248,7 +249,7 @@ const ComparePage = () => {
                 {visibleSuggestions.map((p) => (
                   <article key={p.id} className="cmp-suggest-card">
                     <Link to={`/products/${p.id}`} className="cmp-suggest-img">
-                      <img src={p.image} alt={p.name} loading="lazy" />
+                      <img src={getImageUrl(p.image)} alt={p.name} loading="lazy" />
                     </Link>
                     <div className="cmp-suggest-body">
                       <Link to={`/products/${p.id}`} className="cmp-suggest-name">{p.name}</Link>

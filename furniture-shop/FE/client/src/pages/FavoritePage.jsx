@@ -7,6 +7,7 @@ import ChanTrang from '../components/ChanTrang';
 import { useFavorites } from '../hooks/useFavorites';
 import { useCart } from '../hooks/useCart';
 import { formatCurrency } from '../utils/currency.util';
+import { getImageUrl } from '../helpers/image.helper';
 import './FavoritePage.css';
 
 const FavoritePage = () => {
@@ -86,7 +87,7 @@ const FavoritePage = () => {
                 </button>
 
                 <Link to={`/products/${item.id}`} className="fav-card-img">
-                  <img src={item.image} alt={item.name} loading="lazy" />
+                  <img src={getImageUrl(item.image)} alt={item.name} loading="lazy" />
                 </Link>
 
                 <div className="fav-card-body">

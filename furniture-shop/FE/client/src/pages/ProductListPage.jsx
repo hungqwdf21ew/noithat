@@ -6,17 +6,9 @@ import ChanTrang from '../components/ChanTrang';
 import { useFavorites } from '../hooks/useFavorites';
 import { useCompare } from '../hooks/useCompare';
 import { formatCurrency } from '../utils/currency.util';
-import { MOCK_PRODUCTS } from '../data/mockProducts';
+import productApi from '../apis/product.api';
+import { getImageUrl } from '../helpers/image.helper';
 import './ProductListPage.css';
-
-const CATEGORIES = [
-  { name: 'Sofa', count: 38 },
-  { name: 'Bàn ăn', count: 18 },
-  { name: 'Ghế bành', count: 24 },
-  { name: 'Giường ngủ', count: 31 },
-  { name: 'Đèn trang trí', count: 29 },
-  { name: 'Bàn console', count: 14 },
-];
 
 const STYLES = [
   { name: 'Cổ điển châu Âu', count: 72 },
@@ -58,7 +50,7 @@ const BADGE_STYLE = {
 
 const ProductListPage = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, searchSetParams] = useSearchParams();
   const [search, setSearch]           = useState('');
   const [activeCategory, setActiveCategory] = useState('');
   const [activeStyles, setActiveStyles]     = useState([]);
@@ -71,8 +63,33 @@ const ProductListPage = () => {
   const { addToCompare }                    = useCompare();
   const PER_PAGE = 9;
 
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const res = await productApi.getAll();
+        if (res.success) {
+          setProducts(res.data.products);
+          const catMap = res.data.categories.map(c => {
+            const count = res.data.products.filter(p => p.categoryId === c.id).length;
+            return { name: c.name, id: c.id, count };
+          });
+          setCategories(catMap);
+        }
+      } catch (err) {
+        console.error('Error loading live products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
   /* ── Filter logic ── */
-  const filtered = MOCK_PRODUCTS.filter(p => {
+  const filtered = products.filter(p => {
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
     if (activeCategory && p.category !== activeCategory) return false;
     if (activeStyles.length && !activeStyles.includes(p.style)) return false;
@@ -132,7 +149,7 @@ const ProductListPage = () => {
               <div className="sb-title">DANH MỤC</div>
               <div className="sb-ornament">✦</div>
               <ul className="sb-list">
-                {CATEGORIES.map(c => (
+                {categories.map(c => (
                   <li key={c.name}
                     className={`sb-item ${activeCategory === c.name ? 'active' : ''}`}
                     onClick={() => setActiveCategory(activeCategory === c.name ? '' : c.name)}
@@ -241,7 +258,7 @@ const ProductListPage = () => {
               {/* Category quick tabs */}
               <div className="plp-tabs">
                 <button className={`plp-tab ${!activeCategory ? 'active' : ''}`} onClick={() => setActiveCategory('')}>Tất cả</button>
-                {CATEGORIES.slice(0, 5).map(c => (
+                {categories.slice(0, 5).map(c => (
                   <button key={c.name}
                     className={`plp-tab ${activeCategory === c.name ? 'active' : ''}`}
                     onClick={() => setActiveCategory(activeCategory === c.name ? '' : c.name)}
@@ -291,7 +308,7 @@ const ProductListPage = () => {
 
                     {/* Image */}
                     <div className="plp-card-img">
-                      <img src={p.image} alt={p.name} loading="lazy" />
+                      <img src={getImageUrl(p.image)} alt={p.name} loading="lazy" />
                       <div className="plp-card-overlay">
                         <Link to={`/products/${p.id}`} className="plp-overlay-btn">
                           <Eye size={16} /> Xem chi tiết
