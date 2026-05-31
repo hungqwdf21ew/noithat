@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import {
@@ -6,6 +6,7 @@ import {
   ShoppingBag, Tag, LogOut, Plus, Search,
   Star, Home, DollarSign, TrendingUp, UserCheck, X
 } from 'lucide-react';
+import userApi from '../../apis/user.api';
 import './AdminDashboard.css';
 
 const DashboardPage = () => {
@@ -33,64 +34,133 @@ const DashboardPage = () => {
   ]);
 
   // 2. Access Control / Users
-  const [users, setUsers] = useState([
-    { id: 1, name: 'Đỗ Minh Hùng', email: 'hung@gmail.com', role: 'ADMIN', status: 'ACTIVE' },
-    { id: 2, name: 'Nguyễn Văn Quyết', email: 'quyet@gmail.com', role: 'CUSTOMER', status: 'ACTIVE' },
-    { id: 3, name: 'Trần Thị Thuỷ', email: 'thuy@gmail.com', role: 'CUSTOMER', status: 'SUSPENDED' },
-    { id: 4, name: 'Lê Hoàng Nam', email: 'namlh@gmail.com', role: 'CUSTOMER', status: 'ACTIVE' }
-  ]);
-
+  const [users, setUsers] = useState([]);
   const [searchUser, setSearchUser] = useState('');
   const [newMember, setNewMember] = useState(null);
   const [editingMember, setEditingMember] = useState(null);
 
-  const handleToggleRole = (id) => {
-    setUsers(prev => prev.map(u => {
-      if (u.id === id) {
-        const newRole = u.role === 'ADMIN' ? 'CUSTOMER' : 'ADMIN';
-        return { ...u, role: newRole };
+  const fetchUsers = async () => {
+    try {
+      const res = await userApi.getAll();
+      if (res && res.success) {
+        setUsers(res.data);
       }
-      return u;
-    }));
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    }
   };
 
-  const handleToggleStatus = (id) => {
-    setUsers(prev => prev.map(u => {
-      if (u.id === id) {
-        const newStatus = u.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
-        return { ...u, status: newStatus };
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleToggleRole = async (id) => {
+    const userToUpdate = users.find(u => u.id === id);
+    if (!userToUpdate) return;
+    const newRole = userToUpdate.role === 'ADMIN' ? 'CUSTOMER' : 'ADMIN';
+    try {
+      const res = await userApi.update(id, {
+        name: userToUpdate.name,
+        email: userToUpdate.email,
+        role: newRole,
+        status: userToUpdate.status
+      });
+      if (res.success) {
+        setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole } : u));
+      } else {
+        alert(res.message || 'Không thể đổi quyền.');
       }
-      return u;
-    }));
+    } catch (err) {
+      alert(err.message || 'Có lỗi xảy ra khi đổi quyền.');
+    }
   };
 
-  const saveNewMember = (e) => {
-    e.preventDefault();
-    const newId = Math.floor(Math.random() * 900) + 100;
-    const { password, ...rest } = newMember;
-    setUsers(prev => [...prev, { ...rest, id: newId, status: 'ACTIVE' }]);
-    alert(`Đã tạo tài khoản thành công cho ${newMember.name} với mật khẩu đã nhập!`);
-    setNewMember(null);
+  const handleToggleStatus = async (id) => {
+    const userToUpdate = users.find(u => u.id === id);
+    if (!userToUpdate) return;
+    const newStatus = userToUpdate.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    try {
+      const res = await userApi.update(id, {
+        name: userToUpdate.name,
+        email: userToUpdate.email,
+        role: userToUpdate.role,
+        status: newStatus
+      });
+      if (res.success) {
+        setUsers(prev => prev.map(u => u.id === id ? { ...u, status: newStatus } : u));
+      } else {
+        alert(res.message || 'Không thể đổi trạng thái.');
+      }
+    } catch (err) {
+      alert(err.message || 'Có lỗi xảy ra khi đổi trạng thái.');
+    }
   };
 
-  const saveEditingMember = (e) => {
+  const saveNewMember = async (e) => {
     e.preventDefault();
-    setUsers(prev => prev.map(u => {
-      if (u.id === editingMember.id) {
-        const { newPassword, ...rest } = editingMember;
+    try {
+      const res = await userApi.create({
+        name: newMember.name,
+        email: newMember.email,
+        password: newMember.password,
+        role: newMember.role
+      });
+      if (res.success) {
+        alert('Đã tạo tài khoản thành công!');
+        fetchUsers();
+        setNewMember(null);
+      } else {
+        alert(res.message || 'Không thể tạo tài khoản.');
+      }
+    } catch (err) {
+      alert(err.message || 'Có lỗi xảy ra khi tạo tài khoản.');
+    }
+  };
+
+  const saveEditingMember = async (e) => {
+    e.preventDefault();
+    try {
+      const { newPassword, ...rest } = editingMember;
+      const res = await userApi.update(editingMember.id, {
+        name: rest.name,
+        email: rest.email,
+        role: rest.role,
+        status: rest.status
+      });
+      if (res.success) {
         if (newPassword) {
-          alert(`Đã đặt lại mật khẩu mới thành công cho tài khoản ${editingMember.email}!`);
+          const passRes = await userApi.resetPassword(editingMember.id, newPassword);
+          if (!passRes.success) {
+            alert('Cập nhật thông tin thành công nhưng đặt lại mật khẩu thất bại: ' + passRes.message);
+          } else {
+            alert('Đã cập nhật thông tin và mật khẩu mới thành công!');
+          }
+        } else {
+          alert('Cập nhật thông tin thành công!');
         }
-        return rest;
+        fetchUsers();
+        setEditingMember(null);
+      } else {
+        alert(res.message || 'Không thể cập nhật tài khoản.');
       }
-      return u;
-    }));
-    setEditingMember(null);
+    } catch (err) {
+      alert(err.message || 'Có lỗi xảy ra khi cập nhật tài khoản.');
+    }
   };
 
-  const handleDeleteMember = (id) => {
+  const handleDeleteMember = async (id) => {
     if (window.confirm('Bạn có chắc muốn xóa tài khoản này khỏi danh sách truy cập?')) {
-      setUsers(prev => prev.filter(u => u.id !== id));
+      try {
+        const res = await userApi.delete(id);
+        if (res.success) {
+          alert('Xóa tài khoản thành công!');
+          setUsers(prev => prev.filter(u => u.id !== id));
+        } else {
+          alert(res.message || 'Không thể xóa tài khoản.');
+        }
+      } catch (err) {
+        alert(err.message || 'Có lỗi xảy ra khi xóa tài khoản.');
+      }
     }
   };
 
@@ -269,7 +339,7 @@ const DashboardPage = () => {
                 <div className="admin-stat-icon"><Users size={24} /></div>
                 <div className="admin-stat-info">
                   <small>Tổng khách hàng</small>
-                  <strong>142 thành viên</strong>
+                  <strong>{users.length} thành viên</strong>
                 </div>
               </div>
               <div className="admin-stat-card">

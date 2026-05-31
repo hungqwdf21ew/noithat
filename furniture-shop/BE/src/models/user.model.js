@@ -74,6 +74,84 @@ const UserModel = {
       `);
     return result.recordset[0] || null;
   },
+
+  // Lấy danh sách tất cả người dùng
+  findAll: async () => {
+    const pool = await connect();
+    const result = await pool.request().query(`
+      SELECT MaNguoiDung, HoTen, Email, SoDienThoai, AnhDaiDien, VaiTro, TrangThai, NgayTao
+      FROM dbo.NguoiDung
+      ORDER BY NgayTao DESC
+    `);
+    return result.recordset;
+  },
+
+  // Tạo tài khoản bởi Admin
+  createByAdmin: async ({ hoTen, email, matKhauHash, role }) => {
+    const pool = await connect();
+    const result = await pool.request()
+      .input('HoTen',       sql.NVarChar(100), hoTen)
+      .input('Email',       sql.NVarChar(150), email)
+      .input('MatKhauHash', sql.NVarChar(255), matKhauHash)
+      .input('VaiTro',      sql.NVarChar(20),  role)
+      .query(`
+        INSERT INTO dbo.NguoiDung (HoTen, Email, MatKhauHash, VaiTro)
+        OUTPUT INSERTED.MaNguoiDung, INSERTED.HoTen, INSERTED.Email,
+               INSERTED.VaiTro, INSERTED.TrangThai, INSERTED.NgayTao
+        VALUES (@HoTen, @Email, @MatKhauHash, @VaiTro)
+      `);
+    return result.recordset[0];
+  },
+
+  // Cập nhật người dùng bởi Admin
+  updateByAdmin: async (id, { hoTen, email, role, status }) => {
+    const pool = await connect();
+    const result = await pool.request()
+      .input('MaNguoiDung', sql.Int, id)
+      .input('HoTen',       sql.NVarChar(100), hoTen)
+      .input('Email',       sql.NVarChar(150), email)
+      .input('VaiTro',      sql.NVarChar(20),  role)
+      .input('TrangThai',   sql.NVarChar(20),  status)
+      .query(`
+        UPDATE dbo.NguoiDung
+        SET HoTen = @HoTen,
+            Email = @Email,
+            VaiTro = @VaiTro,
+            TrangThai = @TrangThai,
+            NgayCapNhat = SYSDATETIME()
+        OUTPUT INSERTED.MaNguoiDung, INSERTED.HoTen, INSERTED.Email,
+               INSERTED.VaiTro, INSERTED.TrangThai, INSERTED.NgayTao
+        WHERE MaNguoiDung = @MaNguoiDung
+      `);
+    return result.recordset[0] || null;
+  },
+
+  // Thay đổi mật khẩu người dùng bởi Admin
+  updatePassword: async (id, matKhauHash) => {
+    const pool = await connect();
+    const result = await pool.request()
+      .input('MaNguoiDung', sql.Int, id)
+      .input('MatKhauHash', sql.NVarChar(255), matKhauHash)
+      .query(`
+        UPDATE dbo.NguoiDung
+        SET MatKhauHash = @MatKhauHash,
+            NgayCapNhat = SYSDATETIME()
+        WHERE MaNguoiDung = @MaNguoiDung
+      `);
+    return result.rowsAffected[0] > 0;
+  },
+
+  // Xóa tài khoản người dùng
+  delete: async (id) => {
+    const pool = await connect();
+    const result = await pool.request()
+      .input('MaNguoiDung', sql.Int, id)
+      .query(`
+        DELETE FROM dbo.NguoiDung
+        WHERE MaNguoiDung = @MaNguoiDung
+      `);
+    return result.rowsAffected[0] > 0;
+  },
 };
 
 module.exports = UserModel;
