@@ -13,6 +13,8 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProfilePage from './pages/ProfilePage'
 import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
+import OrdersPage from './pages/OrdersPage'
 import FavoritePage from './pages/FavoritePage'
 import ComparePage from './pages/ComparePage'
 import DesignRoomPage from './pages/DesignRoomPage'
@@ -37,6 +39,12 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/orders" element={
+              <ProtectedRoute>
+                <OrdersPage />
+              </ProtectedRoute>
+            } />
             <Route path="/favorites" element={<FavoritePage />} />
             <Route path="/compare" element={<ComparePage />} />
             <Route path="/design-room" element={<DesignRoomPage />} />
