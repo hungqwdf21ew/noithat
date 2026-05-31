@@ -21,6 +21,8 @@ import DesignRoomPage from './pages/DesignRoomPage'
 import BundlePage from './pages/BundlePage'
 import OrderDetailPage from './pages/OrderDetailPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminLayout from './layouts/AdminLayout'
+import DashboardPage from './pages/admin/DashboardPage'
 
 function App() {
   return (
@@ -57,6 +59,11 @@ function App() {
                   <ProtectedRoute>
                     <OrderDetailPage />
                   </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <AdminLayout>
+                    <DashboardPage />
+                  </AdminLayout>
                 } />
               </Routes>
             </Router>
