@@ -10,6 +10,7 @@ const dbRoutes = require('./db.routes');
 const userRoutes = require('./user.routes');
 const uploadRoutes = require('./upload.routes');
 const collectionRoutes = require('./collection.routes');
+const aiRoutes = require('./ai.routes');
 
 const router = express.Router();
 
@@ -24,5 +25,6 @@ router.use('/db', dbRoutes);
 router.use('/users', userRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/collections', collectionRoutes);
+router.use('/ai', aiRoutes);
 
 module.exports = router;

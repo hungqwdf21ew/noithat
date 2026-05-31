@@ -384,6 +384,14 @@
   flex-shrink: 0;
 }
 
+.bp-generate-status {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  animation: fadeIn 0.4s ease-out;
+}
+
 /* ══════════════════════════════════
    RESULT SECTION
 ══════════════════════════════════ */
