@@ -1,4 +1,4 @@
-import React from 'react'
+import { Link } from 'react-router-dom'
 import { useScrollReveal } from '../hooks/useAnimations'
 
 const BannerKhuyenMai = () => {
@@ -22,8 +22,11 @@ const BannerKhuyenMai = () => {
             đến hết ngày 30/06/2025.
           </p>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-            <button className="btn primary">Xem Ưu Đãi Ngay →</button>
-            <button className="btn outline-light">Đặt Lịch Tư Vấn</button>
+            
+            {/* ĐÃ SỬA: Thay button thành thẻ Link */}
+            <Link to="/collections" className="btn primary">Xem Ưu Đãi Ngay →</Link>
+            <Link to="/lien-he" className="btn outline-light">Đặt Lịch Tư Vấn</Link>
+            
           </div>
           {/* Bộ đếm ngược dummy */}
           <div

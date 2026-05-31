@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { useScrollReveal } from '../hooks/useAnimations'
+
 import DauTrang from '../components/DauTrang'
 import PhanAnhBia from '../components/PhanAnhBia'
 import ThanhDichVu from '../components/ThanhDichVu'
@@ -11,6 +12,7 @@ import PhongCamHung from '../components/PhongCamHung'
 import DanhGiaKhachHang from '../components/DanhGiaKhachHang'
 import LienHeShowroom from '../components/LienHeShowroom'
 import ChanTrang from '../components/ChanTrang'
+import QuangCaoDauTrang from '../components/QuangCaoDauTrang'
 import '../index.css'
 
 const HomePage = () => {
@@ -19,6 +21,8 @@ const HomePage = () => {
 
   return (
     <div className="lavish-root">
+      <QuangCaoDauTrang />
+
       <DauTrang />
 
       <main>
@@ -75,7 +79,7 @@ const HomePage = () => {
                 Không Gian Truyền Cảm Hứng
               </h2>
             </div>
-            <a className="link-all" href="#">Xem Thêm Ý Tưởng →</a>
+            <Link className="link-all" to="/cam-hung">Xem Thêm Ý Tưởng →</Link>
           </div>
           <PhongCamHung />
         </section>
