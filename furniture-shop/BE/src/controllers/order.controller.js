@@ -56,3 +56,25 @@ exports.cancel = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Lỗi máy chủ.' });
   }
 };
+
+// GET /api/orders  — lấy toàn bộ đơn hàng (Admin chỉ định)
+exports.getAllOrders = async (req, res) => {
+  try {
+    const result = await orderService.getAllOrders();
+    return res.json(result);
+  } catch (error) {
+    console.error('[order.getAllOrders]', error);
+    return res.status(500).json({ success: false, message: 'Lỗi máy chủ.' });
+  }
+};
+
+// PATCH /api/orders/:id/status — Cập nhật trạng thái đơn hàng (Admin chỉ định)
+exports.updateStatus = async (req, res) => {
+  try {
+    const result = await orderService.updateOrderStatus(Number(req.params.id), req.body.status);
+    return res.status(result.success ? 200 : 400).json(result);
+  } catch (error) {
+    console.error('[order.updateStatus]', error);
+    return res.status(500).json({ success: false, message: 'Lỗi máy chủ.' });
+  }
+};

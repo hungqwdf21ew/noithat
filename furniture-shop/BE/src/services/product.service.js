@@ -72,6 +72,7 @@ exports.getProductById = async (id) => {
       color: p.MauSac,
       size: p.KichThuoc,
       image: p.HinhAnhChinh,
+      gallery: p.gallery || [],
       status: p.TrangThai === 'HOAT_DONG' ? 'ACTIVE' : (p.TrangThai === 'AN' ? 'HIDDEN' : 'OUT_OF_STOCK')
     }
   };
@@ -102,6 +103,10 @@ exports.createProduct = async (data) => {
   }
 
   const newProd = await ProductModel.create(payload);
+
+  if (data.gallery && Array.isArray(data.gallery)) {
+    await ProductModel.updateGallery(newProd.MaSanPham, data.gallery);
+  }
 
   return {
     success: true,
@@ -136,6 +141,10 @@ exports.updateProduct = async (id, data) => {
   const updatedProd = await ProductModel.update(id, payload);
   if (!updatedProd) {
     return { success: false, message: 'Không tìm thấy sản phẩm để cập nhật.' };
+  }
+
+  if (data.gallery && Array.isArray(data.gallery)) {
+    await ProductModel.updateGallery(id, data.gallery);
   }
 
   return {

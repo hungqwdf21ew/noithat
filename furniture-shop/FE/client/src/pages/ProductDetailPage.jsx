@@ -54,7 +54,7 @@ const ProductDetailPage = () => {
             style: 'Hiện đại',
             material: raw.material || 'Gỗ / Vải cao cấp',
             image: getImageUrl(raw.image),
-            images: [getImageUrl(raw.image)],
+            images: [getImageUrl(raw.image), ...(raw.gallery || []).map(img => getImageUrl(img))],
             sku: raw.sku || `SP-${raw.id}`,
             rating: 5,
             reviewCount: 12,

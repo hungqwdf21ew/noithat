@@ -49,4 +49,24 @@ export const orderApi = {
       throw error.response?.data || { success: false, message: 'Không thể huỷ đơn hàng.' };
     }
   },
+
+  // Lấy toàn bộ đơn hàng (Admin)
+  getAllOrders: async () => {
+    try {
+      const res = await axiosInstance.get('/orders');
+      return res.data;
+    } catch (error) {
+      throw error.response?.data || { success: false, message: 'Không thể lấy danh sách đơn hàng.' };
+    }
+  },
+
+  // Cập nhật trạng thái đơn hàng (Admin)
+  updateOrderStatus: async (id, status) => {
+    try {
+      const res = await axiosInstance.patch(`/orders/${id}/status`, { status });
+      return res.data;
+    } catch (error) {
+      throw error.response?.data || { success: false, message: 'Không thể cập nhật trạng thái đơn hàng.' };
+    }
+  },
 };

@@ -1,9 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Headphones } from 'lucide-react';
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
 import { useScrollReveal } from '../hooks/useAnimations';
+import collectionApi from '../apis/collection.api';
+import { getImageUrl } from '../helpers/image.helper';
 import './collections.css';
 
 /* ── DATA ─────────────────────────────────────────────────── */
@@ -112,10 +114,38 @@ const TrangBoSuuTap = () => {
   const [activeFilter, setActiveFilter] = useState('Tất cả');
   const [gridRef,  gridVisible]  = useScrollReveal();
   const [roomsRef, roomsVisible] = useScrollReveal();
+  const [collections, setCollections] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        setLoading(true);
+        const res = await collectionApi.getAll();
+        if (res && res.success) {
+          const mapped = res.data.map((col, idx) => ({
+            id: col.id || col.MaBoSuuTap,
+            title: col.title || col.TenBoSuuTap,
+            subtitle: col.subtitle || 'Kiệt tác không gian sống quý tộc',
+            desc: col.desc || col.MoTa,
+            img: getImageUrl(col.img || col.HinhAnh),
+            tags: col.tags || ['Tất cả', idx % 2 === 0 ? 'Cổ điển' : 'Luxury'],
+            size: idx === 0 ? 'large' : 'normal'
+          }));
+          setCollections(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching collections:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCollections();
+  }, []);
 
   const displayed = useMemo(
-    () => COLLECTIONS.filter(c => matchFilter(c, activeFilter)),
-    [activeFilter]
+    () => collections.filter(c => matchFilter(c, activeFilter)),
+    [collections, activeFilter]
   );
 
   return (

@@ -9,6 +9,7 @@ const compareRoutes = require('./compare.routes');
 const dbRoutes = require('./db.routes');
 const userRoutes = require('./user.routes');
 const uploadRoutes = require('./upload.routes');
+const collectionRoutes = require('./collection.routes');
 
 const router = express.Router();
 
@@ -16,11 +17,12 @@ router.use('/auth', authRoutes);
 router.use('/products', productRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/orders', orderRoutes);
-router.use('/', reviewRoutes);
+router.use('/reviews', reviewRoutes);
 router.use('/favorites', favoriteRoutes);
 router.use('/compare', compareRoutes);
 router.use('/db', dbRoutes);
 router.use('/users', userRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/collections', collectionRoutes);
 
 module.exports = router;

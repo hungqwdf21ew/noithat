@@ -124,7 +124,7 @@ PORT=5000
 DB_USER=sa
 DB_PASSWORD=your_password
 DB_SERVER=localhost
-DB_DATABASE=QLNT
+DB_DATABASE=FurnitureShopDB
 DB_PORT=1433
 
 JWT_SECRET=furniture_shop_secret_key

@@ -28,7 +28,21 @@ const ProductModel = {
         INNER JOIN dbo.DanhMuc c ON p.MaDanhMuc = c.MaDanhMuc
         WHERE p.MaSanPham = @MaSanPham
       `);
-    return result.recordset[0] || null;
+      
+    if (!result.recordset[0]) return null;
+    const product = result.recordset[0];
+    
+    const galleryResult = await pool.request()
+      .input('MaSanPham', sql.Int, id)
+      .query(`
+        SELECT DuongDanHinh 
+        FROM dbo.HinhAnhSanPham 
+        WHERE MaSanPham = @MaSanPham
+        ORDER BY ThuTuHienThi ASC
+      `);
+      
+    product.gallery = galleryResult.recordset.map(r => r.DuongDanHinh);
+    return product;
   },
 
   // Lấy tất cả danh mục để hiển thị trong select dropdown
@@ -107,9 +121,38 @@ const ProductModel = {
     return result.recordset[0] || null;
   },
 
+  // Cập nhật thư viện ảnh cho sản phẩm
+  updateGallery: async (maSanPham, galleryUrls) => {
+    const pool = await connect();
+    // Xóa ảnh cũ
+    await pool.request()
+      .input('MaSanPham', sql.Int, maSanPham)
+      .query('DELETE FROM dbo.HinhAnhSanPham WHERE MaSanPham = @MaSanPham');
+      
+    // Thêm ảnh mới
+    if (galleryUrls && galleryUrls.length > 0) {
+      for (let i = 0; i < galleryUrls.length; i++) {
+        await pool.request()
+          .input('MaSanPham', sql.Int, maSanPham)
+          .input('DuongDanHinh', sql.NVarChar(500), galleryUrls[i])
+          .input('ThuTuHienThi', sql.Int, i)
+          .query(`
+            INSERT INTO dbo.HinhAnhSanPham (MaSanPham, DuongDanHinh, ThuTuHienThi)
+            VALUES (@MaSanPham, @DuongDanHinh, @ThuTuHienThi)
+          `);
+      }
+    }
+  },
+
   // Xóa sản phẩm
   delete: async (id) => {
     const pool = await connect();
+    
+    // Xóa gallery trước
+    await pool.request()
+      .input('MaSanPham', sql.Int, id)
+      .query('DELETE FROM dbo.HinhAnhSanPham WHERE MaSanPham = @MaSanPham');
+      
     const result = await pool.request()
       .input('MaSanPham', sql.Int, id)
       .query(`

@@ -310,3 +310,42 @@ exports.cancelOrder = async (maDonHang, userId) => {
 
   return { success: true, message: 'Đã huỷ đơn hàng thành công.' };
 };
+
+// ── Lấy toàn bộ đơn hàng (Admin) ─────────────────────────────────────────────
+exports.getAllOrders = async () => {
+  const pool = await connect();
+
+  const res = await pool.request().query(`
+    SELECT
+      dh.MaDonHang, dh.MaDonHangCode, dh.TenKhachHang, dh.SoDienThoai,
+      dh.DiaChiGiaoHang, dh.GhiChu,
+      dh.TamTinh, dh.TienGiam, dh.PhiVanChuyen, dh.TongTien,
+      dh.TrangThaiDonHang, dh.PhuongThucThanhToan, dh.TrangThaiThanhToan,
+      dh.NgayTao, dh.NgayCapNhat
+    FROM dbo.DonHang dh
+    ORDER BY dh.NgayTao DESC
+  `);
+
+  return { success: true, data: res.recordset };
+};
+
+// ── Cập nhật trạng thái đơn hàng (Admin) ──────────────────────────────────────
+exports.updateOrderStatus = async (maDonHang, status) => {
+  const pool = await connect();
+
+  const res = await pool.request()
+    .input('MaDonHang', sql.Int, maDonHang)
+    .input('TrangThaiDonHang', sql.NVarChar(30), status)
+    .query(`
+      UPDATE dbo.DonHang
+      SET TrangThaiDonHang = @TrangThaiDonHang, NgayCapNhat = SYSDATETIME()
+      OUTPUT INSERTED.MaDonHang, INSERTED.TrangThaiDonHang
+      WHERE MaDonHang = @MaDonHang
+    `);
+
+  if (res.recordset.length === 0) {
+    return { success: false, message: 'Đơn hàng không tồn tại.' };
+  }
+
+  return { success: true, message: 'Cập nhật trạng thái đơn hàng thành công!', data: res.recordset[0] };
+};

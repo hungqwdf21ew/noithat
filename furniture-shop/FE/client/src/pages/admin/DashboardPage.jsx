@@ -4,10 +4,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import {
   LayoutDashboard, Users, MessageSquare, Image,
   ShoppingBag, Tag, LogOut, Plus, Search,
-  Star, Home, DollarSign, TrendingUp, UserCheck, X
+  Star, Home, DollarSign, TrendingUp, UserCheck, X, Package
 } from 'lucide-react';
 import userApi from '../../apis/user.api';
 import productApi from '../../apis/product.api';
+import collectionApi from '../../apis/collection.api';
+import { orderApi } from '../../apis/order.api';
 import { getImageUrl } from '../../helpers/image.helper';
 import './AdminDashboard.css';
 
@@ -67,9 +69,156 @@ const DashboardPage = () => {
     }
   };
 
+  const [collections, setCollections] = useState([]);
+  const [newCol, setNewCol] = useState(null);
+  const [editingCol, setEditingCol] = useState(null);
+
+  const fetchCollections = async () => {
+    try {
+      const res = await collectionApi.getAll();
+      if (res && res.success) {
+        setCollections(res.data);
+      }
+    } catch (err) {
+      console.error('Error fetching collections:', err);
+    }
+  };
+
+  const handleCollectionImageUpload = async (e, type) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      setUploadingImage(true);
+      const res = await collectionApi.uploadImage(formData);
+      if (res.success) {
+        if (type === 'new') {
+          setNewCol(prev => ({ ...prev, img: res.url }));
+        } else {
+          setEditingCol(prev => ({ ...prev, img: res.url }));
+        }
+        alert('Tải hình ảnh bộ sưu tập lên thành công!');
+      } else {
+        alert(res.message || 'Lỗi khi tải hình ảnh bộ sưu tập.');
+      }
+    } catch (err) {
+      alert(err.message || 'Lỗi khi tải hình ảnh lên server.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const saveNewCollection = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await collectionApi.create({
+        title: newCol.title,
+        desc: newCol.desc,
+        img: newCol.img || ''
+      });
+      if (res.success) {
+        alert('Đã thêm bộ sưu tập mới thành công!');
+        fetchCollections();
+        setNewCol(null);
+      } else {
+        alert(res.message || 'Không thể thêm bộ sưu tập.');
+      }
+    } catch (err) {
+      alert(err.message || 'Có lỗi xảy ra khi thêm bộ sưu tập.');
+    }
+  };
+
+  const saveCollection = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await collectionApi.update(editingCol.id, {
+        title: editingCol.title,
+        desc: editingCol.desc,
+        img: editingCol.img || ''
+      });
+      if (res.success) {
+        alert('Cập nhật bộ sưu tập thành công!');
+        fetchCollections();
+        setEditingCol(null);
+      } else {
+        alert(res.message || 'Không thể cập nhật bộ sưu tập.');
+      }
+    } catch (err) {
+      alert(err.message || 'Có lỗi xảy ra khi cập nhật bộ sưu tập.');
+    }
+  };
+
+  const deleteCollection = async (id) => {
+    if (window.confirm('Bạn có chắc muốn xóa bộ sưu tập này?')) {
+      try {
+        const res = await collectionApi.delete(id);
+        if (res.success) {
+          alert('Xóa bộ sưu tập thành công!');
+          fetchCollections();
+        } else {
+          alert(res.message || 'Không thể xóa bộ sưu tập.');
+        }
+      } catch (err) {
+        alert(err.message || 'Có lỗi xảy ra khi xóa bộ sưu tập.');
+      }
+    }
+  };
+
+  const [orders, setOrders] = useState([]);
+  const [searchOrder, setSearchOrder] = useState('');
+  const [filterOrderStatus, setFilterOrderStatus] = useState('ALL');
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const fetchOrders = async () => {
+    try {
+      const res = await orderApi.getAllOrders();
+      if (res && res.success) {
+        setOrders(res.data);
+      }
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+    }
+  };
+
+  const handleUpdateOrderStatus = async (orderId, nextStatus) => {
+    try {
+      const res = await orderApi.updateOrderStatus(orderId, nextStatus);
+      if (res.success) {
+        alert('Cập nhật trạng thái đơn hàng thành công!');
+        fetchOrders();
+        if (selectedOrder && selectedOrder.MaDonHang === orderId) {
+          setSelectedOrder(prev => ({ ...prev, TrangThaiDonHang: nextStatus }));
+        }
+      } else {
+        alert(res.message || 'Cập nhật trạng thái thất bại.');
+      }
+    } catch (err) {
+      alert(err.message || 'Có lỗi xảy ra khi cập nhật trạng thái đơn hàng.');
+    }
+  };
+
+  const fetchOrderItemsDetail = async (order) => {
+    try {
+      const res = await orderApi.getOrderDetail(order.MaDonHangCode || order.MaDonHang);
+      if (res.success) {
+        setSelectedOrder(res.data);
+      } else {
+        setSelectedOrder(order);
+      }
+    } catch (err) {
+      console.error('[fetchOrderItemsDetail]', err);
+      setSelectedOrder(order);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
     fetchProducts();
+    fetchCollections();
+    fetchOrders();
   }, []);
 
   const handleToggleRole = async (id) => {
@@ -198,23 +347,7 @@ const DashboardPage = () => {
     setReviews(prev => prev.map(r => r.id === id ? { ...r, status: 'REJECTED' } : r));
   };
 
-  // 4. Collections Editor (BST 1 - 13)
-  const [collections, setCollections] = useState([
-    { id: 1, title: 'Minimalist Elegance', tag: 'Hiện đại', img: '/images/bst1.png', desc: 'Sự tĩnh lặng của không gian đương đại tối giản.' },
-    { id: 2, title: 'Royal Oak', tag: 'Cổ điển', img: '/images/bst2.png', desc: 'Vẻ đẹp hoàng tộc sang trọng kết hợp gỗ óc chó.' },
-    { id: 3, title: 'Glass & Stone', tag: 'Hiện đại', img: '/images/bst3.png', desc: 'Nét chạm khắc tinh khôi từ thiên nhiên đá kính.' },
-    { id: 4, title: 'Cozy Terracotta', tag: 'Decor', img: '/images/bst4.png', desc: 'Ấm áp, gần gũi với sắc cam đất terracotta.' },
-    { id: 5, title: 'Navy Gold', tag: 'Cổ điển', img: '/images/bst5.png', desc: 'Sự quyền uy sâu thẳm kết hợp nhung vàng đồng.' },
-    { id: 6, title: 'Luxe Bedroom', tag: 'Cổ điển', img: '/images/bst6.png', desc: 'Giấc ngủ hoàng cung đầy vương giả quý phái.' }
-  ]);
 
-  const [editingCol, setEditingCol] = useState(null);
-
-  const saveCollection = (e) => {
-    e.preventDefault();
-    setCollections(prev => prev.map(c => c.id === editingCol.id ? editingCol : c));
-    setEditingCol(null);
-  };
 
   // 5. Products Setup
   const [products, setProducts] = useState([]);
@@ -234,6 +367,7 @@ const DashboardPage = () => {
         material: newProd.material || '',
         color: newProd.color || '',
         size: newProd.size || '',
+        gallery: newProd.gallery || [],
         status: newProd.status || 'ACTIVE'
       });
       if (res.success) {
@@ -261,6 +395,7 @@ const DashboardPage = () => {
         material: editingProd.material || '',
         color: editingProd.color || '',
         size: editingProd.size || '',
+        gallery: editingProd.gallery || [],
         status: editingProd.status || 'ACTIVE',
         sku: editingProd.sku
       });
@@ -302,6 +437,53 @@ const DashboardPage = () => {
       alert(err.message || 'Lỗi khi tải hình ảnh lên server.');
     } finally {
       setUploadingImage(false);
+    }
+  };
+
+  const handleGalleryUpload = async (e, type) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    try {
+      setUploadingImage(true);
+      const uploadedUrls = [];
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('image', file);
+        const res = await productApi.uploadImage(formData);
+        if (res.success) {
+          uploadedUrls.push(res.url);
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        if (type === 'new') {
+          setNewProd(prev => ({ ...prev, gallery: [...(prev.gallery || []), ...uploadedUrls] }));
+        } else {
+          setEditingProd(prev => ({ ...prev, gallery: [...(prev.gallery || []), ...uploadedUrls] }));
+        }
+        alert('Tải thư viện ảnh lên thành công!');
+      }
+    } catch (err) {
+      alert(err.message || 'Lỗi khi tải hình ảnh lên server.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeGalleryImage = (type, index) => {
+    if (type === 'new') {
+      setNewProd(prev => {
+        const newGallery = [...(prev.gallery || [])];
+        newGallery.splice(index, 1);
+        return { ...prev, gallery: newGallery };
+      });
+    } else {
+      setEditingProd(prev => {
+        const newGallery = [...(prev.gallery || [])];
+        newGallery.splice(index, 1);
+        return { ...prev, gallery: newGallery };
+      });
     }
   };
 
@@ -387,6 +569,13 @@ const DashboardPage = () => {
               <span>Thiết lập giảm giá</span>
             </button>
             <button
+              className={`admin-nav-item ${activeTab === 'orders' ? 'active' : ''}`}
+              onClick={() => setActiveTab('orders')}
+            >
+              <Package size={18} />
+              <span>Quản lý đơn hàng</span>
+            </button>
+            <button
               className={`admin-nav-item ${activeTab === 'reviews' ? 'active' : ''}`}
               onClick={() => setActiveTab('reviews')}
             >
@@ -436,7 +625,9 @@ const DashboardPage = () => {
                 <div className="admin-stat-icon"><DollarSign size={24} /></div>
                 <div className="admin-stat-info">
                   <small>Tổng doanh thu</small>
-                  <strong>668,000,000 ₫</strong>
+                  <strong>
+                    {(orders.filter(o => o.TrangThaiDonHang === 'HOAN_THANH').reduce((sum, o) => sum + Number(o.TongTien), 0) || 668000000).toLocaleString('vi-VN')} ₫
+                  </strong>
                 </div>
               </div>
               <div className="admin-stat-card">
@@ -798,6 +989,12 @@ const DashboardPage = () => {
                 <h1>Biên tập bộ sưu tập</h1>
                 <p>Quản lý nội dung, hình ảnh và tiêu đề các bộ sưu tập nội thất</p>
               </div>
+              <button
+                className="admin-btn-add"
+                onClick={() => setNewCol({ title: '', desc: '', img: '' })}
+              >
+                <Plus size={16} /> Thêm bộ sưu tập
+              </button>
             </div>
 
             <div className="admin-collections-grid">
@@ -810,12 +1007,22 @@ const DashboardPage = () => {
                   <div className="admin-col-body">
                     <h4>{col.title}</h4>
                     <p>{col.desc}</p>
-                    <button
-                      className="admin-col-btn-edit"
-                      onClick={() => setEditingCol({ ...col })}
-                    >
-                      Chỉnh sửa nội dung
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        className="admin-col-btn-edit"
+                        onClick={() => setEditingCol({ ...col })}
+                        style={{ flex: 1 }}
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        className="admin-col-btn-edit"
+                        onClick={() => deleteCollection(col.id)}
+                        style={{ flex: 1, background: 'var(--admin-danger)', color: '#fff', border: 'none' }}
+                      >
+                        Xóa
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -837,15 +1044,6 @@ const DashboardPage = () => {
                       />
                     </div>
                     <div className="admin-form-group">
-                      <label>Nhãn danh mục (Tag)</label>
-                      <input
-                        type="text"
-                        value={editingCol.tag}
-                        onChange={e => setEditingCol({ ...editingCol, tag: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="admin-form-group">
                       <label>Mô tả ngắn</label>
                       <textarea
                         rows={3}
@@ -854,12 +1052,107 @@ const DashboardPage = () => {
                         required
                       />
                     </div>
+                    <div className="admin-form-group">
+                      <label>Đường dẫn hình ảnh</label>
+                      <input
+                        type="text"
+                        value={editingCol.img || ''}
+                        onChange={e => setEditingCol({ ...editingCol, img: e.target.value })}
+                      />
+                    </div>
+                    <div className="admin-form-group">
+                      <label>Hoặc Tải ảnh mới từ thiết bị</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleCollectionImageUpload(e, 'edit')}
+                        disabled={uploadingImage}
+                        style={{ display: 'block', marginTop: '6px' }}
+                      />
+                      {uploadingImage && <small style={{ color: 'var(--admin-gold)', display: 'block', marginTop: '4px' }}>Đang tải ảnh lên...</small>}
+                      {editingCol.img && (
+                        <div style={{ marginTop: '8px' }}>
+                          <img
+                            src={getImageUrl(editingCol.img)}
+                            alt="Preview"
+                            style={{ maxWidth: '100px', maxHeight: '100px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--admin-border)' }}
+                            onError={e => { e.target.style.display = 'none'; }}
+                          />
+                        </div>
+                      )}
+                    </div>
                     <div className="admin-modal-buttons">
                       <button type="button" className="admin-btn-cancel" onClick={() => setEditingCol(null)}>
                         Hủy
                       </button>
                       <button type="submit" className="admin-btn-submit">
                         Lưu thay đổi
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Add Collection */}
+            {newCol && (
+              <div className="admin-modal-overlay">
+                <div className="admin-modal">
+                  <h3>Thêm bộ sưu tập mới</h3>
+                  <form onSubmit={saveNewCollection}>
+                    <div className="admin-form-group">
+                      <label>Tiêu đề</label>
+                      <input
+                        type="text"
+                        value={newCol.title}
+                        onChange={e => setNewCol({ ...newCol, title: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="admin-form-group">
+                      <label>Mô tả ngắn</label>
+                      <textarea
+                        rows={3}
+                        value={newCol.desc}
+                        onChange={e => setNewCol({ ...newCol, desc: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="admin-form-group">
+                      <label>Đường dẫn hình ảnh</label>
+                      <input
+                        type="text"
+                        value={newCol.img || ''}
+                        onChange={e => setNewCol({ ...newCol, img: e.target.value })}
+                      />
+                    </div>
+                    <div className="admin-form-group">
+                      <label>Hoặc Tải ảnh mới từ thiết bị</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleCollectionImageUpload(e, 'new')}
+                        disabled={uploadingImage}
+                        style={{ display: 'block', marginTop: '6px' }}
+                      />
+                      {uploadingImage && <small style={{ color: 'var(--admin-gold)', display: 'block', marginTop: '4px' }}>Đang tải ảnh lên...</small>}
+                      {newCol.img && (
+                        <div style={{ marginTop: '8px' }}>
+                          <img
+                            src={getImageUrl(newCol.img)}
+                            alt="Preview"
+                            style={{ maxWidth: '100px', maxHeight: '100px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--admin-border)' }}
+                            onError={e => { e.target.style.display = 'none'; }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="admin-modal-buttons">
+                      <button type="button" className="admin-btn-cancel" onClick={() => setNewCol(null)}>
+                        Hủy
+                      </button>
+                      <button type="submit" className="admin-btn-submit">
+                        Thêm mới
                       </button>
                     </div>
                   </form>
@@ -892,7 +1185,7 @@ const DashboardPage = () => {
                 </div>
                 <button
                   className="admin-btn-add"
-                  onClick={() => setNewProd({ name: '', categoryId: dbCategories[0]?.id || '', price: '', stock: '', image: '', material: '', color: '', size: '', description: '' })}
+                  onClick={() => setNewProd({ name: '', categoryId: dbCategories[0]?.id || '', price: '', stock: '', image: '', gallery: [], material: '', color: '', size: '', description: '' })}
                 >
                   <Plus size={16} /> Thêm sản phẩm
                 </button>
@@ -1036,6 +1329,39 @@ const DashboardPage = () => {
                         </div>
                       )}
                     </div>
+                    
+                    <div className="admin-form-group" style={{ borderTop: '1px solid var(--admin-border)', paddingTop: '12px' }}>
+                      <label>Ảnh mô tả (Thư viện ảnh)</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={e => handleGalleryUpload(e, 'new')}
+                        disabled={uploadingImage}
+                        style={{ display: 'block', marginTop: '6px' }}
+                      />
+                      {newProd.gallery && newProd.gallery.length > 0 && (
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
+                          {newProd.gallery.map((img, idx) => (
+                            <div key={idx} style={{ position: 'relative' }}>
+                              <img
+                                src={getImageUrl(img)}
+                                alt={`Gallery ${idx}`}
+                                style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--admin-border)' }}
+                                onError={e => { e.target.style.display = 'none'; }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeGalleryImage('new', idx)}
+                                style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                       <div className="admin-form-group">
                         <label>Chất liệu</label>
@@ -1161,6 +1487,39 @@ const DashboardPage = () => {
                             style={{ maxWidth: '100px', maxHeight: '100px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--admin-border)' }}
                             onError={e => { e.target.style.display = 'none'; }}
                           />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="admin-form-group" style={{ borderTop: '1px solid var(--admin-border)', paddingTop: '12px' }}>
+                      <label>Ảnh mô tả (Thư viện ảnh)</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={e => handleGalleryUpload(e, 'edit')}
+                        disabled={uploadingImage}
+                        style={{ display: 'block', marginTop: '6px' }}
+                      />
+                      {editingProd.gallery && editingProd.gallery.length > 0 && (
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
+                          {editingProd.gallery.map((img, idx) => (
+                            <div key={idx} style={{ position: 'relative' }}>
+                              <img
+                                src={getImageUrl(img)}
+                                alt={`Gallery ${idx}`}
+                                style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--admin-border)' }}
+                                onError={e => { e.target.style.display = 'none'; }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeGalleryImage('edit', idx)}
+                                style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
