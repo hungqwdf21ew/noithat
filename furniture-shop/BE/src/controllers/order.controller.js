@@ -37,7 +37,8 @@ exports.getMyOrders = async (req, res) => {
 // GET /api/orders/:id  — chi tiết đơn hàng
 exports.getDetail = async (req, res) => {
   try {
-    const userId = req.user?.id || null;
+    // Admin xem được mọi đơn; khách chỉ xem đơn của mình
+    const userId = req.user?.role === 'ADMIN' ? null : (req.user?.id || null);
     const result = await orderService.getOrderDetail(req.params.id, userId);
     return res.status(result.success ? 200 : 404).json(result);
   } catch (error) {

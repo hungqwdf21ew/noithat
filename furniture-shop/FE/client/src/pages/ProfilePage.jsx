@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Mail, Phone, Shield, Calendar, Loader, Save, Package } from 'lucide-react';
+import { User, Mail, Phone, Shield, Calendar, Loader, Save, Package, ChevronRight } from 'lucide-react';
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
 import { useAuth } from '../contexts/AuthContext';
 import { authApi } from '../apis/auth.api';
+import { orderApi } from '../apis/order.api';
+import { formatCurrency } from '../utils/currency.util';
+import { ORDER_STATUS_CONFIG } from '../constants/order.constant';
 import './ProfilePage.css';
 
 const ROLE_LABELS = {
@@ -36,6 +39,8 @@ const ProfilePage = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -57,6 +62,23 @@ const ProfilePage = () => {
     };
 
     loadProfile();
+  }, []);
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      setOrdersLoading(true);
+      try {
+        const res = await orderApi.getMyOrders();
+        if (res.success) {
+          setRecentOrders((res.data || []).slice(0, 5));
+        }
+      } catch (_) {
+        setRecentOrders([]);
+      } finally {
+        setOrdersLoading(false);
+      }
+    };
+    loadOrders();
   }, []);
 
   const initials = profile?.fullName
@@ -159,6 +181,7 @@ const ProfilePage = () => {
                 </div>
               </aside>
 
+              <div className="profile-right-col">
               <section className="profile-card profile-form-card">
                 <h3>Cập nhật thông tin</h3>
 
@@ -230,6 +253,46 @@ const ProfilePage = () => {
                   </button>
                 </form>
               </section>
+
+              <section className="profile-card profile-orders-card">
+                <div className="profile-orders-head">
+                  <h3><Package size={18} /> Đơn hàng của tôi</h3>
+                  <Link to="/orders" className="profile-orders-all">
+                    Xem tất cả <ChevronRight size={16} />
+                  </Link>
+                </div>
+
+                {ordersLoading ? (
+                  <p className="profile-orders-empty">Đang tải đơn hàng...</p>
+                ) : recentOrders.length === 0 ? (
+                  <p className="profile-orders-empty">
+                    Bạn chưa có đơn hàng nào. <Link to="/products">Mua sắm ngay</Link>
+                  </p>
+                ) : (
+                  <ul className="profile-orders-list">
+                    {recentOrders.map((o) => {
+                      const st = ORDER_STATUS_CONFIG[o.TrangThaiDonHang];
+                      return (
+                        <li key={o.MaDonHang}>
+                          <Link to={`/orders/${o.MaDonHangCode}`} className="profile-order-row">
+                            <div>
+                              <strong>{o.MaDonHangCode}</strong>
+                              <span>{new Date(o.NgayTao).toLocaleDateString('vi-VN')}</span>
+                            </div>
+                            <div className="profile-order-row-right">
+                              <span className={`profile-order-status status-${st?.color || 'pending'}`}>
+                                {st?.label || o.TrangThaiDonHang}
+                              </span>
+                              <strong>{formatCurrency(o.TongTien)}</strong>
+                            </div>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </section>
+              </div>
             </div>
           )}
         </div>

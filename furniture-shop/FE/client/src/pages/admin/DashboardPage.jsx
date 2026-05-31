@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   LayoutDashboard, Users, MessageSquare, Image,
@@ -13,10 +13,35 @@ import { orderApi } from '../../apis/order.api';
 import { getImageUrl } from '../../helpers/image.helper';
 import './AdminDashboard.css';
 
-const DashboardPage = () => {
+const ORDER_STATUS_META = {
+  CHO_XAC_NHAN: { label: 'Chờ xác nhận', badge: 'warning' },
+  DA_XAC_NHAN:  { label: 'Đã xác nhận',  badge: 'info' },
+  DANG_GIAO:    { label: 'Đang giao',     badge: 'info' },
+  HOAN_THANH:   { label: 'Hoàn thành',   badge: 'success' },
+  DA_HUY:       { label: 'Đã huỷ',       badge: 'danger' },
+};
+
+const ORDER_STATUS_FILTERS = [
+  { value: 'ALL', label: 'Tất cả' },
+  { value: 'CHO_XAC_NHAN', label: 'Chờ xác nhận' },
+  { value: 'DA_XAC_NHAN', label: 'Đã xác nhận' },
+  { value: 'DANG_GIAO', label: 'Đang giao' },
+  { value: 'HOAN_THANH', label: 'Hoàn thành' },
+  { value: 'DA_HUY', label: 'Đã huỷ' },
+];
+
+const PAYMENT_LABELS = {
+  THANH_TOAN_KHI_NHAN_HANG: 'COD',
+  CHUYEN_KHOAN: 'Chuyển khoản',
+  MOMO: 'MoMo',
+  VNPAY: 'VNPay',
+};
+
+const DashboardPage = ({ initialTab = 'overview' }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('overview');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   // ── MOCK DATA FOR THE MODULES ──
 
@@ -168,11 +193,15 @@ const DashboardPage = () => {
   };
 
   const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const [searchOrder, setSearchOrder] = useState('');
   const [filterOrderStatus, setFilterOrderStatus] = useState('ALL');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orderDetailLoading, setOrderDetailLoading] = useState(false);
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
 
   const fetchOrders = async () => {
+    setOrdersLoading(true);
     try {
       const res = await orderApi.getAllOrders();
       if (res && res.success) {
@@ -180,10 +209,13 @@ const DashboardPage = () => {
       }
     } catch (err) {
       console.error('Error fetching orders:', err);
+    } finally {
+      setOrdersLoading(false);
     }
   };
 
   const handleUpdateOrderStatus = async (orderId, nextStatus) => {
+    setUpdatingOrderId(orderId);
     try {
       const res = await orderApi.updateOrderStatus(orderId, nextStatus);
       if (res.success) {
@@ -197,22 +229,63 @@ const DashboardPage = () => {
       }
     } catch (err) {
       alert(err.message || 'Có lỗi xảy ra khi cập nhật trạng thái đơn hàng.');
+    } finally {
+      setUpdatingOrderId(null);
     }
   };
 
   const fetchOrderItemsDetail = async (order) => {
+    setOrderDetailLoading(true);
+    setSelectedOrder(order);
     try {
       const res = await orderApi.getOrderDetail(order.MaDonHangCode || order.MaDonHang);
       if (res.success) {
         setSelectedOrder(res.data);
-      } else {
-        setSelectedOrder(order);
       }
     } catch (err) {
       console.error('[fetchOrderItemsDetail]', err);
-      setSelectedOrder(order);
+      alert(err.message || 'Không thể tải chi tiết đơn hàng.');
+    } finally {
+      setOrderDetailLoading(false);
     }
   };
+
+  const filteredOrders = orders.filter(o => {
+    const matchStatus = filterOrderStatus === 'ALL' || o.TrangThaiDonHang === filterOrderStatus;
+    const q = searchOrder.trim().toLowerCase();
+    if (!q) return matchStatus;
+    const haystack = [
+      o.MaDonHangCode,
+      o.TenKhachHang,
+      o.SoDienThoai,
+      o.DiaChiGiaoHang,
+    ].filter(Boolean).join(' ').toLowerCase();
+    return matchStatus && haystack.includes(q);
+  });
+
+  const handleAdminStatusChange = async (e) => {
+    const nextStatus = e.target.value;
+    if (!selectedOrder || nextStatus === selectedOrder.TrangThaiDonHang) return;
+    setUpdatingOrderId(selectedOrder.MaDonHang);
+    try {
+      await handleUpdateOrderStatus(selectedOrder.MaDonHang, nextStatus);
+      setSelectedOrder(prev => ({ ...prev, TrangThaiDonHang: nextStatus }));
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const switchTab = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'orders') navigate('/admin/orders');
+    else if (location.pathname !== '/admin') navigate('/admin');
+  };
+
+  useEffect(() => {
+    if (location.pathname.includes('/admin/orders')) {
+      setActiveTab('orders');
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     fetchUsers();
@@ -220,6 +293,20 @@ const DashboardPage = () => {
     fetchCollections();
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    if (orders.length > 0) {
+      setRecentTransactions(
+        orders.slice(0, 4).map(o => ({
+          id: o.MaDonHangCode,
+          name: o.TenKhachHang,
+          type: ORDER_STATUS_META[o.TrangThaiDonHang]?.label || o.TrangThaiDonHang,
+          amount: Number(o.TongTien),
+          date: new Date(o.NgayTao).toLocaleString('vi-VN'),
+        }))
+      );
+    }
+  }, [orders]);
 
   const handleToggleRole = async (id) => {
     const userToUpdate = users.find(u => u.id === id);
@@ -535,49 +622,49 @@ const DashboardPage = () => {
           <nav className="admin-sidebar-nav">
             <button
               className={`admin-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
-              onClick={() => setActiveTab('overview')}
+              onClick={() => switchTab('overview')}
             >
               <TrendingUp size={18} />
               <span>Báo cáo thống kê</span>
             </button>
             <button
               className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
-              onClick={() => setActiveTab('users')}
+              onClick={() => switchTab('users')}
             >
               <Users size={18} />
               <span>Kiểm soát truy cập</span>
             </button>
             <button
               className={`admin-nav-item ${activeTab === 'products' ? 'active' : ''}`}
-              onClick={() => setActiveTab('products')}
+              onClick={() => switchTab('products')}
             >
               <ShoppingBag size={18} />
               <span>Thiết lập sản phẩm</span>
             </button>
             <button
               className={`admin-nav-item ${activeTab === 'collections' ? 'active' : ''}`}
-              onClick={() => setActiveTab('collections')}
+              onClick={() => switchTab('collections')}
             >
               <Image size={18} />
               <span>Biên tập bộ sưu tập</span>
             </button>
             <button
               className={`admin-nav-item ${activeTab === 'coupons' ? 'active' : ''}`}
-              onClick={() => setActiveTab('coupons')}
+              onClick={() => switchTab('coupons')}
             >
               <Tag size={18} />
               <span>Thiết lập giảm giá</span>
             </button>
             <button
               className={`admin-nav-item ${activeTab === 'orders' ? 'active' : ''}`}
-              onClick={() => setActiveTab('orders')}
+              onClick={() => switchTab('orders')}
             >
               <Package size={18} />
               <span>Quản lý đơn hàng</span>
             </button>
             <button
               className={`admin-nav-item ${activeTab === 'reviews' ? 'active' : ''}`}
-              onClick={() => setActiveTab('reviews')}
+              onClick={() => switchTab('reviews')}
             >
               <MessageSquare size={18} />
               <span>Kiểm duyệt đánh giá</span>
@@ -1694,6 +1781,245 @@ const DashboardPage = () => {
                       </button>
                     </div>
                   </form>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── TAB: ORDER MANAGEMENT ── */}
+        {activeTab === 'orders' && (
+          <>
+            <div className="admin-content-header">
+              <div>
+                <h1>Quản lý đơn hàng</h1>
+                <p>Theo dõi, xử lý và cập nhật trạng thái đơn hàng từ API</p>
+              </div>
+              <button type="button" className="admin-btn-add" onClick={fetchOrders} disabled={ordersLoading}>
+                {ordersLoading ? 'Đang tải...' : 'Làm mới'}
+              </button>
+            </div>
+
+            <div className="admin-order-stats">
+              {ORDER_STATUS_FILTERS.map(f => (
+                <button
+                  key={f.value}
+                  type="button"
+                  className={`admin-order-stat ${filterOrderStatus === f.value ? 'active' : ''}`}
+                  onClick={() => setFilterOrderStatus(f.value)}
+                >
+                  <strong>
+                    {f.value === 'ALL'
+                      ? orders.length
+                      : orders.filter(o => o.TrangThaiDonHang === f.value).length}
+                  </strong>
+                  <span>{f.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="admin-data-card">
+              <div className="admin-table-actions">
+                <div className="admin-search-wrapper">
+                  <Search size={16} style={{ color: 'var(--admin-text-muted)' }} />
+                  <input
+                    type="text"
+                    placeholder="Tìm theo mã đơn, tên, SĐT, địa chỉ..."
+                    value={searchOrder}
+                    onChange={e => setSearchOrder(e.target.value)}
+                  />
+                </div>
+                <div style={{ color: 'var(--admin-text-muted)', fontSize: '13px' }}>
+                  Hiển thị {filteredOrders.length} / {orders.length} đơn
+                </div>
+              </div>
+
+              {ordersLoading ? (
+                <div className="admin-order-loading">Đang tải danh sách đơn hàng...</div>
+              ) : (
+                <div className="admin-table-container">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Liên hệ / Giao hàng</th>
+                        <th>Tổng tiền</th>
+                        <th>Thanh toán</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày đặt</th>
+                        <th>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredOrders.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} style={{ textAlign: 'center', padding: '32px', color: 'var(--admin-text-muted)' }}>
+                            Không có đơn hàng phù hợp bộ lọc.
+                          </td>
+                        </tr>
+                      ) : filteredOrders.map(order => {
+                        const meta = ORDER_STATUS_META[order.TrangThaiDonHang] || ORDER_STATUS_META.CHO_XAC_NHAN;
+                        const ngayTao = new Date(order.NgayTao).toLocaleString('vi-VN');
+                        return (
+                          <tr key={order.MaDonHang}>
+                            <td><code>{order.MaDonHangCode}</code></td>
+                            <td><strong>{order.TenKhachHang}</strong></td>
+                            <td>
+                              <div className="admin-order-contact">
+                                <span>{order.SoDienThoai}</span>
+                                <small>{order.DiaChiGiaoHang}</small>
+                              </div>
+                            </td>
+                            <td><strong>{Number(order.TongTien).toLocaleString('vi-VN')} ₫</strong></td>
+                            <td>{PAYMENT_LABELS[order.PhuongThucThanhToan] || order.PhuongThucThanhToan}</td>
+                            <td>
+                              <span className={`admin-badge ${meta.badge}`}>{meta.label}</span>
+                            </td>
+                            <td><small>{ngayTao}</small></td>
+                            <td>
+                              <div className="admin-action-buttons">
+                                <button
+                                  type="button"
+                                  className="admin-btn-action toggle-role"
+                                  onClick={() => fetchOrderItemsDetail(order)}
+                                >
+                                  Chi tiết
+                                </button>
+                                {order.TrangThaiDonHang === 'CHO_XAC_NHAN' && (
+                                  <button
+                                    type="button"
+                                    className="admin-btn-action approve"
+                                    disabled={updatingOrderId === order.MaDonHang}
+                                    onClick={() => handleUpdateOrderStatus(order.MaDonHang, 'DA_XAC_NHAN')}
+                                  >
+                                    Xác nhận
+                                  </button>
+                                )}
+                                {order.TrangThaiDonHang === 'DA_XAC_NHAN' && (
+                                  <button
+                                    type="button"
+                                    className="admin-btn-action approve"
+                                    disabled={updatingOrderId === order.MaDonHang}
+                                    onClick={() => handleUpdateOrderStatus(order.MaDonHang, 'DANG_GIAO')}
+                                  >
+                                    Giao hàng
+                                  </button>
+                                )}
+                                {order.TrangThaiDonHang === 'DANG_GIAO' && (
+                                  <button
+                                    type="button"
+                                    className="admin-btn-action approve"
+                                    disabled={updatingOrderId === order.MaDonHang}
+                                    onClick={() => handleUpdateOrderStatus(order.MaDonHang, 'HOAN_THANH')}
+                                  >
+                                    Hoàn thành
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {selectedOrder && (
+              <div className="admin-modal-overlay" onClick={() => setSelectedOrder(null)}>
+                <div className="admin-modal admin-order-modal" onClick={e => e.stopPropagation()}>
+                  <div className="admin-order-modal-header">
+                    <h3>Chi tiết đơn {selectedOrder.MaDonHangCode}</h3>
+                    <button type="button" className="admin-order-close" onClick={() => setSelectedOrder(null)}>
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  {orderDetailLoading ? (
+                    <p className="admin-order-loading">Đang tải chi tiết...</p>
+                  ) : (
+                    <>
+                      <div className="admin-order-modal-grid">
+                        <div>
+                          <label>Khách hàng</label>
+                          <p>{selectedOrder.TenKhachHang}</p>
+                        </div>
+                        <div>
+                          <label>Số điện thoại</label>
+                          <p>{selectedOrder.SoDienThoai}</p>
+                        </div>
+                        <div className="admin-order-modal-full">
+                          <label>Địa chỉ giao hàng</label>
+                          <p>{selectedOrder.DiaChiGiaoHang}</p>
+                        </div>
+                        {selectedOrder.GhiChu && (
+                          <div className="admin-order-modal-full">
+                            <label>Ghi chú</label>
+                            <p>{selectedOrder.GhiChu}</p>
+                          </div>
+                        )}
+                        <div>
+                          <label>Cập nhật trạng thái</label>
+                          <select
+                            value={selectedOrder.TrangThaiDonHang}
+                            onChange={handleAdminStatusChange}
+                            disabled={updatingOrderId === selectedOrder.MaDonHang}
+                          >
+                            {Object.entries(ORDER_STATUS_META).map(([value, { label }]) => (
+                              <option key={value} value={value}>{label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label>Thanh toán</label>
+                          <p>{PAYMENT_LABELS[selectedOrder.PhuongThucThanhToan] || selectedOrder.PhuongThucThanhToan}</p>
+                        </div>
+                      </div>
+
+                      <h4 className="admin-order-items-title">Sản phẩm trong đơn</h4>
+                      {selectedOrder.chiTiet?.length ? (
+                        <div className="admin-order-items">
+                          {selectedOrder.chiTiet.map(item => (
+                            <div key={item.MaChiTietDonHang} className="admin-order-item">
+                              <img
+                                src={getImageUrl(item.HinhAnhChinh)}
+                                alt={item.TenSanPham}
+                                onError={e => { e.target.src = 'https://placehold.co/80x80?text=SP'; }}
+                              />
+                              <div>
+                                <strong>{item.TenSanPham}</strong>
+                                <small>SL: {item.SoLuong} × {Number(item.DonGia).toLocaleString('vi-VN')} ₫</small>
+                              </div>
+                              <span>{(Number(item.DonGia) * item.SoLuong).toLocaleString('vi-VN')} ₫</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="admin-order-loading">Chưa có dòng sản phẩm (mở lại Chi tiết để tải).</p>
+                      )}
+
+                      <div className="admin-order-totals">
+                        <div><span>Tạm tính</span><span>{Number(selectedOrder.TamTinh).toLocaleString('vi-VN')} ₫</span></div>
+                        {Number(selectedOrder.TienGiam) > 0 && (
+                          <div><span>Giảm giá</span><span>- {Number(selectedOrder.TienGiam).toLocaleString('vi-VN')} ₫</span></div>
+                        )}
+                        <div>
+                          <span>Phí vận chuyển</span>
+                          <span>
+                            {Number(selectedOrder.PhiVanChuyen) === 0
+                              ? 'Miễn phí'
+                              : `${Number(selectedOrder.PhiVanChuyen).toLocaleString('vi-VN')} ₫`}
+                          </span>
+                        </div>
+                        <div className="admin-order-total-row">
+                          <span>Tổng cộng</span>
+                          <strong>{Number(selectedOrder.TongTien).toLocaleString('vi-VN')} ₫</strong>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}

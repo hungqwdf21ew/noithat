@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Package, ChevronDown, ChevronUp, Truck, CheckCircle,
-  Clock, XCircle, ShoppingBag,
+  Clock, XCircle, ShoppingBag, ExternalLink, RefreshCw,
 } from 'lucide-react';
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
@@ -10,40 +10,35 @@ import { useAuth } from '../contexts/AuthContext';
 import { orderApi } from '../apis/order.api';
 import { formatCurrency } from '../utils/currency.util';
 import { getImageUrl } from '../helpers/image.helper';
+import { ORDER_STATUS_CONFIG, ORDER_PAYMENT_LABEL, ORDER_FILTER_TABS } from '../constants/order.constant';
 import './OrdersPage.css';
 
-const STATUS_CONFIG = {
-  CHO_XAC_NHAN: { label: 'Chờ xác nhận', color: 'pending',   icon: Clock       },
-  DA_XAC_NHAN:  { label: 'Đã xác nhận',  color: 'confirmed', icon: CheckCircle },
-  DANG_GIAO:    { label: 'Đang giao',     color: 'shipping',  icon: Truck       },
-  HOAN_THANH:   { label: 'Hoàn thành',   color: 'done',      icon: CheckCircle },
-  DA_HUY:       { label: 'Đã huỷ',       color: 'cancelled', icon: XCircle     },
+const STATUS_ICONS = {
+  CHO_XAC_NHAN: Clock,
+  DA_XAC_NHAN: CheckCircle,
+  DANG_GIAO: Truck,
+  HOAN_THANH: CheckCircle,
+  DA_HUY: XCircle,
 };
 
 const STEPS = ['CHO_XAC_NHAN', 'DA_XAC_NHAN', 'DANG_GIAO', 'HOAN_THANH'];
 
-const PAYMENT_LABEL = {
-  THANH_TOAN_KHI_NHAN_HANG: 'Thanh toán khi nhận hàng',
-  CHUYEN_KHOAN:              'Chuyển khoản',
-  MOMO:                      'Ví MoMo',
-  VNPAY:                     'VNPay',
-};
-
-// ── Thanh tiến trình ──────────────────────────────────────────────────────────
 const OrderProgress = ({ status }) => {
-  if (status === 'DA_HUY') return (
-    <div className="op-cancelled-bar">
-      <XCircle size={16} /> Đơn hàng đã bị huỷ
-    </div>
-  );
+  if (status === 'DA_HUY') {
+    return (
+      <div className="op-cancelled-bar">
+        <XCircle size={16} /> Đơn hàng đã bị huỷ
+      </div>
+    );
+  }
 
   const currentIdx = STEPS.indexOf(status);
   return (
     <div className="op-progress">
       {STEPS.map((step, idx) => {
-        const cfg  = STATUS_CONFIG[step];
-        const Icon = cfg.icon;
-        const done   = idx < currentIdx;
+        const cfg = ORDER_STATUS_CONFIG[step];
+        const Icon = STATUS_ICONS[step];
+        const done = idx < currentIdx;
         const active = idx === currentIdx;
         return (
           <div key={step} className={`op-step ${done ? 'done' : ''} ${active ? 'active' : ''}`}>
@@ -59,26 +54,34 @@ const OrderProgress = ({ status }) => {
   );
 };
 
-// ── Card đơn hàng ─────────────────────────────────────────────────────────────
-const OrderCard = ({ order, onCancel }) => {
-  const [expanded,   setExpanded]   = useState(false);
-  const [detail,     setDetail]     = useState(null);
-  const [loading,    setLoading]    = useState(false);
+const OrderCard = ({ order, onCancel, onStatusChange }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [detail, setDetail] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [localStatus, setLocalStatus] = useState(order.TrangThaiDonHang);
 
-  const cfg  = STATUS_CONFIG[order.TrangThaiDonHang] || STATUS_CONFIG.CHO_XAC_NHAN;
-  const Icon = cfg.icon;
+  useEffect(() => {
+    setLocalStatus(order.TrangThaiDonHang);
+  }, [order.TrangThaiDonHang]);
+
+  const status = localStatus;
+  const cfg = ORDER_STATUS_CONFIG[status] || ORDER_STATUS_CONFIG.CHO_XAC_NHAN;
+  const Icon = STATUS_ICONS[status] || Clock;
 
   const toggleDetail = async () => {
     if (!expanded && !detail) {
       setLoading(true);
       try {
-        const res = await orderApi.getOrderDetail(order.MaDonHang);
+        const res = await orderApi.getOrderDetail(order.MaDonHangCode || order.MaDonHang);
         if (res.success) setDetail(res.data);
-      } catch (_) {}
-      finally { setLoading(false); }
+      } catch (_) {
+        /* ignore */
+      } finally {
+        setLoading(false);
+      }
     }
-    setExpanded(prev => !prev);
+    setExpanded((prev) => !prev);
   };
 
   const handleCancel = async () => {
@@ -86,10 +89,14 @@ const OrderCard = ({ order, onCancel }) => {
     setCancelling(true);
     try {
       const res = await onCancel(order.MaDonHang);
-      if (res.success && detail) {
-        setDetail(prev => ({ ...prev, TrangThaiDonHang: 'DA_HUY' }));
+      if (res.success) {
+        setLocalStatus('DA_HUY');
+        onStatusChange?.(order.MaDonHang, 'DA_HUY');
+        if (detail) setDetail((prev) => ({ ...prev, TrangThaiDonHang: 'DA_HUY' }));
       }
-    } finally { setCancelling(false); }
+    } finally {
+      setCancelling(false);
+    }
   };
 
   const ngayTao = new Date(order.NgayTao).toLocaleDateString('vi-VN', {
@@ -103,7 +110,9 @@ const OrderCard = ({ order, onCancel }) => {
         <div className="op-card-meta">
           <div className="op-code">
             <Package size={16} />
-            <strong>{order.MaDonHangCode}</strong>
+            <Link to={`/orders/${order.MaDonHangCode}`} className="op-code-link">
+              <strong>{order.MaDonHangCode}</strong>
+            </Link>
           </div>
           <span className="op-date">{ngayTao}</span>
         </div>
@@ -115,22 +124,25 @@ const OrderCard = ({ order, onCancel }) => {
         </div>
       </div>
 
-      <OrderProgress status={order.TrangThaiDonHang} />
+      <OrderProgress status={status} />
 
       <div className="op-quick-info">
         <span>📍 {order.DiaChiGiaoHang}</span>
-        <span>💳 {PAYMENT_LABEL[order.PhuongThucThanhToan] || order.PhuongThucThanhToan}</span>
+        <span>💳 {ORDER_PAYMENT_LABEL[order.PhuongThucThanhToan] || order.PhuongThucThanhToan}</span>
       </div>
 
       <div className="op-card-actions">
-        <button className="op-btn-toggle" onClick={toggleDetail}>
+        <Link to={`/orders/${order.MaDonHangCode}`} className="op-btn-detail">
+          <ExternalLink size={14} /> Trang chi tiết
+        </Link>
+        <button type="button" className="op-btn-toggle" onClick={toggleDetail}>
           {expanded
             ? <><ChevronUp size={14} /> Ẩn chi tiết</>
-            : <><ChevronDown size={14} /> Xem chi tiết</>}
+            : <><ChevronDown size={14} /> Xem nhanh</>}
         </button>
-        {order.TrangThaiDonHang === 'CHO_XAC_NHAN' && (
-          <button className="op-btn-cancel" onClick={handleCancel} disabled={cancelling}>
-            {cancelling ? 'Đang huỷ...' : 'Huỷ đơn hàng'}
+        {status === 'CHO_XAC_NHAN' && (
+          <button type="button" className="op-btn-cancel" onClick={handleCancel} disabled={cancelling}>
+            {cancelling ? 'Đang huỷ...' : 'Huỷ đơn'}
           </button>
         )}
       </div>
@@ -138,12 +150,12 @@ const OrderCard = ({ order, onCancel }) => {
       {expanded && (
         <div className="op-detail">
           {loading ? (
-            <div className="op-loading">Đang tải...</div>
+            <div className="op-loading">Đang tải từ API...</div>
           ) : detail ? (
             <>
               <h4>Sản phẩm đã đặt</h4>
               <div className="op-detail-items">
-                {detail.chiTiet?.map(item => (
+                {detail.chiTiet?.map((item) => (
                   <div key={item.MaChiTietDonHang} className="op-detail-item">
                     <div className="op-detail-img">
                       <img src={getImageUrl(item.HinhAnhChinh)} alt={item.TenSanPham} />
@@ -182,7 +194,7 @@ const OrderCard = ({ order, onCancel }) => {
               )}
             </>
           ) : (
-            <p className="op-loading">Không thể tải chi tiết đơn hàng.</p>
+            <p className="op-loading">Không thể tải chi tiết. Thử mở trang chi tiết.</p>
           )}
         </div>
       )}
@@ -190,47 +202,66 @@ const OrderCard = ({ order, onCancel }) => {
   );
 };
 
-// ── Trang chính ───────────────────────────────────────────────────────────────
 const OrdersPage = () => {
-  const { user }  = useAuth();
-  const [orders,  setOrders]  = useState([]);
+  const { user, initialized } = useAuth();
+  const location = useLocation();
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter,  setFilter]  = useState('ALL');
+  const [error, setError] = useState('');
+  const [filter, setFilter] = useState('ALL');
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await orderApi.getMyOrders();
-        if (res.success) setOrders(res.data);
-      } catch (_) {}
-      finally { setLoading(false); }
-    })();
+  const loadOrders = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await orderApi.getMyOrders();
+      if (res.success) {
+        setOrders(Array.isArray(res.data) ? res.data : []);
+      } else {
+        setError(res.message || 'Không thể tải đơn hàng.');
+      }
+    } catch (err) {
+      const msg = err?.message || 'Không thể kết nối máy chủ.';
+      setError(msg);
+      if (err?.success === false && !err.message) {
+        setError('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.');
+      }
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    if (!initialized || !user) return;
+    loadOrders();
+  }, [initialized, user, location.key, loadOrders]);
+
   const handleCancel = async (maDonHang) => {
-    const res = await orderApi.cancelOrder(maDonHang);
-    if (res.success) {
-      setOrders(prev =>
-        prev.map(o => o.MaDonHang === maDonHang ? { ...o, TrangThaiDonHang: 'DA_HUY' } : o)
-      );
-    } else {
-      alert(res.message || 'Không thể huỷ đơn hàng.');
+    try {
+      const res = await orderApi.cancelOrder(maDonHang);
+      if (res.success) {
+        setOrders((prev) =>
+          prev.map((o) => (o.MaDonHang === maDonHang ? { ...o, TrangThaiDonHang: 'DA_HUY' } : o))
+        );
+      } else {
+        alert(res.message || 'Không thể huỷ đơn hàng.');
+      }
+      return res;
+    } catch (err) {
+      alert(err.message || 'Không thể huỷ đơn hàng.');
+      return { success: false };
     }
-    return res;
   };
 
-  const FILTERS = [
-    { value: 'ALL',           label: 'Tất cả' },
-    { value: 'CHO_XAC_NHAN', label: 'Chờ xác nhận' },
-    { value: 'DA_XAC_NHAN',  label: 'Đã xác nhận' },
-    { value: 'DANG_GIAO',    label: 'Đang giao' },
-    { value: 'HOAN_THANH',   label: 'Hoàn thành' },
-    { value: 'DA_HUY',       label: 'Đã huỷ' },
-  ];
+  const handleStatusChange = (maDonHang, status) => {
+    setOrders((prev) =>
+      prev.map((o) => (o.MaDonHang === maDonHang ? { ...o, TrangThaiDonHang: status } : o))
+    );
+  };
 
   const filtered = filter === 'ALL'
     ? orders
-    : orders.filter(o => o.TrangThaiDonHang === filter);
+    : orders.filter((o) => o.TrangThaiDonHang === filter);
 
   return (
     <div className="lavish-root">
@@ -245,26 +276,40 @@ const OrdersPage = () => {
           </nav>
 
           <div className="op-page-header">
-            <h1>Đơn Hàng Của Tôi</h1>
-            <p>Xin chào, <strong>{user?.fullName}</strong> — {orders.length} đơn hàng</p>
+            <div>
+              <h1>Đơn Hàng Của Tôi</h1>
+              <p>Xin chào, <strong>{user?.fullName}</strong> — {orders.length} đơn hàng</p>
+            </div>
+            <button type="button" className="op-btn-refresh" onClick={loadOrders} disabled={loading}>
+              <RefreshCw size={16} className={loading ? 'op-spin' : ''} />
+              Làm mới
+            </button>
           </div>
 
           <div className="op-filters">
-            {FILTERS.map(f => (
+            {ORDER_FILTER_TABS.map((f) => (
               <button
                 key={f.value}
+                type="button"
                 className={`op-filter-btn ${filter === f.value ? 'active' : ''}`}
                 onClick={() => setFilter(f.value)}
               >
                 {f.label}
                 {f.value !== 'ALL' && (
                   <span className="op-filter-count">
-                    {orders.filter(o => o.TrangThaiDonHang === f.value).length}
+                    {orders.filter((o) => o.TrangThaiDonHang === f.value).length}
                   </span>
                 )}
               </button>
             ))}
           </div>
+
+          {error && (
+            <div className="op-error-banner">
+              {error}
+              <button type="button" onClick={loadOrders}>Thử lại</button>
+            </div>
+          )}
 
           {loading ? (
             <div className="op-loading-state">
@@ -280,11 +325,20 @@ const OrdersPage = () => {
             </div>
           ) : (
             <div className="op-list">
-              {filtered.map(order => (
-                <OrderCard key={order.MaDonHang} order={order} onCancel={handleCancel} />
+              {filtered.map((order) => (
+                <OrderCard
+                  key={order.MaDonHang}
+                  order={order}
+                  onCancel={handleCancel}
+                  onStatusChange={handleStatusChange}
+                />
               ))}
             </div>
           )}
+
+          <p className="op-track-hint">
+            Đặt hàng không đăng nhập? <Link to="/track-order">Tra cứu bằng mã đơn</Link>
+          </p>
 
         </div>
       </main>

@@ -20,9 +20,11 @@ import ComparePage from './pages/ComparePage'
 import DesignRoomPage from './pages/DesignRoomPage'
 import BundlePage from './pages/BundlePage'
 import OrderDetailPage from './pages/OrderDetailPage'
+import OrderTrackPage from './pages/OrderTrackPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import AdminLayout from './layouts/AdminLayout'
 import DashboardPage from './pages/admin/DashboardPage'
+import OrderManagePage from './pages/admin/OrderManagePage'
 
 function App() {
   return (
@@ -55,14 +57,16 @@ function App() {
                     <ProfilePage />
                   </ProtectedRoute>
                 } />
-                <Route path="/orders/:id" element={
-                  <ProtectedRoute>
-                    <OrderDetailPage />
-                  </ProtectedRoute>
-                } />
+                <Route path="/track-order" element={<OrderTrackPage />} />
+                <Route path="/orders/:id" element={<OrderDetailPage />} />
                 <Route path="/admin" element={
                   <AdminLayout>
                     <DashboardPage />
+                  </AdminLayout>
+                } />
+                <Route path="/admin/orders" element={
+                  <AdminLayout>
+                    <OrderManagePage />
                   </AdminLayout>
                 } />
               </Routes>

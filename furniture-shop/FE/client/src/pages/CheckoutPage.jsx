@@ -55,8 +55,13 @@ const OrderSuccess = ({ order, isLoggedIn }) => (
     </p>
 
     <div className="checkout-success-actions">
-      {isLoggedIn && (
-        <Link to="/orders" className="co-btn-primary">Xem đơn hàng của tôi</Link>
+      <Link to={`/orders/${order.maDonHangCode}`} className="co-btn-primary">
+        Xem chi tiết đơn hàng
+      </Link>
+      {isLoggedIn ? (
+        <Link to="/orders" className="co-btn-outline">Tất cả đơn của tôi</Link>
+      ) : (
+        <Link to="/track-order" className="co-btn-outline">Tra cứu đơn khác</Link>
       )}
       <Link to="/products" className="co-btn-outline">Tiếp tục mua sắm</Link>
     </div>
@@ -248,7 +253,8 @@ const CheckoutPage = () => {
               <Lock size={16} />
               <span>
                 Bạn đang đặt hàng với tư cách khách. Vui lòng điền đầy đủ thông tin và xác nhận để đơn hàng được xử lý chính xác.
-                <Link to="/login">Đăng nhập</Link> để theo dõi đơn hàng dễ dàng hơn.
+                <Link to="/login">Đăng nhập</Link> để theo dõi đơn hàng dễ dàng hơn, hoặc{' '}
+                <Link to="/track-order">tra cứu bằng mã đơn</Link> sau khi đặt.
               </span>
             </div>
           )}

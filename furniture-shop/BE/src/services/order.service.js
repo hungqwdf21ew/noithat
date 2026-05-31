@@ -224,19 +224,31 @@ exports.validateCoupon = async ({ maCode, tamTinh }) => {
 exports.getMyOrders = async (userId) => {
   const pool = await connect();
 
-  const res = await pool.request()
+  const userRes = await pool.request()
     .input('MaNguoiDung', sql.Int, userId)
-    .query(`
-      SELECT
-        dh.MaDonHang, dh.MaDonHangCode, dh.TenKhachHang, dh.SoDienThoai,
-        dh.DiaChiGiaoHang, dh.GhiChu,
-        dh.TamTinh, dh.TienGiam, dh.PhiVanChuyen, dh.TongTien,
-        dh.TrangThaiDonHang, dh.PhuongThucThanhToan, dh.TrangThaiThanhToan,
-        dh.NgayTao, dh.NgayCapNhat
-      FROM dbo.DonHang dh
-      WHERE dh.MaNguoiDung = @MaNguoiDung
-      ORDER BY dh.NgayTao DESC
-    `);
+    .query(`SELECT SoDienThoai FROM dbo.NguoiDung WHERE MaNguoiDung = @MaNguoiDung`);
+
+  const userPhone = userRes.recordset[0]?.SoDienThoai?.trim() || null;
+
+  const orderReq = pool.request().input('MaNguoiDung', sql.Int, userId);
+
+  let whereClause = 'dh.MaNguoiDung = @MaNguoiDung';
+  if (userPhone) {
+    orderReq.input('SoDienThoai', sql.NVarChar(20), userPhone);
+    whereClause = `(dh.MaNguoiDung = @MaNguoiDung OR (dh.MaNguoiDung IS NULL AND dh.SoDienThoai = @SoDienThoai))`;
+  }
+
+  const res = await orderReq.query(`
+    SELECT
+      dh.MaDonHang, dh.MaDonHangCode, dh.TenKhachHang, dh.SoDienThoai,
+      dh.DiaChiGiaoHang, dh.GhiChu,
+      dh.TamTinh, dh.TienGiam, dh.PhiVanChuyen, dh.TongTien,
+      dh.TrangThaiDonHang, dh.PhuongThucThanhToan, dh.TrangThaiThanhToan,
+      dh.NgayTao, dh.NgayCapNhat
+    FROM dbo.DonHang dh
+    WHERE ${whereClause}
+    ORDER BY dh.NgayTao DESC
+  `);
 
   return { success: true, data: res.recordset };
 };
@@ -247,14 +259,31 @@ exports.getOrderDetail = async (idOrCode, userId = null) => {
 
   const isNumeric = !isNaN(Number(idOrCode));
 
-  // Lấy header đơn hàng
+  let userPhone = null;
+  if (userId) {
+    const userRes = await pool.request()
+      .input('MaNguoiDung', sql.Int, userId)
+      .query(`SELECT SoDienThoai FROM dbo.NguoiDung WHERE MaNguoiDung = @MaNguoiDung`);
+    userPhone = userRes.recordset[0]?.SoDienThoai?.trim() || null;
+  }
+
   const orderReq = pool.request();
   if (isNumeric) {
     orderReq.input('MaDonHang', sql.Int, Number(idOrCode));
   } else {
     orderReq.input('MaDonHangCode', sql.NVarChar(30), idOrCode);
   }
-  if (userId) orderReq.input('MaNguoiDung', sql.Int, userId);
+
+  let ownerClause = '';
+  if (userId) {
+    orderReq.input('MaNguoiDung', sql.Int, userId);
+    if (userPhone) {
+      orderReq.input('SoDienThoai', sql.NVarChar(20), userPhone);
+      ownerClause = 'AND (dh.MaNguoiDung = @MaNguoiDung OR (dh.MaNguoiDung IS NULL AND dh.SoDienThoai = @SoDienThoai))';
+    } else {
+      ownerClause = 'AND dh.MaNguoiDung = @MaNguoiDung';
+    }
+  }
 
   const orderRes = await orderReq.query(`
     SELECT
@@ -265,7 +294,7 @@ exports.getOrderDetail = async (idOrCode, userId = null) => {
       dh.NgayTao, dh.NgayCapNhat
     FROM dbo.DonHang dh
     WHERE ${isNumeric ? 'dh.MaDonHang = @MaDonHang' : 'dh.MaDonHangCode = @MaDonHangCode'}
-    ${userId ? 'AND dh.MaNguoiDung = @MaNguoiDung' : ''}
+    ${ownerClause}
   `);
 
   const order = orderRes.recordset[0];

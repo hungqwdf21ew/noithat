@@ -737,3 +737,198 @@
     padding: 8px;
   }
 }
+
+/* ── ORDER MANAGEMENT ── */
+.admin-order-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.admin-order-stat {
+  background: var(--admin-card-bg);
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  color: var(--admin-text-main);
+}
+
+.admin-order-stat strong {
+  display: block;
+  font-size: 22px;
+  color: var(--admin-gold);
+  margin-bottom: 4px;
+}
+
+.admin-order-stat span {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+}
+
+.admin-order-stat.active,
+.admin-order-stat:hover {
+  border-color: var(--admin-gold);
+  background: rgba(201, 151, 58, 0.08);
+}
+
+.admin-order-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 220px;
+}
+
+.admin-order-contact small {
+  color: var(--admin-text-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.admin-order-loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--admin-text-muted);
+}
+
+.admin-order-modal {
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.admin-order-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.admin-order-close {
+  background: transparent;
+  border: none;
+  color: var(--admin-text-muted);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.admin-order-close:hover {
+  color: var(--admin-gold);
+}
+
+.admin-order-modal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.admin-order-modal-grid label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--admin-text-muted);
+  margin-bottom: 4px;
+}
+
+.admin-order-modal-grid p,
+.admin-order-modal-grid select {
+  margin: 0;
+  font-size: 14px;
+}
+
+.admin-order-modal-grid select {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--admin-bg-dark);
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  color: var(--admin-text-main);
+}
+
+.admin-order-modal-full {
+  grid-column: 1 / -1;
+}
+
+.admin-order-items-title {
+  font-size: 14px;
+  margin: 0 0 12px;
+  color: var(--admin-gold);
+}
+
+.admin-order-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.admin-order-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--admin-bg-dark);
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+}
+
+.admin-order-item img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.admin-order-item > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-order-item strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.admin-order-item small {
+  color: var(--admin-text-muted);
+  font-size: 11px;
+}
+
+.admin-order-item > span {
+  font-weight: 600;
+  color: var(--admin-gold);
+  white-space: nowrap;
+}
+
+.admin-order-totals {
+  border-top: 1px solid var(--admin-border);
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.admin-order-totals > div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.admin-order-total-row {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--admin-border);
+  font-size: 15px;
+}
+
+.admin-order-total-row strong {
+  color: var(--admin-gold);
+}
