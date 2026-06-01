@@ -3,7 +3,6 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const cloudinary = require('../configs/cloudinary.config');
 
 // Ensure uploads folder exists
 const uploadDir = path.join(__dirname, '../../uploads');
@@ -37,38 +36,20 @@ const upload = multer({
 });
 
 // Single image upload route
-router.post('/image', upload.single('image'), async (req, res) => {
+router.post('/image', upload.single('image'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Vui lòng chọn hình ảnh để tải lên.' });
     }
-
-    // Tải hình ảnh lên Cloudinary
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'furniture-shop',
-      use_filename: true,
-      unique_filename: true
-    });
-
-    // Xóa file tạm thời trên ổ đĩa server cục bộ
-    try {
-      fs.unlinkSync(req.file.path);
-    } catch (unlinkErr) {
-      console.error('Không thể xóa file tạm:', unlinkErr.message);
-    }
-
+    const fileUrl = `/uploads/${req.file.filename}`;
     return res.json({
       success: true,
-      message: 'Tải ảnh lên đám mây thành công!',
-      url: result.secure_url // Trả về link HTTPS đám mây tuyệt đối
+      message: 'Tải ảnh lên thành công!',
+      url: fileUrl
     });
   } catch (error) {
     console.error('[Upload error]', error);
-    // Nếu có lỗi, cũng cố gắng dọn dẹp file tạm
-    if (req.file && fs.existsSync(req.file.path)) {
-      try { fs.unlinkSync(req.file.path); } catch (_) {}
-    }
-    return res.status(500).json({ success: false, message: 'Không thể tải ảnh lên đám mây.' });
+    return res.status(500).json({ success: false, message: 'Không thể tải ảnh lên.' });
   }
 });
 

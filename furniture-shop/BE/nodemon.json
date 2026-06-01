@@ -1,0 +1,10 @@
+{
+  "ignore": [
+    "uploads/",
+    "uploads/**/*",
+    "node_modules/**/*",
+    "*.log",
+    "test_*"
+  ],
+  "delay": "1500"
+}

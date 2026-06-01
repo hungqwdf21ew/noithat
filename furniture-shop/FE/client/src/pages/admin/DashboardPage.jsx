@@ -84,6 +84,8 @@ const DashboardPage = ({ initialTab = 'overview' }) => {
 
   const [dbCategories, setDbCategories] = useState([]);
   const [editingProd, setEditingProd] = useState(null);
+  const [newProdGalleryLink, setNewProdGalleryLink] = useState('');
+  const [editProdGalleryLink, setEditProdGalleryLink] = useState('');
 
   const fetchProducts = async () => {
     try {
@@ -606,6 +608,24 @@ const DashboardPage = ({ initialTab = 'overview' }) => {
         newGallery[index] = colorVal ? `${url}?color=${encodeURIComponent(colorVal)}` : url;
         return { ...prev, gallery: newGallery };
       });
+    }
+  };
+
+  const addGalleryLink = (type) => {
+    if (type === 'new') {
+      if (!newProdGalleryLink.trim()) return;
+      setNewProd(prev => ({
+        ...prev,
+        gallery: [...(prev.gallery || []), newProdGalleryLink.trim()]
+      }));
+      setNewProdGalleryLink('');
+    } else {
+      if (!editProdGalleryLink.trim()) return;
+      setEditingProd(prev => ({
+        ...prev,
+        gallery: [...(prev.gallery || []), editProdGalleryLink.trim()]
+      }));
+      setEditProdGalleryLink('');
     }
   };
 
@@ -1447,6 +1467,40 @@ const DashboardPage = ({ initialTab = 'overview' }) => {
                         disabled={uploadingImage}
                         style={{ display: 'block', marginTop: '6px' }}
                       />
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                        <input
+                          type="text"
+                          placeholder="Hoặc nhập đường dẫn ảnh (vd: /images/ghesofa.png)"
+                          value={newProdGalleryLink}
+                          onChange={e => setNewProdGalleryLink(e.target.value)}
+                          style={{
+                            flex: 1,
+                            padding: '6px 12px',
+                            background: '#120d08',
+                            color: '#fff',
+                            border: '1px solid var(--admin-border)',
+                            borderRadius: '4px',
+                            fontSize: '13px'
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => addGalleryLink('new')}
+                          style={{
+                            padding: '6px 12px',
+                            background: 'var(--admin-gold)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            fontWeight: 'bold',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          Thêm liên kết
+                        </button>
+                      </div>
                       {newProd.gallery && newProd.gallery.length > 0 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
                           {newProd.gallery.map((img, idx) => (
@@ -1625,6 +1679,40 @@ const DashboardPage = ({ initialTab = 'overview' }) => {
                         disabled={uploadingImage}
                         style={{ display: 'block', marginTop: '6px' }}
                       />
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                        <input
+                          type="text"
+                          placeholder="Hoặc nhập đường dẫn ảnh (vd: /images/ghesofa.png)"
+                          value={editProdGalleryLink}
+                          onChange={e => setEditProdGalleryLink(e.target.value)}
+                          style={{
+                            flex: 1,
+                            padding: '6px 12px',
+                            background: '#120d08',
+                            color: '#fff',
+                            border: '1px solid var(--admin-border)',
+                            borderRadius: '4px',
+                            fontSize: '13px'
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => addGalleryLink('edit')}
+                          style={{
+                            padding: '6px 12px',
+                            background: 'var(--admin-gold)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            fontWeight: 'bold',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          Thêm liên kết
+                        </button>
+                      </div>
                       {editingProd.gallery && editingProd.gallery.length > 0 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
                           {editingProd.gallery.map((img, idx) => (
