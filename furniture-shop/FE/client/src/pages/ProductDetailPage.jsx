@@ -1,17 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Heart, ShoppingCart, Share2, Truck, Shield, Headphones,
-  Star, ChevronLeft, ChevronRight, Minus, Plus, Scale, Search, ZoomIn
+  Star, ChevronLeft, ChevronRight, Minus, Plus, Scale, ZoomIn,
+  Send, Edit2, CheckCircle, AlertCircle
 } from 'lucide-react';
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
 import { useCart } from '../hooks/useCart';
 import { useFavorites } from '../hooks/useFavorites';
+import { useAuth } from '../contexts/AuthContext';
 import { formatCurrency } from '../utils/currency.util';
 import productApi from '../apis/product.api';
 import { getImageUrl } from '../helpers/image.helper';
+import { getToken } from '../helpers/storage.helper';
 import './ProductDetailPage.css';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const RELATED = [
   { id: 1,  name: 'Ghế Bành Heritage Royale', price: 29800000, image: '/images/anhghesofa.png' },
@@ -49,16 +54,28 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { isLoggedIn } = useAuth();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeImg, setActiveImg]       = useState(0);
+  const [activeImg, setActiveImg]         = useState(0);
   const [selectedColor, setSelectedColor] = useState(null);
-  const [quantity, setQuantity]         = useState(1);
-  const [activeTab, setActiveTab]       = useState('desc');
-  const [showModal, setShowModal]       = useState(false);
-  const [cartMsg, setCartMsg]           = useState('');
+  const [quantity, setQuantity]           = useState(1);
+  const [activeTab, setActiveTab]         = useState('desc');
+  const [showModal, setShowModal]         = useState(false);
+  const [cartMsg, setCartMsg]             = useState('');
+
+  // Review states
+  const [reviews,        setReviews]        = useState([]);
+  const [avgRating,      setAvgRating]      = useState(0);
+  const [totalReviews,   setTotalReviews]   = useState(0);
+  const [canReview,      setCanReview]      = useState(false);
+  const [existingReview, setExistingReview] = useState(null);
+  const [isEditing,      setIsEditing]      = useState(false);
+  const [reviewForm,     setReviewForm]     = useState({ soSao: 5, noiDung: '' });
+  const [reviewMsg,      setReviewMsg]      = useState({ type: '', text: '' });
+  const [submitting,     setSubmitting]     = useState(false);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -144,6 +161,91 @@ const ProductDetailPage = () => {
     loadProduct();
   }, [id]);
 
+  /* ── Load reviews + check eligibility ── */
+  const loadReviews = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/reviews/product/${id}`);
+      const data = await res.json();
+      if (data.success) {
+        setReviews(data.data.reviews);
+        setAvgRating(data.data.avgRating);
+        setTotalReviews(data.data.totalReviews);
+      }
+    } catch (e) {
+      console.error('[reviews] load error:', e.message);
+    }
+  }, [id]);
+
+  const checkEligibility = useCallback(async () => {
+    if (!isLoggedIn) return;
+    try {
+      const res = await fetch(`${API_BASE}/reviews/check/${id}`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCanReview(data.data.canReview);
+        setExistingReview(data.data.existingReview);
+        if (data.data.existingReview) {
+          setReviewForm({
+            soSao:   data.data.existingReview.SoSao,
+            noiDung: data.data.existingReview.NoiDung || '',
+          });
+        }
+      }
+    } catch (e) {
+      console.error('[reviews] check error:', e.message);
+    }
+  }, [id, isLoggedIn]);
+
+  useEffect(() => {
+    loadReviews();
+    checkEligibility();
+  }, [loadReviews, checkEligibility]);
+
+  /* ── Submit đánh giá (tạo mới hoặc sửa) ── */
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!reviewForm.soSao) return;
+    setSubmitting(true);
+    setReviewMsg({ type: '', text: '' });
+
+    try {
+      const isUpdate = !!existingReview;
+      const url = isUpdate
+        ? `${API_BASE}/reviews/${existingReview.MaDanhGia}`
+        : `${API_BASE}/reviews`;
+      const method = isUpdate ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({
+          productId: Number(id),
+          soSao:     reviewForm.soSao,
+          noiDung:   reviewForm.noiDung,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setReviewMsg({ type: 'success', text: data.message });
+        setIsEditing(false);
+        await checkEligibility();
+        await loadReviews();
+      } else {
+        setReviewMsg({ type: 'error', text: data.message });
+      }
+    } catch (e) {
+      setReviewMsg({ type: 'error', text: 'Lỗi kết nối. Vui lòng thử lại.' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleToggleFavorite = () => {
     if (!product) return;
     toggleFavorite({
@@ -227,7 +329,7 @@ const ProductDetailPage = () => {
     { key: 'desc',     label: 'MÔ TẢ SẢN PHẨM' },
     { key: 'specs',    label: 'CHI TIẾT KỸ THUẬT' },
     { key: 'care',     label: 'HƯỚNG DẪN BẢO QUẢN' },
-    { key: 'reviews',  label: `ĐÁNH GIÁ (${product.reviewCount})` },
+    { key: 'reviews',  label: `ĐÁNH GIÁ (${totalReviews})` },
   ];
 
   return (
@@ -514,21 +616,142 @@ const ProductDetailPage = () => {
 
               {activeTab === 'reviews' && (
                 <div className="pdp-tab-reviews">
+                  {/* Tổng quan điểm */}
                   <div className="review-summary">
                     <div className="review-score">
-                      <span className="score-big">{product.rating}.0</span>
+                      <span className="score-big">{avgRating || '—'}</span>
                       <div className="score-stars">
                         {[...Array(5)].map((_, i) => (
                           <Star key={i} size={20}
-                            fill={i < product.rating ? '#c9973a' : 'none'}
-                            stroke={i < product.rating ? '#c9973a' : '#ccc'}
+                            fill={i < Math.round(avgRating) ? '#c9973a' : 'none'}
+                            stroke={i < Math.round(avgRating) ? '#c9973a' : '#ccc'}
                           />
                         ))}
                       </div>
-                      <span className="score-count">{product.reviewCount} đánh giá</span>
+                      <span className="score-count">{totalReviews} đánh giá</span>
                     </div>
                   </div>
-                  <p className="review-placeholder">Chức năng đánh giá đang được phát triển...</p>
+
+                  {/* Form đánh giá */}
+                  {!isLoggedIn ? (
+                    <div className="review-login-prompt">
+                      <AlertCircle size={18} />
+                      <span>Vui lòng <Link to="/login">đăng nhập</Link> để đánh giá sản phẩm.</span>
+                    </div>
+                  ) : !canReview && !existingReview ? (
+                    <div className="review-no-purchase">
+                      <AlertCircle size={18} />
+                      <span>Bạn cần mua và nhận sản phẩm này trước khi đánh giá.</span>
+                    </div>
+                  ) : existingReview && !isEditing ? (
+                    <div className="review-existing">
+                      <div className="review-existing-header">
+                        <CheckCircle size={16} color="#2d7a3a" />
+                        <span>Đánh giá của bạn</span>
+                        <span className={`review-status-badge ${existingReview.TrangThai}`}>
+                          {existingReview.TrangThai === 'CHO_DUYET' ? 'Chờ duyệt'
+                            : existingReview.TrangThai === 'DA_DUYET' ? 'Đã duyệt'
+                            : 'Đã ẩn'}
+                        </span>
+                      </div>
+                      <div className="review-existing-stars">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={16}
+                            fill={i < existingReview.SoSao ? '#c9973a' : 'none'}
+                            stroke={i < existingReview.SoSao ? '#c9973a' : '#ccc'}
+                          />
+                        ))}
+                      </div>
+                      {existingReview.NoiDung && <p className="review-existing-text">{existingReview.NoiDung}</p>}
+                      <button className="review-edit-btn" onClick={() => setIsEditing(true)}>
+                        <Edit2 size={14} /> Sửa đánh giá
+                      </button>
+                    </div>
+                  ) : (canReview || isEditing) && (
+                    <form className="review-form" onSubmit={handleSubmitReview}>
+                      <h4>{isEditing ? 'Sửa đánh giá của bạn' : 'Viết đánh giá'}</h4>
+
+                      {/* Chọn số sao */}
+                      <div className="review-star-select">
+                        <span>Đánh giá:</span>
+                        <div className="review-stars-input">
+                          {[1,2,3,4,5].map(star => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setReviewForm(f => ({ ...f, soSao: star }))}
+                            >
+                              <Star size={28}
+                                fill={star <= reviewForm.soSao ? '#c9973a' : 'none'}
+                                stroke={star <= reviewForm.soSao ? '#c9973a' : '#ccc'}
+                              />
+                            </button>
+                          ))}
+                          <span className="review-star-label">
+                            {['', 'Rất tệ', 'Tệ', 'Bình thường', 'Tốt', 'Xuất sắc'][reviewForm.soSao]}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Nội dung */}
+                      <textarea
+                        className="review-textarea"
+                        placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."
+                        value={reviewForm.noiDung}
+                        onChange={e => setReviewForm(f => ({ ...f, noiDung: e.target.value }))}
+                        rows={4}
+                        maxLength={1000}
+                      />
+                      <div className="review-char-count">{reviewForm.noiDung.length}/1000</div>
+
+                      {reviewMsg.text && (
+                        <div className={`review-msg ${reviewMsg.type}`}>
+                          {reviewMsg.type === 'success' ? <CheckCircle size={15} /> : <AlertCircle size={15} />}
+                          {reviewMsg.text}
+                        </div>
+                      )}
+
+                      <div className="review-form-actions">
+                        {isEditing && (
+                          <button type="button" className="review-cancel-btn" onClick={() => { setIsEditing(false); setReviewMsg({ type: '', text: '' }); }}>
+                            Hủy
+                          </button>
+                        )}
+                        <button type="submit" className="review-submit-btn" disabled={submitting}>
+                          <Send size={15} />
+                          {submitting ? 'Đang gửi...' : isEditing ? 'Cập nhật' : 'Gửi đánh giá'}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Danh sách đánh giá */}
+                  <div className="review-list">
+                    {reviews.length === 0 ? (
+                      <p className="review-empty">Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
+                    ) : reviews.map(r => (
+                      <div key={r.MaDanhGia} className="review-item">
+                        <div className="review-item-header">
+                          <div className="review-avatar">{r.TenNguoiDung?.[0] || 'U'}</div>
+                          <div className="review-item-meta">
+                            <strong>{r.TenNguoiDung}</strong>
+                            <div className="review-item-stars">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} size={13}
+                                  fill={i < r.SoSao ? '#c9973a' : 'none'}
+                                  stroke={i < r.SoSao ? '#c9973a' : '#ccc'}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <span className="review-item-date">
+                            {new Date(r.NgayTao).toLocaleDateString('vi-VN')}
+                          </span>
+                        </div>
+                        {r.NoiDung && <p className="review-item-text">{r.NoiDung}</p>}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
