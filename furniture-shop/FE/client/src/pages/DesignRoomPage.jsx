@@ -306,7 +306,8 @@ const DesignRoomPage = () => {
 
       // Đặt ảnh nền nếu có
       if (duAn.HinhAnhKhongGian) {
-        setCanvasBackground(`http://localhost:5000${duAn.HinhAnhKhongGian}`);
+        const baseUrl = API_BASE.replace(/\/api\/?$/, '');
+        setCanvasBackground(`${baseUrl}${duAn.HinhAnhKhongGian}`);
       }
 
       // Load từng sản phẩm theo tọa độ đã lưu
