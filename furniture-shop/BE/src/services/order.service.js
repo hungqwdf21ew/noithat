@@ -362,13 +362,27 @@ exports.getAllOrders = async () => {
 exports.updateOrderStatus = async (maDonHang, status) => {
   const pool = await connect();
 
+  // Khi đơn hàng chuyển sang HOAN_THANH:
+  // - Nếu phương thức là COD (thanh toán khi nhận hàng) → tự động cập nhật TrangThaiThanhToan = DA_THANH_TOAN
+  // - Nếu phương thức khác (chuyển khoản, MoMo, VNPay) → giữ nguyên (đã thanh toán trước)
+  const updatePaymentClause = status === 'HOAN_THANH'
+    ? `, TrangThaiThanhToan = CASE
+        WHEN PhuongThucThanhToan = N'THANH_TOAN_KHI_NHAN_HANG'
+          AND TrangThaiThanhToan = N'CHUA_THANH_TOAN'
+        THEN N'DA_THANH_TOAN'
+        ELSE TrangThaiThanhToan
+      END`
+    : '';
+
   const res = await pool.request()
-    .input('MaDonHang', sql.Int, maDonHang)
-    .input('TrangThaiDonHang', sql.NVarChar(30), status)
+    .input('MaDonHang',        sql.Int,          maDonHang)
+    .input('TrangThaiDonHang', sql.NVarChar(30),  status)
     .query(`
       UPDATE dbo.DonHang
-      SET TrangThaiDonHang = @TrangThaiDonHang, NgayCapNhat = SYSDATETIME()
-      OUTPUT INSERTED.MaDonHang, INSERTED.TrangThaiDonHang
+      SET TrangThaiDonHang = @TrangThaiDonHang
+          ${updatePaymentClause},
+          NgayCapNhat = SYSDATETIME()
+      OUTPUT INSERTED.MaDonHang, INSERTED.TrangThaiDonHang, INSERTED.TrangThaiThanhToan
       WHERE MaDonHang = @MaDonHang
     `);
 
@@ -376,5 +390,9 @@ exports.updateOrderStatus = async (maDonHang, status) => {
     return { success: false, message: 'Đơn hàng không tồn tại.' };
   }
 
-  return { success: true, message: 'Cập nhật trạng thái đơn hàng thành công!', data: res.recordset[0] };
+  return {
+    success: true,
+    message: 'Cập nhật trạng thái đơn hàng thành công!',
+    data: res.recordset[0],
+  };
 };
