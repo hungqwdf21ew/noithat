@@ -8,6 +8,7 @@ import {
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
 import { formatCurrency } from '../utils/currency.util';
+import { getImageUrl } from '../helpers/image.helper';
 import './DesignRoomPage.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -15,11 +16,28 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 /* ══════════════════════════════════════════
    1. HELPER FUNCTIONS
 ══════════════════════════════════════════ */
-const getThumbnail  = (name) => `/images/${name}`;
-const getTransparent = (name) => `/images/${name}`; // dùng cùng thư mục, thay bằng /images_nen/ nếu có ảnh nền trong suốt
+// Ảnh thumbnail (có nền) — dùng để hiển thị trong danh sách
+const getThumbnail = (imagePath) => getImageUrl(imagePath);
+
+// Ảnh tách nền (PNG trong suốt) — dùng khi đặt lên canvas
+// Quy tắc: cùng tên file, chỉ đổi thư mục sang /images_nen/
+// Nếu chưa có ảnh tách nền thì fallback về thumbnail
+const getTransparent = (imagePath) => {
+  if (!imagePath) return '/images/anhghesofa.png';
+  // Nếu là đường dẫn /uploads/products/sofa_01.png
+  // → thử /uploads/products_nen/sofa_01.png
+  if (imagePath.startsWith('/uploads/products/')) {
+    return imagePath.replace('/uploads/products/', '/uploads/products_nen/');
+  }
+  // Nếu là /images/sofa_01.png → thử /images_nen/sofa_01.png
+  if (imagePath.startsWith('/images/')) {
+    return imagePath.replace('/images/', '/images_nen/');
+  }
+  return imagePath;
+};
 
 /* ══════════════════════════════════════════
-   2. DỮ LIỆU MẪU
+   2. DỮ LIỆU MẪU (phòng preset — giữ nguyên)
 ══════════════════════════════════════════ */
 const ROOM_PRESETS = [
   { id: 1, name: 'Phòng Ngủ Hiện Đại',          style: 'Modern',         image: '/images/noi_that_01_hang1_cot1.png' },
@@ -33,39 +51,6 @@ const ROOM_PRESETS = [
 const SAMPLE_ROOMS = ROOM_PRESETS;
 
 const ROOM_TABS = ['Tất cả', 'Phòng khách', 'Phòng ngủ', 'Phòng ăn', 'Góc làm việc', 'Luxury'];
-
-const FURNITURE_CATEGORIES = [
-  {
-    name: 'PHÒNG KHÁCH',
-    items: [
-      { id: 1,  name: 'Sofa Heritage',        price: 45000000,  file: 'anhghesofa.png',        maSanPham: 1 },
-      { id: 2,  name: 'Bàn Trà Gỗ',           price: 12000000,  file: 'anhbanan.png',           maSanPham: 3 },
-      { id: 3,  name: 'Ghế Bành Louis XV',     price: 24800000,  file: 'anhghebandenkh.png',     maSanPham: 5 },
-      { id: 4,  name: 'Bàn Console',           price: 18000000,  file: 'anhbanghekh.png',        maSanPham: 2 },
-    ],
-  },
-  {
-    name: 'PHÒNG NGỦ',
-    items: [
-      { id: 5,  name: 'Giường Imperial',       price: 98000000,  file: 'anhgiuong.png',          maSanPham: 6 },
-      { id: 6,  name: 'Giường + Đèn Ngủ',      price: 28000000,  file: 'anhgiuonghaiden.png',    maSanPham: 7 },
-    ],
-  },
-  {
-    name: 'PHÒNG ĂN',
-    items: [
-      { id: 7,  name: 'Bàn Ăn Grand Palace',   price: 125000000, file: 'anhbobanghe.png',        maSanPham: 4 },
-      { id: 8,  name: 'Bàn Ăn Dài',            price: 62000000,  file: 'anhbanandai.png',        maSanPham: 8 },
-    ],
-  },
-  {
-    name: 'TRANG TRÍ',
-    items: [
-      { id: 9,  name: 'Đèn Sàn',               price: 8500000,   file: 'dendung.png',            maSanPham: 8 },
-      { id: 10, name: 'Đèn Ngủ',               price: 3200000,   file: 'denngu.png',             maSanPham: 8 },
-    ],
-  },
-];
 
 /* ══════════════════════════════════════════
    3. COMPONENT CHÍNH
@@ -86,9 +71,43 @@ const DesignRoomPage = () => {
   const [projectName,    setProjectName]    = useState('Thiết kế của tôi');
   const [zoom,           setZoom]           = useState(1);
 
+  // Sản phẩm từ API
+  const [furnitureCategories, setFurnitureCategories] = useState([]);
+  const [loadingProducts,     setLoadingProducts]     = useState(true);
+
   const SAMPLES_PER_PAGE = 3;
   const CANVAS_W = 820;
   const CANVAS_H = 500;
+
+  /* ── Fetch sản phẩm từ API, nhóm theo danh mục ── */
+  useEffect(() => {
+    fetch(`${API_BASE}/products`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.success) return;
+        const products = data.data.products;
+
+        // Nhóm theo tên danh mục
+        const grouped = {};
+        products.forEach(p => {
+          const cat = p.category || 'Khác';
+          if (!grouped[cat]) grouped[cat] = [];
+          grouped[cat].push({
+            id:        p.id,
+            name:      p.name,
+            price:     p.price,
+            imagePath: p.image,   // đường dẫn từ DB, vd: /uploads/products/sofa_01.png
+            maSanPham: p.id,
+          });
+        });
+
+        setFurnitureCategories(
+          Object.entries(grouped).map(([name, items]) => ({ name: name.toUpperCase(), items }))
+        );
+      })
+      .catch(e => console.error('[DesignRoom] fetch products:', e))
+      .finally(() => setLoadingProducts(false));
+  }, []);
 
   /* ── Khởi tạo Fabric Canvas ── */
   useEffect(() => {
@@ -164,30 +183,39 @@ const DesignRoomPage = () => {
     const canvas = fabricRef.current;
     if (!canvas) return;
 
-    const imgSrc = getTransparent(item.file);
-    fabric.Image.fromURL(imgSrc, (img) => {
-      // Scale vừa phải (~200px chiều rộng)
-      const maxW = 200;
-      const scale = maxW / img.width;
-      img.set({
-        left:          CANVAS_W / 2 - (img.width * scale) / 2 + (Math.random() - 0.5) * 80,
-        top:           CANVAS_H / 2 - (img.height * scale) / 2 + (Math.random() - 0.5) * 60,
-        scaleX:        scale,
-        scaleY:        scale,
-        cornerColor:   '#c9973a',
-        cornerSize:    10,
-        transparentCorners: false,
-        borderColor:   '#c9973a',
-        // Metadata
-        _furnitureName:  item.name,
-        _furniturePrice: item.price,
-        _furnitureFile:  item.file,
-        _maSanPham:      item.maSanPham,
-      });
-      canvas.add(img);
-      canvas.setActiveObject(img);
-      canvas.renderAll();
-    }, { crossOrigin: 'anonymous' });
+    // Dùng ảnh tách nền nếu có, fallback về thumbnail
+    const imgSrc = getTransparent(item.imagePath);
+
+    const tryLoad = (src, fallback) => {
+      fabric.Image.fromURL(src, (img) => {
+        if (!img || img.width === 0) {
+          if (fallback) tryLoad(fallback, null);
+          return;
+        }
+        const maxW = 200;
+        const scale = maxW / img.width;
+        img.set({
+          left:   CANVAS_W / 2 - (img.width * scale) / 2 + (Math.random() - 0.5) * 80,
+          top:    CANVAS_H / 2 - (img.height * scale) / 2 + (Math.random() - 0.5) * 60,
+          scaleX: scale,
+          scaleY: scale,
+          cornerColor:        '#c9973a',
+          cornerSize:         10,
+          transparentCorners: false,
+          borderColor:        '#c9973a',
+          _furnitureName:  item.name,
+          _furniturePrice: item.price,
+          _furnitureFile:  src,
+          _maSanPham:      item.maSanPham,
+        });
+        canvas.add(img);
+        canvas.setActiveObject(img);
+        canvas.renderAll();
+      }, { crossOrigin: 'anonymous' });
+    };
+
+    // Thử ảnh tách nền trước, fallback về thumbnail
+    tryLoad(imgSrc, getThumbnail(item.imagePath));
   }, []);
 
   /* ── Toolbar: Xóa object đang chọn ── */
@@ -339,13 +367,10 @@ const DesignRoomPage = () => {
   };
 
   /* ── Filter furniture theo tab ── */
-  const filteredCategories = FURNITURE_CATEGORIES.filter(cat => {
+  const filteredCategories = furnitureCategories.filter(cat => {
     if (activeRoomTab === 'Tất cả') return true;
-    if (activeRoomTab === 'Phòng khách') return cat.name === 'PHÒNG KHÁCH';
-    if (activeRoomTab === 'Phòng ngủ')  return cat.name === 'PHÒNG NGỦ';
-    if (activeRoomTab === 'Phòng ăn')   return cat.name === 'PHÒNG ĂN';
-    if (activeRoomTab === 'Luxury')     return cat.name === 'TRANG TRÍ';
-    return true;
+    const tab = activeRoomTab.toLowerCase();
+    return cat.name.toLowerCase().includes(tab);
   });
 
   const visibleSamples = SAMPLE_ROOMS.slice(
@@ -454,13 +479,21 @@ const DesignRoomPage = () => {
 
               {/* Left: Danh sách nội thất */}
               <div className="drp-furniture-list">
-                {filteredCategories.map((cat, ci) => (
+                {loadingProducts ? (
+                  <div className="drp-loading">Đang tải sản phẩm...</div>
+                ) : filteredCategories.length === 0 ? (
+                  <div className="drp-loading">Không có sản phẩm</div>
+                ) : filteredCategories.map((cat, ci) => (
                   <div key={ci} className="drp-fcat">
                     <div className="drp-fcat-title">{cat.name}</div>
                     {cat.items.map(item => (
                       <div key={item.id} className="drp-fitem">
                         <div className="drp-fitem-img">
-                          <img src={getThumbnail(item.file)} alt={item.name} />
+                          <img
+                            src={getThumbnail(item.imagePath)}
+                            alt={item.name}
+                            onError={e => { e.target.src = '/images/anhghesofa.png'; }}
+                          />
                         </div>
                         <div className="drp-fitem-info">
                           <div className="drp-fitem-name">{item.name}</div>

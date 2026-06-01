@@ -2,7 +2,7 @@
 
 IF DB_ID(N'QLNT') IS NULL
 BEGIN
-    CREATE DATABASE QuanLyNoiThatDB;
+    CREATE DATABASE QLNT;
 END
 GO
 
@@ -687,41 +687,41 @@ INSERT INTO dbo.SanPham
 (MaDanhMuc, MaPhongCach, MaPhong, TenSanPham, DuongDan, MaSKU, MoTa, GiaBan, GiaKhuyenMai, SoLuongTon, ChatLieu, MauSac, KichThuoc, KhoiLuong, HinhAnhChinh, LaNoiBat, TrangThai)
 VALUES
 (1, 2, 1, N'Sofa vải hiện đại 3 chỗ', N'sofa-vai-hien-dai-3-cho', N'SF001',
- N'Mẫu sofa vải hiện đại phù hợp phòng khách chung cư.', 8500000, 7900000, 15, N'Vải bố, gỗ tự nhiên', N'Xám', N'210x85x80 cm', 45, N'/uploads/products/sofa-1.jpg', 1, N'HOAT_DONG'),
+ N'Mẫu sofa vải hiện đại phù hợp phòng khách chung cư.', 8500000, 7900000, 15, N'Vải bố, gỗ tự nhiên', N'Xám', N'210x85x80 cm', 45, N'/images/anhghesofa.png', 1, N'HOAT_DONG'),
 
 (1, 3, 1, N'Sofa da cao cấp', N'sofa-da-cao-cap', N'SF002',
- N'Sofa da sang trọng dành cho phòng khách lớn.', 18500000, NULL, 8, N'Da công nghiệp cao cấp, gỗ', N'Nâu', N'230x90x85 cm', 60, N'/uploads/products/sofa-2.jpg', 1, N'HOAT_DONG'),
+ N'Sofa da sang trọng dành cho phòng khách lớn.', 18500000, NULL, 8, N'Da công nghiệp cao cấp, gỗ', N'Nâu', N'230x90x85 cm', 60, N'/images/sofabo.png', 1, N'HOAT_DONG'),
 
 (2, 1, 1, N'Bàn trà gỗ tối giản', N'ban-tra-go-toi-gian', N'BT001',
- N'Bàn trà nhỏ gọn phong cách tối giản.', 2500000, 2200000, 25, N'Gỗ MDF phủ veneer', N'Nâu sáng', N'100x55x40 cm', 18, N'/uploads/products/ban-tra-1.jpg', 1, N'HOAT_DONG'),
+ N'Bàn trà nhỏ gọn phong cách tối giản.', 2500000, 2200000, 25, N'Gỗ MDF phủ veneer', N'Nâu sáng', N'100x55x40 cm', 18, N'/images/bantra.png', 1, N'HOAT_DONG'),
 
 (2, 5, 3, N'Bàn ăn Bắc Âu 4 ghế', N'ban-an-bac-au-4-ghe', N'BA001',
- N'Bàn ăn phong cách Bắc Âu kèm 4 ghế.', 6900000, NULL, 12, N'Gỗ cao su, nệm vải', N'Trắng - gỗ', N'120x75x75 cm', 38, N'/uploads/products/ban-an-1.jpg', 1, N'HOAT_DONG'),
+ N'Bàn ăn phong cách Bắc Âu kèm 4 ghế.', 6900000, NULL, 12, N'Gỗ cao su, nệm vải', N'Trắng - gỗ', N'120x75x75 cm', 38, N'/images/anhbobanghe.png', 1, N'HOAT_DONG'),
 
 (3, 2, 4, N'Ghế làm việc ergonomic', N'ghe-lam-viec-ergonomic', N'GH001',
- N'Ghế làm việc công thái học hỗ trợ lưng.', 3200000, 2900000, 30, N'Lưới, kim loại', N'Đen', N'65x65x110 cm', 16, N'/uploads/products/ghe-1.jpg', 0, N'HOAT_DONG'),
+ N'Ghế làm việc công thái học hỗ trợ lưng.', 3200000, 2900000, 30, N'Lưới, kim loại', N'Đen', N'65x65x110 cm', 16, N'/images/anhbanghekh.png', 0, N'HOAT_DONG'),
 
 (4, 1, 2, N'Giường ngủ gỗ tối giản', N'giuong-ngu-go-toi-gian', N'GN001',
- N'Giường ngủ thiết kế tối giản, phù hợp phòng ngủ hiện đại.', 7900000, NULL, 10, N'Gỗ công nghiệp MDF', N'Nâu gỗ', N'160x200 cm', 55, N'/uploads/products/giuong-1.jpg', 1, N'HOAT_DONG'),
+ N'Giường ngủ thiết kế tối giản, phù hợp phòng ngủ hiện đại.', 7900000, NULL, 10, N'Gỗ công nghiệp MDF', N'Nâu gỗ', N'160x200 cm', 55, N'/images/anhgiuong.png', 1, N'HOAT_DONG'),
 
 (5, 2, 2, N'Tủ quần áo 3 cánh', N'tu-quan-ao-3-canh', N'TU001',
- N'Tủ quần áo 3 cánh rộng rãi, thiết kế hiện đại.', 6200000, 5900000, 14, N'Gỗ MDF chống ẩm', N'Trắng', N'180x55x200 cm', 70, N'/uploads/products/tu-1.jpg', 0, N'HOAT_DONG'),
+ N'Tủ quần áo 3 cánh rộng rãi, thiết kế hiện đại.', 6200000, 5900000, 14, N'Gỗ MDF chống ẩm', N'Trắng', N'180x55x200 cm', 70, N'/images/tuda.png', 0, N'HOAT_DONG'),
 
 (6, 3, 1, N'Đèn sàn trang trí phòng khách', N'den-san-trang-tri-phong-khach', N'DE001',
- N'Đèn sàn ánh sáng ấm, tạo điểm nhấn thẩm mỹ.', 1450000, NULL, 40, N'Kim loại, vải', N'Vàng đồng', N'40x40x160 cm', 6, N'/uploads/products/den-1.jpg', 0, N'HOAT_DONG');
+ N'Đèn sàn ánh sáng ấm, tạo điểm nhấn thẩm mỹ.', 1450000, NULL, 40, N'Kim loại, vải', N'Vàng đồng', N'40x40x160 cm', 6, N'/images/dendung.png', 0, N'HOAT_DONG');
 GO
 
 INSERT INTO dbo.HinhAnhSanPham (MaSanPham, DuongDanHinh, MoTaHinh, ThuTuHienThi, LaAnhDaiDien)
 VALUES
-(1, N'/uploads/products/sofa-1.jpg', N'Sofa vải hiện đại ảnh chính', 1, 1),
-(1, N'/uploads/products/sofa-1-2.jpg', N'Sofa vải hiện đại góc nghiêng', 2, 0),
-(2, N'/uploads/products/sofa-2.jpg', N'Sofa da cao cấp ảnh chính', 1, 1),
-(3, N'/uploads/products/ban-tra-1.jpg', N'Bàn trà gỗ tối giản', 1, 1),
-(4, N'/uploads/products/ban-an-1.jpg', N'Bàn ăn Bắc Âu', 1, 1),
-(5, N'/uploads/products/ghe-1.jpg', N'Ghế làm việc ergonomic', 1, 1),
-(6, N'/uploads/products/giuong-1.jpg', N'Giường ngủ gỗ tối giản', 1, 1),
-(7, N'/uploads/products/tu-1.jpg', N'Tủ quần áo 3 cánh', 1, 1),
-(8, N'/uploads/products/den-1.jpg', N'Đèn sàn trang trí', 1, 1);
+(1, N'/images/anhghesofa.png',   N'Sofa vải hiện đại ảnh chính',    1, 1),
+(1, N'/images/sofacong_ct_maube_1.png', N'Sofa vải hiện đại góc nghiêng', 2, 0),
+(2, N'/images/sofabo.png',       N'Sofa da cao cấp ảnh chính',       1, 1),
+(3, N'/images/bantra.png',       N'Bàn trà gỗ tối giản',             1, 1),
+(4, N'/images/anhbobanghe.png',  N'Bàn ăn Bắc Âu',                  1, 1),
+(5, N'/images/anhbanghekh.png',  N'Ghế làm việc ergonomic',          1, 1),
+(6, N'/images/anhgiuong.png',    N'Giường ngủ gỗ tối giản',          1, 1),
+(7, N'/images/tuda.png',         N'Tủ quần áo 3 cánh',               1, 1),
+(8, N'/images/dendung.png',      N'Đèn sàn trang trí',               1, 1);
 GO
 
 INSERT INTO dbo.BoSuuTap (TenBoSuuTap, DuongDan, MoTa, HinhAnh)
