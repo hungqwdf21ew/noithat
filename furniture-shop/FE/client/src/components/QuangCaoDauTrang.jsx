@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-import { Link } from 'react-router-dom'
-=======
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,7 +8,6 @@ const dsAnhNen = [
   '/images/anhghesofa.png',
   '/images/anhgiuong.png'
 ];
->>>>>>> 14737872e240f61cf7c5c4564d0a0abf08429abd
 
 const QuangCaoDauTrang = () => {
   const { isLoggedIn } = useAuth();
@@ -34,18 +30,6 @@ const QuangCaoDauTrang = () => {
   }
 
   return (
-<<<<<<< HEAD
-    <div className="top-promo-bar" role="region" aria-label="Ưu đãi">
-      <div className="top-promo-bar-inner">
-        <span className="top-promo-accent" aria-hidden="true" />
-        <p className="top-promo-text">
-          Đăng ký tài khoản hôm nay — <strong>giảm 20%</strong> cho đơn hàng đầu tiên
-        </p>
-        <Link to="/register" className="top-promo-link">
-          Đăng ký ngay
-        </Link>
-      </div>
-=======
     <div style={{
       position: 'relative',
       width: '100%',
@@ -120,7 +104,6 @@ const QuangCaoDauTrang = () => {
         </Link>
       </div>
       
->>>>>>> 14737872e240f61cf7c5c4564d0a0abf08429abd
     </div>
   )
 }
