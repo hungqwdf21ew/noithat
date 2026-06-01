@@ -20,6 +20,30 @@ const RELATED = [
   { id: 5,  name: 'Ghế Bành Royal Majesty',   price: 27300000, image: '/images/anhbobanghe.png' },
 ];
 
+const getUrlOnly = (imgStr) => {
+  if (!imgStr) return '';
+  return imgStr.split('?color=')[0];
+};
+
+const getColorOnly = (imgStr) => {
+  if (!imgStr) return '';
+  const parts = imgStr.split('?color=');
+  return parts[1] ? decodeURIComponent(parts[1]) : '';
+};
+
+const COLOR_MAP = {
+  'xám': '#808080',
+  'nâu': '#8B4513',
+  'đen': '#1a1a1a',
+  'trắng': '#FFFFFF',
+  'vàng': '#DAA520',
+  'xanh': '#4682B4',
+  'đỏ': '#8B0000',
+  'kem': '#FFFDD0',
+  'gỗ': '#C19A6B',
+  'mặc định': '#d4c5a9'
+};
+
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -44,6 +68,42 @@ const ProductDetailPage = () => {
         const res = await productApi.getById(id);
         if (res.success) {
           const raw = res.data;
+          
+          // Phân tách màu sắc nếu được ngăn cách bởi dấu phẩy
+          const rawColors = raw.color ? raw.color.split(',').map(c => c.trim()) : ['Mặc định'];
+          
+          // Thu thập thêm màu sắc từ các ảnh gallery đã được gán màu
+          const galleryColors = [];
+          if (raw.gallery && Array.isArray(raw.gallery)) {
+            raw.gallery.forEach(img => {
+              const imgColor = getColorOnly(img);
+              if (imgColor && !galleryColors.includes(imgColor)) {
+                galleryColors.push(imgColor);
+              }
+            });
+          }
+
+          // Gộp chung các màu sắc độc bản (không trùng lặp)
+          const allColors = [...rawColors];
+          galleryColors.forEach(gc => {
+            if (!allColors.some(ac => ac.toLowerCase() === gc.toLowerCase())) {
+              allColors.push(gc);
+            }
+          });
+
+          // Ánh xạ sang cấu trúc màu sắc có mã HEX tương ứng
+          const mappedColors = allColors.map(c => {
+            const lower = c.toLowerCase();
+            let hex = '#d4c5a9'; // default
+            for (const [key, value] of Object.entries(COLOR_MAP)) {
+              if (lower.includes(key)) {
+                hex = value;
+                break;
+              }
+            }
+            return { name: c, hex };
+          });
+
           const mapped = {
             id: raw.id,
             name: raw.name,
@@ -60,7 +120,7 @@ const ProductDetailPage = () => {
             reviewCount: 12,
             description: raw.description || 'Mô tả sản phẩm đang được cập nhật.',
             dimensions: raw.size || 'N/A',
-            colors: [{ name: raw.color || 'Mặc định', hex: '#d4c5a9' }],
+            colors: mappedColors,
             features: [raw.material || 'Chất liệu cao cấp', raw.size || 'Kích thước tiêu chuẩn'],
             specs: {
               'Kích thước': raw.size || 'N/A',
@@ -221,7 +281,20 @@ const ProductDetailPage = () => {
                   <div
                     key={i}
                     className={`pdp-thumb ${activeImg === i ? 'active' : ''}`}
-                    onClick={() => setActiveImg(i)}
+                    onClick={() => {
+                      setActiveImg(i);
+                      const imgColor = getColorOnly(img);
+                      if (imgColor) {
+                        const matchedColorObj = product.colors.find(c => c.name.toLowerCase() === imgColor.toLowerCase());
+                        if (matchedColorObj) {
+                          setSelectedColor(matchedColorObj);
+                          return;
+                        }
+                      }
+                      if (product.colors && product.colors[i]) {
+                        setSelectedColor(product.colors[i]);
+                      }
+                    }}
                   >
                     <img src={img} alt={`${product.name} ${i + 1}`} />
                   </div>
@@ -278,7 +351,18 @@ const ProductDetailPage = () => {
                       className={`pdp-color-btn ${selectedColor.name === c.name ? 'active' : ''}`}
                       style={{ background: c.hex }}
                       title={c.name}
-                      onClick={() => setSelectedColor(c)}
+                      onClick={() => {
+                        setSelectedColor(c);
+                        const idx = product.images.findIndex(img => {
+                          const imgColor = getColorOnly(img);
+                          return imgColor && imgColor.toLowerCase() === c.name.toLowerCase();
+                        });
+                        if (idx !== -1) {
+                          setActiveImg(idx);
+                        } else if (i < product.images.length) {
+                          setActiveImg(i);
+                        }
+                      }}
                     />
                   ))}
                 </div>

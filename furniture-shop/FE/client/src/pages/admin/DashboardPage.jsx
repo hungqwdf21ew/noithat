@@ -580,6 +580,35 @@ const DashboardPage = ({ initialTab = 'overview' }) => {
     }
   };
 
+  const getUrlOnly = (imgStr) => {
+    if (!imgStr) return '';
+    return imgStr.split('?color=')[0];
+  };
+
+  const getColorOnly = (imgStr) => {
+    if (!imgStr) return '';
+    const parts = imgStr.split('?color=');
+    return parts[1] ? decodeURIComponent(parts[1]) : '';
+  };
+
+  const updateImageColor = (type, index, colorVal) => {
+    if (type === 'new') {
+      setNewProd(prev => {
+        const newGallery = [...(prev.gallery || [])];
+        const url = getUrlOnly(newGallery[index]);
+        newGallery[index] = colorVal ? `${url}?color=${encodeURIComponent(colorVal)}` : url;
+        return { ...prev, gallery: newGallery };
+      });
+    } else {
+      setEditingProd(prev => {
+        const newGallery = [...(prev.gallery || [])];
+        const url = getUrlOnly(newGallery[index]);
+        newGallery[index] = colorVal ? `${url}?color=${encodeURIComponent(colorVal)}` : url;
+        return { ...prev, gallery: newGallery };
+      });
+    }
+  };
+
   const handleDeleteProduct = async (id) => {
     if (window.confirm('Bạn có chắc muốn xóa sản phẩm này khỏi hệ thống kho?')) {
       try {
@@ -1421,12 +1450,29 @@ const DashboardPage = ({ initialTab = 'overview' }) => {
                       {newProd.gallery && newProd.gallery.length > 0 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
                           {newProd.gallery.map((img, idx) => (
-                            <div key={idx} style={{ position: 'relative' }}>
+                            <div key={idx} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                               <img
-                                src={getImageUrl(img)}
+                                src={getImageUrl(getUrlOnly(img))}
                                 alt={`Gallery ${idx}`}
                                 style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--admin-border)' }}
                                 onError={e => { e.target.style.display = 'none'; }}
+                              />
+                              <input
+                                type="text"
+                                placeholder="Gán màu"
+                                value={getColorOnly(img)}
+                                onChange={e => updateImageColor('new', idx, e.target.value)}
+                                style={{
+                                  width: '80px',
+                                  fontSize: '11px',
+                                  marginTop: '4px',
+                                  padding: '2px 4px',
+                                  background: '#120d08',
+                                  color: '#fff',
+                                  border: '1px solid var(--admin-border)',
+                                  borderRadius: '3px',
+                                  textAlign: 'center'
+                                }}
                               />
                               <button
                                 type="button"
@@ -1582,12 +1628,29 @@ const DashboardPage = ({ initialTab = 'overview' }) => {
                       {editingProd.gallery && editingProd.gallery.length > 0 && (
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
                           {editingProd.gallery.map((img, idx) => (
-                            <div key={idx} style={{ position: 'relative' }}>
+                            <div key={idx} style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                               <img
-                                src={getImageUrl(img)}
+                                src={getImageUrl(getUrlOnly(img))}
                                 alt={`Gallery ${idx}`}
                                 style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--admin-border)' }}
                                 onError={e => { e.target.style.display = 'none'; }}
+                              />
+                              <input
+                                type="text"
+                                placeholder="Gán màu"
+                                value={getColorOnly(img)}
+                                onChange={e => updateImageColor('edit', idx, e.target.value)}
+                                style={{
+                                  width: '80px',
+                                  fontSize: '11px',
+                                  marginTop: '4px',
+                                  padding: '2px 4px',
+                                  background: '#120d08',
+                                  color: '#fff',
+                                  border: '1px solid var(--admin-border)',
+                                  borderRadius: '3px',
+                                  textAlign: 'center'
+                                }}
                               />
                               <button
                                 type="button"
