@@ -363,3 +363,147 @@
   border-radius: 50%;
   background: #d1d5db;
 }
+
+/* ── Nút đánh giá trong chi tiết đơn hàng ── */
+.detail-product-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px dashed #e5e7eb;
+}
+.detail-product-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.od-btn-review {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  background: linear-gradient(135deg, #c9973a, #8b6914);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.od-btn-review:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(201,151,58,0.4);
+}
+
+/* Dùng chung CSS modal từ OrdersPage — copy lại để tự đứng */
+.rv-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: rvFadeIn 0.2s ease-out;
+}
+@keyframes rvFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.rv-modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  animation: rvSlideUp 0.25s ease-out;
+}
+@keyframes rvSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.rv-modal-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px;
+  background: #f5f0e8; border: none; border-radius: 50%;
+  font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: #5c4a3a; transition: background 0.2s;
+}
+.rv-modal-close:hover { background: #ece3d4; }
+.rv-modal-title {
+  font-family: var(--serif); font-size: 20px;
+  color: #2a1f15; margin: 0 0 18px;
+}
+.rv-product-info {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; background: #faf7f2;
+  border: 1px solid #ece3d4; border-radius: 10px; margin-bottom: 20px;
+}
+.rv-product-img {
+  width: 52px; height: 52px; border-radius: 8px;
+  object-fit: cover; border: 1px solid #ece3d4; flex-shrink: 0;
+}
+.rv-product-name { font-size: 14px; font-weight: 600; color: #2a1f15; line-height: 1.4; }
+.rv-checking { text-align: center; color: #aaa; font-size: 13px; padding: 16px 0; }
+.rv-existing {
+  background: #f8fdf8; border: 1px solid #b8ddb8;
+  border-radius: 12px; padding: 16px; margin-bottom: 4px;
+}
+.rv-existing-stars { display: flex; gap: 4px; margin-bottom: 10px; }
+.rv-existing-text { font-size: 14px; color: #555; line-height: 1.6; margin: 0 0 12px; }
+.rv-status-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; margin-bottom: 12px;
+}
+.rv-status-badge.CHO_DUYET { background: #fff3cd; color: #856404; }
+.rv-status-badge.DA_DUYET  { background: #d4edda; color: #155724; }
+.rv-status-badge.TU_CHOI   { background: #f8d7da; color: #721c24; }
+.rv-edit-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border: 1.5px solid #c9973a; border-radius: 8px;
+  background: transparent; color: #8b6914; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.rv-edit-btn:hover { background: rgba(201,151,58,0.08); }
+.rv-stars-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  font-size: 14px; font-weight: 600; color: #5c4a3a;
+}
+.rv-stars-input { display: flex; align-items: center; gap: 2px; }
+.rv-stars-input button { background: none; border: none; cursor: pointer; padding: 2px; transition: transform 0.15s; }
+.rv-stars-input button:hover { transform: scale(1.2); }
+.rv-star-label { font-size: 13px; color: #c9973a; font-weight: 700; margin-left: 8px; }
+.rv-textarea {
+  width: 100%; padding: 12px 14px; border: 1.5px solid #e0d5c3;
+  border-radius: 10px; font-size: 14px; font-family: var(--sans);
+  resize: vertical; background: #faf7f2; color: #2a1f15;
+  transition: border-color 0.2s; box-sizing: border-box;
+}
+.rv-textarea:focus { outline: none; border-color: #c9973a; }
+.rv-char-count { font-size: 11px; color: #aaa; text-align: right; margin-top: 4px; margin-bottom: 12px; }
+.rv-msg {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px;
+}
+.rv-msg.success { background: #d4edda; color: #155724; border: 1px solid #b8ddb8; }
+.rv-msg.error   { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.rv-form-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.rv-cancel-btn {
+  padding: 10px 20px; border: 1.5px solid #e0d5c3; border-radius: 8px;
+  background: transparent; color: #666; font-size: 13px; cursor: pointer; transition: all 0.2s;
+}
+.rv-cancel-btn:hover { border-color: #999; }
+.rv-submit-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 24px; background: linear-gradient(135deg, #c9973a, #8b6914);
+  border: none; border-radius: 8px; color: #fff;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.3s;
+}
+.rv-submit-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(201,151,58,0.4); }
+.rv-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
