@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import { authApi } from '../apis/auth.api';
 import { getToken, setToken, removeToken, getUser, setUser, removeUser } from '../helpers/storage.helper';
+import { mergeGuestCartOnLogin } from '../helpers/cart.helper';
 
 export const AuthContext = createContext(null);
 
@@ -45,6 +46,8 @@ const AuthProvider = ({ children }) => {
     try {
       const res = await authApi.login({ email, password });
       if (res.success) {
+        // Merge cart khách vào cart user TRƯỚC khi setUser
+        mergeGuestCartOnLogin(res.data.user.id);
         setToken(res.data.token);
         setUser(res.data.user);
         setUserState(res.data.user);
@@ -60,6 +63,8 @@ const AuthProvider = ({ children }) => {
     try {
       const res = await authApi.register(formData);
       if (res.success) {
+        // Merge cart khách vào cart user mới đăng ký
+        mergeGuestCartOnLogin(res.data.user.id);
         setToken(res.data.token);
         setUser(res.data.user);
         setUserState(res.data.user);

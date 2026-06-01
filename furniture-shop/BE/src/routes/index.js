@@ -13,6 +13,7 @@ const collectionRoutes = require('./collection.routes');
 const couponRoutes = require('./coupon.routes');
 const aiRoutes = require('./ai.routes');
 const designRoomRoutes = require('./designRoom.routes');
+const cartRoutes = require('./cart.routes');
 
 const router = express.Router();
 
@@ -30,5 +31,6 @@ router.use('/collections', collectionRoutes);
 router.use('/coupons', couponRoutes);
 router.use('/ai', aiRoutes);
 router.use('/design-room', designRoomRoutes);
+router.use('/cart', cartRoutes);
 
 module.exports = router;
