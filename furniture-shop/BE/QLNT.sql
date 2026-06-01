@@ -2,7 +2,7 @@
 
 IF DB_ID(N'QLNT') IS NULL
 BEGIN
-    CREATE DATABASE QLNT;
+    CREATE DATABASE QuanLyNoiThatDB;
 END
 GO
 
@@ -1100,4 +1100,11 @@ UNION ALL SELECT N'SanPham', COUNT(*) FROM dbo.SanPham
 UNION ALL SELECT N'DonHang', COUNT(*) FROM dbo.DonHang
 UNION ALL SELECT N'ChiTietDonHang', COUNT(*) FROM dbo.ChiTietDonHang
 UNION ALL SELECT N'DanhGiaSanPham', COUNT(*) FROM dbo.DanhGiaSanPham;
+GO
+USE QLNT;
+GO
+
+UPDATE dbo.NguoiDung 
+SET VaiTro = 'ADMIN' 
+WHERE Email = 'hungadmin@gmail.com'; -- Thay bằng email bạn vừa đăng ký
 GO

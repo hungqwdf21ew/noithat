@@ -1,8 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Plus, X, ShoppingCart, Download, ChevronLeft, ChevronRight,
-  Sofa, Lamp, Phone, ArrowRight, Sparkles
+  Phone, ArrowRight, Sparkles
 } from 'lucide-react';
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
@@ -139,23 +139,207 @@ const ProductSelector = ({ label, selected, onSelect, onClear, exclude }) => {
 };
 
 /* ── Main Page ── */
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const BundlePage = () => {
   const [product1, setProduct1] = useState(ALL_PRODUCTS[0]);
   const [product2, setProduct2] = useState(ALL_PRODUCTS[1]);
   const [generated, setGenerated] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [combinedImageUrl, setCombinedImageUrl] = useState(null);
+  const [generateStatus, setGenerateStatus] = useState('');
   const [suggPage, setSuggPage] = useState(0);
 
-  const handleGenerate = () => {
+  /* ── Ghép 2 ảnh sản phẩm lên nền phòng nội thất ── */
+  const generateCanvasImage = useCallback((p1, p2) => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const W = 1200, H = 600;
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+
+      const loadImg = (src) => new Promise((res) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => res(img);
+        img.onerror = () => res(null);
+        img.src = src;
+      });
+
+      // Chọn ảnh nền phòng ngẫu nhiên từ bộ có sẵn
+      const bgImages = [
+        '/images/noi_that_cao_cap_boi_canh_01.png',
+        '/images/noi_that_cao_cap_boi_canh_02.png',
+        '/images/noi_that_cao_cap_boi_canh_03.png',
+        '/images/noi_that_cao_cap_boi_canh_05.png',
+      ];
+      const bgSrc = bgImages[Math.floor(Math.random() * bgImages.length)];
+
+      Promise.all([loadImg(bgSrc), loadImg(p1.image), loadImg(p2.image)])
+        .then(([bgImg, img1, img2]) => {
+
+          // 1. Vẽ nền phòng full canvas
+          if (bgImg) {
+            // Cover fit
+            const scale = Math.max(W / bgImg.width, H / bgImg.height);
+            const bw = bgImg.width * scale, bh = bgImg.height * scale;
+            ctx.drawImage(bgImg, (W - bw) / 2, (H - bh) / 2, bw, bh);
+          } else {
+            // Fallback gradient nếu không load được nền
+            const bg = ctx.createLinearGradient(0, 0, W, H);
+            bg.addColorStop(0, '#2a1f15');
+            bg.addColorStop(1, '#3d2e1e');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, W, H);
+          }
+
+          // 2. Overlay tối nhẹ để sản phẩm nổi bật hơn
+          ctx.fillStyle = 'rgba(20, 12, 5, 0.35)';
+          ctx.fillRect(0, 0, W, H);
+
+          // 3. Vẽ sản phẩm 1 — bên trái, hơi nghiêng vào giữa
+          const drawProduct = (img, cx, cy, maxW, maxH, label) => {
+            if (!img) return;
+
+            const scale = Math.min(maxW / img.width, maxH / img.height);
+            const sw = img.width * scale, sh = img.height * scale;
+            const sx = cx - sw / 2, sy = cy - sh / 2;
+
+            // Đổ bóng
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.6)';
+            ctx.shadowBlur = 30;
+            ctx.shadowOffsetX = 8;
+            ctx.shadowOffsetY = 12;
+
+            // Bo góc cho ảnh sản phẩm
+            ctx.beginPath();
+            ctx.roundRect(sx, sy, sw, sh, 10);
+            ctx.clip();
+            ctx.drawImage(img, sx, sy, sw, sh);
+            ctx.restore();
+
+            // Viền vàng sang trọng
+            ctx.strokeStyle = 'rgba(201,151,58,0.8)';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.roundRect(sx, sy, sw, sh, 10);
+            ctx.stroke();
+
+            // Label tên sản phẩm phía dưới
+            const labelW = Math.min(sw + 20, 280);
+            const labelH = 38;
+            const lx = cx - labelW / 2;
+            const ly = sy + sh + 10;
+
+            ctx.fillStyle = 'rgba(20,12,5,0.85)';
+            ctx.beginPath();
+            ctx.roundRect(lx, ly, labelW, labelH, 8);
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(201,151,58,0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(lx, ly, labelW, labelH, 8);
+            ctx.stroke();
+
+            ctx.fillStyle = '#f5e6c8';
+            ctx.font = 'bold 13px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            // Cắt tên nếu quá dài
+            let txt = label;
+            while (ctx.measureText(txt).width > labelW - 16 && txt.length > 0) txt = txt.slice(0, -1);
+            if (txt !== label) txt += '…';
+            ctx.fillText(txt, cx, ly + labelH / 2);
+          };
+
+          // Sản phẩm 1: bên trái
+          drawProduct(img1, W * 0.27, H * 0.44, 340, 340, p1.name);
+
+          // Dấu "+" ở giữa
+          ctx.fillStyle = 'rgba(201,151,58,0.95)';
+          ctx.font = 'bold 36px serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.shadowColor = 'rgba(0,0,0,0.5)';
+          ctx.shadowBlur = 8;
+          ctx.fillText('+', W / 2, H * 0.44);
+          ctx.shadowBlur = 0;
+
+          // Sản phẩm 2: bên phải
+          drawProduct(img2, W * 0.73, H * 0.44, 340, 340, p2.name);
+
+          // Watermark nhỏ góc dưới phải
+          ctx.fillStyle = 'rgba(201,151,58,0.5)';
+          ctx.font = '11px serif';
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('✦ LAVISH HERITAGE', W - 16, H - 12);
+
+          resolve(canvas.toDataURL('image/png'));
+        })
+        .catch(reject);
+    });
+  }, []);
+
+  /* ── Tạo ảnh: thử AI trước, fallback Canvas ── */
+  const handleGenerate = async () => {
     if (!product1 || !product2) {
       alert('Vui lòng chọn đủ 2 sản phẩm!');
       return;
     }
     setGenerating(true);
-    setTimeout(() => {
-      setGenerating(false);
+    setGenerated(false);
+    setCombinedImageUrl(null);
+    setGenerateStatus('🤖 Đang tạo ảnh AI... (20-40 giây)');
+
+    // Thử gọi AI BE
+    try {
+      const res = await fetch(`${API_BASE}/ai/bundle-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product1: { name: product1.name, category: product1.category },
+          product2: { name: product2.name, category: product2.category },
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.imageUrl) {
+        setCombinedImageUrl(data.imageUrl);
+        setGenerated(true);
+        setGenerateStatus('✨ AI đã tạo ảnh thành công!');
+        setGenerating(false);
+        return;
+      }
+      console.warn('[AI] fallback:', data.message);
+      setGenerateStatus('⚠️ AI chưa sẵn sàng — đang ghép ảnh thủ công...');
+    } catch (e) {
+      console.warn('[AI] error, fallback canvas:', e.message);
+      setGenerateStatus('⚠️ Không kết nối AI — đang ghép ảnh thủ công...');
+    }
+
+    // Fallback Canvas
+    try {
+      const url = await generateCanvasImage(product1, product2);
+      setCombinedImageUrl(url);
       setGenerated(true);
-    }, 2000);
+      setGenerateStatus('🖼️ Ảnh ghép hoàn thành');
+    } catch (e) {
+      alert('Không thể tạo ảnh. Vui lòng thử lại.');
+      setGenerateStatus('');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleSaveImage = () => {
+    if (!combinedImageUrl) return;
+    const a = document.createElement('a');
+    a.href = combinedImageUrl;
+    a.download = `ket-hop-${(product1?.name || 'sp1')}-${(product2?.name || 'sp2')}.png`
+      .replace(/\s+/g, '-');
+    a.click();
   };
 
   const handleAddBoth = () => {
@@ -166,10 +350,6 @@ const BundlePage = () => {
   const totalPrice = (product1?.price || 0) + (product2?.price || 0);
 
   const SUGG_PER_PAGE = 3;
-  const visibleSugg = BUNDLE_SUGGESTIONS.slice(
-    suggPage * SUGG_PER_PAGE,
-    suggPage * SUGG_PER_PAGE + SUGG_PER_PAGE
-  );
 
   return (
     <div className="lavish-root">
@@ -245,6 +425,9 @@ const BundlePage = () => {
                   <><Sparkles size={20} /> TẠO ẢNH KẾT HỢP</>
                 )}
               </button>
+              {generateStatus && (
+                <div className="bp-generate-status">{generateStatus}</div>
+              )}
             </div>
           </div>
 
@@ -267,9 +450,9 @@ const BundlePage = () => {
 
               {/* Combined image */}
               <div className="bp-result-img">
-                {generated ? (
+                {generated && combinedImageUrl ? (
                   <img
-                    src="/images/noi_that_04_hang1_cot4.png"
+                    src={combinedImageUrl}
                     alt="Ảnh kết hợp"
                     className="bp-result-photo"
                   />
@@ -298,7 +481,7 @@ const BundlePage = () => {
               {/* Action buttons */}
               {generated && (
                 <div className="bp-result-actions">
-                  <button className="bp-btn-save">
+                  <button className="bp-btn-save" onClick={handleSaveImage}>
                     <Download size={18} /> LƯU ẢNH
                   </button>
                   <button className="bp-btn-add-both" onClick={handleAddBoth}>

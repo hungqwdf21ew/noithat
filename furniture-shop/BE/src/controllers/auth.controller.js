@@ -8,10 +8,12 @@ exports.register = async (req, res) => {
     const status = result.success ? 201 : 400;
     return res.status(status).json(result);
   } catch (error) {
-    console.error('[register]', error);
+    console.error('[register] ERROR:', error.message);
+    console.error('[register] STACK:', error.stack);
     return res.status(500).json({
       success: false,
       message: 'Lỗi máy chủ, vui lòng thử lại sau.',
+      debug: error.message,
     });
   }
 };
@@ -23,10 +25,12 @@ exports.login = async (req, res) => {
     const status = result.success ? 200 : 401;
     return res.status(status).json(result);
   } catch (error) {
-    console.error('[login]', error);
+    console.error('[login] ERROR:', error.message);
+    console.error('[login] STACK:', error.stack);
     return res.status(500).json({
       success: false,
       message: 'Lỗi máy chủ, vui lòng thử lại sau.',
+      debug: error.message,
     });
   }
 };
