@@ -1,8 +1,11 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useScrollReveal } from '../hooks/useAnimations'
+import collectionApi from '../apis/collection.api'
+import { getImageUrl } from '../helpers/image.helper'
 
-const collections = [
+
+const mockCollections = [
   {
     id: 1,
     title: 'Grand Palace',
@@ -37,8 +40,32 @@ const collections = [
   }
 ]
 
+
+
+
 const BoSuuTapNoiBat = () => {
   const [ref, isVisible] = useScrollReveal()
+  const [collections, setCollections] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchCollections = async () => {
+      try {
+        const res = await collectionApi.getAll()
+        if (res && res.success && res.data && res.data.length > 0) {
+          setCollections(res.data.slice(0, 4))
+        } else {
+          setCollections(mockCollections)
+        }
+      } catch (err) {
+        console.error('Lỗi khi lấy danh sách bộ sưu tập:', err)
+        setCollections(mockCollections)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchCollections()
+  }, [])
 
   return (
     <div className="collections-grid stagger-children" ref={ref}>
@@ -48,10 +75,10 @@ const BoSuuTapNoiBat = () => {
           key={c.id}
           style={{ transitionDelay: `${i * 0.12}s` }}
         >
-          <Link to={`/product/${c.id}`} style={{ display: 'block', textDecoration: 'none' }}>
+          <Link to={`/product?collection=${c.id}`} style={{ display: 'block', textDecoration: 'none' }}>
             <div
               className="collection-media"
-              style={{ backgroundImage: `url(${c.img})` }}
+              style={{ backgroundImage: `url(${getImageUrl(c.img)})` }}
             >
               <span
                 style={{
@@ -70,13 +97,13 @@ const BoSuuTapNoiBat = () => {
                   backdropFilter: 'blur(8px)'
                 }}
               >
-                {c.tag}
+                {c.tag || 'Hiện đại'}
               </span>
             </div>
             <div className="collection-body">
               <h3>{c.title}</h3>
               <p className="muted">{c.desc}</p>
-              <div className="from">{c.price}</div>
+              <div className="from">{c.price || 'Liên hệ để có giá'}</div>
             </div>
           </Link>
         </div>
@@ -86,3 +113,4 @@ const BoSuuTapNoiBat = () => {
 }
 
 export default BoSuuTapNoiBat
+

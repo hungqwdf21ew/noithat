@@ -7,12 +7,34 @@ const ProductModel = {
     const result = await pool.request().query(`
       SELECT p.MaSanPham, p.MaDanhMuc, p.TenSanPham, p.DuongDan, p.MaSKU, p.MoTa,
              p.GiaBan, p.GiaKhuyenMai, p.SoLuongTon, p.ChatLieu, p.MauSac, p.KichThuoc,
-             p.HinhAnhChinh, p.LaNoiBat, p.TrangThai, c.TenDanhMuc
+             p.HinhAnhChinh, p.LaNoiBat, p.TrangThai, c.TenDanhMuc, s.TenPhongCach, r.TenPhong
       FROM dbo.SanPham p
       INNER JOIN dbo.DanhMuc c ON p.MaDanhMuc = c.MaDanhMuc
+      LEFT JOIN dbo.PhongCach s ON p.MaPhongCach = s.MaPhongCach
+      LEFT JOIN dbo.Phong r ON p.MaPhong = r.MaPhong
       ORDER BY p.NgayTao DESC
     `);
-    return result.recordset;
+    const products = result.recordset;
+
+    const galleryResult = await pool.request().query(`
+      SELECT MaSanPham, DuongDanHinh 
+      FROM dbo.HinhAnhSanPham 
+      ORDER BY ThuTuHienThi ASC
+    `);
+
+    const galleryMap = {};
+    galleryResult.recordset.forEach(row => {
+      if (!galleryMap[row.MaSanPham]) {
+        galleryMap[row.MaSanPham] = [];
+      }
+      galleryMap[row.MaSanPham].push(row.DuongDanHinh);
+    });
+
+    products.forEach(p => {
+      p.gallery = galleryMap[p.MaSanPham] || [];
+    });
+
+    return products;
   },
 
   // Tìm sản phẩm theo ID
@@ -23,9 +45,11 @@ const ProductModel = {
       .query(`
         SELECT p.MaSanPham, p.MaDanhMuc, p.TenSanPham, p.DuongDan, p.MaSKU, p.MoTa,
                p.GiaBan, p.GiaKhuyenMai, p.SoLuongTon, p.ChatLieu, p.MauSac, p.KichThuoc,
-               p.HinhAnhChinh, p.LaNoiBat, p.TrangThai, c.TenDanhMuc
+               p.HinhAnhChinh, p.LaNoiBat, p.TrangThai, c.TenDanhMuc, s.TenPhongCach, r.TenPhong
         FROM dbo.SanPham p
         INNER JOIN dbo.DanhMuc c ON p.MaDanhMuc = c.MaDanhMuc
+        LEFT JOIN dbo.PhongCach s ON p.MaPhongCach = s.MaPhongCach
+        LEFT JOIN dbo.Phong r ON p.MaPhong = r.MaPhong
         WHERE p.MaSanPham = @MaSanPham
       `);
       

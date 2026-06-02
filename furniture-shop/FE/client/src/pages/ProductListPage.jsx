@@ -26,6 +26,15 @@ const MATERIALS = [
   { name: 'Đồng mạ vàng', count: 22 },
 ];
 
+const ROOMS = [
+  { name: 'Phòng khách', count: 0 },
+  { name: 'Phòng ngủ', count: 0 },
+  { name: 'Phòng bếp', count: 0 },
+  { name: 'Phòng làm việc', count: 0 },
+  { name: 'Ban công', count: 0 },
+];
+
+
 const PRICE_RANGES = [
   { label: 'Dưới 20 triệu', min: 0, max: 20000000 },
   { label: '20 – 50 triệu', min: 20000000, max: 50000000 },
@@ -34,6 +43,17 @@ const PRICE_RANGES = [
 ];
 
 const COLORS = ['#3d1a0a', '#7a3b1e', '#c9973a', '#e8c068', '#d4c5a9', '#6b6b6b', '#2a2a2a'];
+
+const COLOR_MAP = {
+  '#3d1a0a': ['nâu', 'gỗ'],
+  '#7a3b1e': ['nâu', 'gỗ'],
+  '#c9973a': ['vàng', 'đồng'],
+  '#e8c068': ['vàng', 'đồng'],
+  '#d4c5a9': ['trắng', 'kem'],
+  '#6b6b6b': ['xám', 'ghi'],
+  '#2a2a2a': ['đen']
+};
+
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Nổi bật' },
@@ -48,6 +68,38 @@ const BADGE_STYLE = {
   'ĐỘC QUYỀN': { bg: '#5c3d2e', color: '#e8c068' },
 };
 
+const getSecondaryImage = (p) => {
+  if (p.gallery && p.gallery.length > 0) {
+    return p.gallery[0];
+  }
+  
+  const name = p.name ? p.name.toLowerCase() : '';
+  const mainImg = p.image ? p.image.toLowerCase() : '';
+  
+  if (name.includes('sofa') || mainImg.includes('sofa')) {
+    if (name.includes('cong') || mainImg.includes('cong')) return '/images/sofacong_ct_mausapphire.png';
+    return '/images/sofabo.png';
+  }
+  if (name.includes('giường') || mainImg.includes('giuong')) {
+    return '/images/giuongngu_ct_maube_1.png';
+  }
+  if (name.includes('bàn') || mainImg.includes('ban')) {
+    if (name.includes('ăn')) return '/images/banantancodien_ct_mauvangdong_12.png';
+    return '/images/bantron_ct_maube_11.png';
+  }
+  if (name.includes('ghế') || mainImg.includes('ghe')) {
+    return '/images/ghebanh_ct_maudo_1.png';
+  }
+  if (name.includes('tủ') || mainImg.includes('tu')) {
+    return '/images/tuda_ct_maube_1.png';
+  }
+  if (name.includes('đèn') || mainImg.includes('den')) {
+    return '/images/dendung_1.png';
+  }
+  
+  return '/images/noi_that_cao_cap_boi_canh_02.png';
+};
+
 const ProductListPage = () => {
   const navigate = useNavigate();
   const [searchParams, searchSetParams] = useSearchParams();
@@ -55,6 +107,7 @@ const ProductListPage = () => {
   const [activeCategory, setActiveCategory] = useState('');
   const [activeStyles, setActiveStyles]     = useState([]);
   const [activeMaterials, setActiveMaterials] = useState([]);
+  const [activeRooms, setActiveRooms]       = useState([]);
   const [activePriceRange, setActivePriceRange] = useState(null);
   const [activeColor, setActiveColor]       = useState('');
   const [sortBy, setSortBy]                 = useState('newest');
@@ -65,6 +118,9 @@ const ProductListPage = () => {
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [styles, setStyles] = useState(STYLES);
+  const [materials, setMaterials] = useState(MATERIALS);
+  const [rooms, setRooms] = useState(ROOMS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -72,12 +128,36 @@ const ProductListPage = () => {
       try {
         const res = await productApi.getAll();
         if (res.success) {
-          setProducts(res.data.products);
+          const fetchedProducts = res.data.products;
+          setProducts(fetchedProducts);
+          
+          // Calculate category counts
           const catMap = res.data.categories.map(c => {
-            const count = res.data.products.filter(p => p.categoryId === c.id).length;
+            const count = fetchedProducts.filter(p => p.categoryId === c.id).length;
             return { name: c.name, id: c.id, count };
           });
           setCategories(catMap);
+
+          // Dynamically calculate style counts from database products
+          const styleMap = STYLES.map(s => {
+            const count = fetchedProducts.filter(p => p.style && (p.style.toLowerCase().includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(p.style.toLowerCase()) || (s.name === 'Cổ điển châu Âu' && p.style.toLowerCase().includes('cổ điển')))).length;
+            return { ...s, count };
+          });
+          setStyles(styleMap);
+
+          // Dynamically calculate material counts from database products
+          const materialMap = MATERIALS.map(m => {
+            const count = fetchedProducts.filter(p => p.material && (p.material.toLowerCase().includes(m.name.toLowerCase()) || m.name.toLowerCase().includes(p.material.toLowerCase()) || (m.name === 'Gỗ tự nhiên' && p.material.toLowerCase().includes('gỗ')) || (m.name === 'Da thật' && p.material.toLowerCase().includes('da')) || (m.name === 'Vải cao cấp' && p.material.toLowerCase().includes('vải')))).length;
+            return { ...m, count };
+          });
+          setMaterials(materialMap);
+
+          // Dynamically calculate room counts from database products
+          const roomMap = ROOMS.map(r => {
+            const count = fetchedProducts.filter(p => p.room && p.room.toLowerCase().includes(r.name.toLowerCase())).length;
+            return { ...r, count };
+          });
+          setRooms(roomMap);
         }
       } catch (err) {
         console.error('Error loading live products:', err);
@@ -88,12 +168,46 @@ const ProductListPage = () => {
     loadData();
   }, []);
 
+  // Sync search, category and room from URL query parameters
+  useEffect(() => {
+    const queryVal = searchParams.get('search');
+    if (queryVal !== null) {
+      setSearch(queryVal);
+    }
+    const catVal = searchParams.get('category');
+    if (catVal !== null) {
+      setActiveCategory(catVal);
+    }
+    const roomVal = searchParams.get('room');
+    if (roomVal !== null) {
+      setActiveRooms([roomVal]);
+    }
+  }, [searchParams]);
+
+
   /* ── Filter logic ── */
   const filtered = products.filter(p => {
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false;
     if (activeCategory && p.category !== activeCategory) return false;
-    if (activeStyles.length && !activeStyles.includes(p.style)) return false;
-    if (activeMaterials.length && !activeMaterials.includes(p.material)) return false;
+    
+    // Substring partial-matching for Style (e.g. "Cổ điển châu Âu" matches "Cổ điển")
+    if (activeStyles.length && !activeStyles.some(s => p.style && (p.style.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(p.style.toLowerCase()) || (s === 'Cổ điển châu Âu' && p.style.toLowerCase().includes('cổ điển'))))) return false;
+    
+    // Substring partial-matching for Material (e.g. "Gỗ tự nhiên" matches "Gỗ MDF" or "Gỗ cao su")
+    if (activeMaterials.length && !activeMaterials.some(m => p.material && (p.material.toLowerCase().includes(m.toLowerCase()) || m.toLowerCase().includes(p.material.toLowerCase()) || (m === 'Gỗ tự nhiên' && p.material.toLowerCase().includes('gỗ')) || (m === 'Da thật' && p.material.toLowerCase().includes('da')) || (m === 'Vải cao cấp' && p.material.toLowerCase().includes('vải'))))) return false;
+    
+    // Substring partial-matching for Room (e.g. "Phòng khách" matches "Phòng khách")
+    if (activeRooms.length && !activeRooms.some(r => p.room && p.room.toLowerCase().includes(r.toLowerCase()))) return false;
+
+    // Filter by Color matching Hex code from UI to Vietnamese substrings in CSDL
+    if (activeColor) {
+      const allowedKeywords = COLOR_MAP[activeColor];
+      if (allowedKeywords) {
+        const matchesColor = p.color && allowedKeywords.some(keyword => p.color.toLowerCase().includes(keyword));
+        if (!matchesColor) return false;
+      }
+    }
+
     if (activePriceRange) {
       const r = PRICE_RANGES[activePriceRange];
       if (p.price < r.min || p.price > r.max) return false;
@@ -110,15 +224,16 @@ const ProductListPage = () => {
 
   const toggleStyle    = s => setActiveStyles(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
   const toggleMaterial = m => setActiveMaterials(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m]);
+  const toggleRoom     = r => setActiveRooms(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r]);
 
   const clearAll = () => {
     setSearch(''); setActiveCategory(''); setActiveStyles([]);
-    setActiveMaterials([]); setActivePriceRange(null); setActiveColor('');
+    setActiveMaterials([]); setActiveRooms([]); setActivePriceRange(null); setActiveColor('');
   };
 
-  useEffect(() => { setPage(1); }, [search, activeCategory, activeStyles, activeMaterials, activePriceRange]);
+  useEffect(() => { setPage(1); }, [search, activeCategory, activeStyles, activeMaterials, activeRooms, activePriceRange]);
 
-  const hasFilter = activeCategory || activeStyles.length || activeMaterials.length || activePriceRange !== null;
+  const hasFilter = activeCategory || activeStyles.length || activeMaterials.length || activeRooms.length || activePriceRange !== null;
 
   return (
     <div className="lavish-root">
@@ -147,13 +262,14 @@ const ProductListPage = () => {
             {/* Danh mục */}
             <div className="sb-block">
               <div className="sb-title">DANH MỤC</div>
-              <div className="sb-ornament">✦</div>
+              <div className="sb-ornament">⚜ ──────── ⚜</div>
               <ul className="sb-list">
                 {categories.map(c => (
                   <li key={c.name}
                     className={`sb-item ${activeCategory === c.name ? 'active' : ''}`}
                     onClick={() => setActiveCategory(activeCategory === c.name ? '' : c.name)}
                   >
+                    <span className={`sb-classic-checkbox ${activeCategory === c.name ? 'checked' : ''}`}></span>
                     <span className="sb-item-name">{c.name}</span>
                     <span className="sb-item-count">({c.count})</span>
                   </li>
@@ -164,14 +280,14 @@ const ProductListPage = () => {
             {/* Phong cách */}
             <div className="sb-block">
               <div className="sb-title">PHONG CÁCH</div>
-              <div className="sb-ornament">✦</div>
+              <div className="sb-ornament">⚜ ──────── ⚜</div>
               <ul className="sb-list">
-                {STYLES.map(s => (
+                {styles.map(s => (
                   <li key={s.name}
                     className={`sb-item ${activeStyles.includes(s.name) ? 'active' : ''}`}
                     onClick={() => toggleStyle(s.name)}
                   >
-                    <span className="sb-checkbox">{activeStyles.includes(s.name) ? '☑' : '☐'}</span>
+                    <span className={`sb-classic-checkbox ${activeStyles.includes(s.name) ? 'checked' : ''}`}></span>
                     <span className="sb-item-name">{s.name}</span>
                     <span className="sb-item-count">({s.count})</span>
                   </li>
@@ -182,16 +298,34 @@ const ProductListPage = () => {
             {/* Chất liệu */}
             <div className="sb-block">
               <div className="sb-title">CHẤT LIỆU</div>
-              <div className="sb-ornament">✦</div>
+              <div className="sb-ornament">⚜ ──────── ⚜</div>
               <ul className="sb-list">
-                {MATERIALS.map(m => (
+                {materials.map(m => (
                   <li key={m.name}
                     className={`sb-item ${activeMaterials.includes(m.name) ? 'active' : ''}`}
                     onClick={() => toggleMaterial(m.name)}
                   >
-                    <span className="sb-checkbox">{activeMaterials.includes(m.name) ? '☑' : '☐'}</span>
+                    <span className={`sb-classic-checkbox ${activeMaterials.includes(m.name) ? 'checked' : ''}`}></span>
                     <span className="sb-item-name">{m.name}</span>
                     <span className="sb-item-count">({m.count})</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Không gian / Phòng */}
+            <div className="sb-block">
+              <div className="sb-title">KHÔNG GIAN</div>
+              <div className="sb-ornament">⚜ ──────── ⚜</div>
+              <ul className="sb-list">
+                {rooms.map(r => (
+                  <li key={r.name}
+                    className={`sb-item ${activeRooms.includes(r.name) ? 'active' : ''}`}
+                    onClick={() => toggleRoom(r.name)}
+                  >
+                    <span className={`sb-classic-checkbox ${activeRooms.includes(r.name) ? 'checked' : ''}`}></span>
+                    <span className="sb-item-name">{r.name}</span>
+                    <span className="sb-item-count">({r.count})</span>
                   </li>
                 ))}
               </ul>
@@ -200,7 +334,7 @@ const ProductListPage = () => {
             {/* Khoảng giá */}
             <div className="sb-block">
               <div className="sb-title">KHOẢNG GIÁ</div>
-              <div className="sb-ornament">✦</div>
+              <div className="sb-ornament">⚜ ──────── ⚜</div>
               <div className="sb-price-slider">
                 <div className="sb-price-track">
                   <div className="sb-price-fill" />
@@ -210,23 +344,22 @@ const ProductListPage = () => {
                   <span>200.000.000 đ</span>
                 </div>
               </div>
-              <ul className="sb-list" style={{ marginTop: 12 }}>
+              <div className="sb-price-grid">
                 {PRICE_RANGES.map((r, i) => (
-                  <li key={i}
-                    className={`sb-item ${activePriceRange === i ? 'active' : ''}`}
+                  <button key={i}
+                    className={`sb-price-btn ${activePriceRange === i ? 'active' : ''}`}
                     onClick={() => setActivePriceRange(activePriceRange === i ? null : i)}
                   >
-                    <span className="sb-checkbox">{activePriceRange === i ? '☑' : '☐'}</span>
-                    <span className="sb-item-name">{r.label}</span>
-                  </li>
+                    {r.label}
+                  </button>
                 ))}
-              </ul>
+              </div>
             </div>
 
             {/* Màu sắc */}
             <div className="sb-block">
               <div className="sb-title">MÀU SẮC</div>
-              <div className="sb-ornament">✦</div>
+              <div className="sb-ornament">⚜ ──────── ⚜</div>
               <div className="sb-colors">
                 {COLORS.map(c => (
                   <button key={c}
@@ -240,7 +373,7 @@ const ProductListPage = () => {
 
             {/* Xóa bộ lọc */}
             {hasFilter && (
-              <button className="sb-clear" onClick={clearAll}>✕ Xóa bộ lọc</button>
+              <button className="sb-clear" onClick={clearAll}>Xóa bộ lọc ↻</button>
             )}
           </aside>
 
@@ -308,7 +441,8 @@ const ProductListPage = () => {
 
                     {/* Image */}
                     <div className="plp-card-img">
-                      <img src={getImageUrl(p.image)} alt={p.name} loading="lazy" />
+                      <img className="plp-img-primary" src={getImageUrl(p.image)} alt={p.name} loading="lazy" />
+                      <img className="plp-img-secondary" src={getImageUrl(getSecondaryImage(p))} alt={p.name} loading="lazy" />
                       <div className="plp-card-overlay">
                         <Link to={`/products/${p.id}`} className="plp-overlay-btn">
                           <Eye size={16} /> Xem chi tiết
@@ -354,42 +488,46 @@ const ProductListPage = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="plp-pagination">
-                <button
-                  className="plp-page-btn nav"
-                  disabled={page === 1}
-                  onClick={() => setPage(p => p - 1)}
-                >
-                  <ChevronLeft size={16} />
-                </button>
-
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(n => (
+              <div className="plp-pagination-container">
+                <span className="plp-pagination-ornament left">⚜ ──────</span>
+                <div className="plp-pagination">
                   <button
-                    key={n}
-                    className={`plp-page-btn ${page === n ? 'active' : ''}`}
-                    onClick={() => setPage(n)}
+                    className="plp-page-btn nav"
+                    disabled={page === 1}
+                    onClick={() => setPage(p => p - 1)}
                   >
-                    {n}
+                    <ChevronLeft size={16} />
                   </button>
-                ))}
 
-                {totalPages > 5 && <span className="plp-page-dots">...</span>}
-                {totalPages > 5 && (
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(n => (
+                    <button
+                      key={n}
+                      className={`plp-page-btn ${page === n ? 'active' : ''}`}
+                      onClick={() => setPage(n)}
+                    >
+                      {n}
+                    </button>
+                  ))}
+
+                  {totalPages > 5 && <span className="plp-page-dots">...</span>}
+                  {totalPages > 5 && (
+                    <button
+                      className={`plp-page-btn ${page === totalPages ? 'active' : ''}`}
+                      onClick={() => setPage(totalPages)}
+                    >
+                      {totalPages}
+                    </button>
+                  )}
+
                   <button
-                    className={`plp-page-btn ${page === totalPages ? 'active' : ''}`}
-                    onClick={() => setPage(totalPages)}
+                    className="plp-page-btn nav"
+                    disabled={page === totalPages}
+                    onClick={() => setPage(p => p + 1)}
                   >
-                    {totalPages}
+                    <ChevronRight size={16} />
                   </button>
-                )}
-
-                <button
-                  className="plp-page-btn nav"
-                  disabled={page === totalPages}
-                  onClick={() => setPage(p => p + 1)}
-                >
-                  <ChevronRight size={16} />
-                </button>
+                </div>
+                <span className="plp-pagination-ornament right">────── ⚜</span>
               </div>
             )}
           </div>
@@ -405,7 +543,7 @@ const ProductListPage = () => {
             </div>
           </div>
           <a href="tel:02838228888" className="plp-cta-btn">
-            LIÊN HỆ NGAY →
+            LIÊN HỆ NGAY &gt;
           </a>
         </div>
       </main>

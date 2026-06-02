@@ -36,9 +36,12 @@ exports.getAllProducts = async () => {
         salePrice: p.GiaKhuyenMai ? Number(p.GiaKhuyenMai) : null,
         stock: p.SoLuongTon,
         material: p.ChatLieu,
+        style: p.TenPhongCach,
+        room: p.TenPhong,
         color: p.MauSac,
         size: p.KichThuoc,
         image: p.HinhAnhChinh,
+        gallery: p.gallery || [],
         status: p.TrangThai === 'HOAT_DONG' ? 'ACTIVE' : (p.TrangThai === 'AN' ? 'HIDDEN' : 'OUT_OF_STOCK')
       })),
       categories: categories.map(c => ({
@@ -69,6 +72,8 @@ exports.getProductById = async (id) => {
       salePrice: p.GiaKhuyenMai ? Number(p.GiaKhuyenMai) : null,
       stock: p.SoLuongTon,
       material: p.ChatLieu,
+      style: p.TenPhongCach,
+      room: p.TenPhong,
       color: p.MauSac,
       size: p.KichThuoc,
       image: p.HinhAnhChinh,

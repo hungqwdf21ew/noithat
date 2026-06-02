@@ -33,7 +33,8 @@ const HomePage = () => {
         <ThanhDichVu />
 
         {/* Bộ sưu tập nổi bật */}
-        <section className="collections-section container" id="collections">
+        <div className="royal-section-divider"><span>⚜ ─── ❦ ─── ⚜</span></div>
+        <section className="collections-section container royal-section-frame" id="collections">
           <div
             className={`collections-header animate-on-scroll${collectionsVisible ? ' visible' : ''}`}
             ref={collectionsRef}
@@ -51,7 +52,8 @@ const HomePage = () => {
         <BannerKhuyenMai />
 
         {/* Phòng cảm hứng */}
-        <section className="inspiration-section container" id="inspiration">
+        <div className="royal-section-divider"><span>⚜ ─── ❦ ─── ⚜</span></div>
+        <section className="inspiration-section container royal-section-frame" id="inspiration">
           <div
             className={`animate-on-scroll${inspirationVisible ? ' visible' : ''}`}
             ref={inspirationRef}
@@ -75,6 +77,7 @@ const HomePage = () => {
           <PhongCamHung />
         </section>
 
+        <div className="royal-section-divider"><span>⚜ ─── ❦ ─── ⚜</span></div>
         {/* Đánh giá khách hàng */}
         <DanhGiaKhachHang />
 

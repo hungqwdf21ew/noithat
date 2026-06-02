@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { useScrollReveal } from '../hooks/useAnimations'
 
 const rooms = [
@@ -34,12 +35,15 @@ const PhongCamHung = () => {
   return (
     <div className="rooms-grid stagger-children" ref={ref}>
       {rooms.map((r, i) => (
-        <div
+        <Link
+          to={`/products?room=${encodeURIComponent(r.title)}`}
           className={`room-card animate-on-scroll${isVisible ? ' visible' : ''}`}
           key={r.id}
           style={{
             backgroundImage: `url(${r.img})`,
-            transitionDelay: `${i * 0.15}s`
+            transitionDelay: `${i * 0.15}s`,
+            display: 'block',
+            textDecoration: 'none'
           }}
         >
           <div className="room-tag">{r.tag}</div>
@@ -50,10 +54,11 @@ const PhongCamHung = () => {
               <div className="from">{r.price}</div>
             </div>
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   )
 }
+
 
 export default PhongCamHung
