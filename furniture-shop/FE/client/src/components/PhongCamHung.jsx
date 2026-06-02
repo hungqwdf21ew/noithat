@@ -1,42 +1,39 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import { useScrollReveal } from '../hooks/useAnimations'
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { useScrollReveal } from '../hooks/useAnimations';
 
 const rooms = [
   {
     id: 1,
-    title: 'Phòng Khách',
+    title: 'PHÒNG KHÁCH',
     desc: 'Đẳng cấp gia chủ',
     price: 'Từ 165.000.000 đ',
-    tag: 'BEST SELLER',
-    img: 'https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?auto=format&fit=crop&q=80&w=1000'
+    img: '/images/noi_that_cao_cap_boi_canh_03.png'
   },
   {
     id: 2,
-    title: 'Phòng Ngủ',
-    desc: 'Riêng tư và đầy đẳng cấp',
+    title: 'PHÒNG NGỦ',
+    desc: 'Riêng tư thanh lịch và đẳng cấp',
     price: 'Từ 98.000.000 đ',
-    tag: 'MỚI',
-    img: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&q=80&w=1000'
+    img: '/images/giuongngu_ct_maube_1.png'
   },
   {
     id: 3,
-    title: 'Phòng Ăn',
-    desc: 'Gắn kết gia đình',
+    title: 'PHÒNG ĂN',
+    desc: 'Gắn kết và ấm cúng',
     price: 'Từ 85.500.000 đ',
-    tag: 'ƯU ĐÃI',
-    img: 'https://images.unsplash.com/photo-1617806118233-18e1c0945591?auto=format&fit=crop&q=80&w=1000'
+    img: '/images/banantancodien_ct_mauvangdong_12.png'
   }
-]
+];
 
 const PhongCamHung = () => {
-  const [ref, isVisible] = useScrollReveal()
+  const [ref, isVisible] = useScrollReveal();
 
   return (
     <div className="rooms-grid stagger-children" ref={ref}>
       {rooms.map((r, i) => (
         <Link
-          to={`/products?room=${encodeURIComponent(r.title)}`}
+          to={`/products?room=${encodeURIComponent(r.title === 'PHÒNG ĂN' ? 'Phòng bếp' : r.title === 'PHÒNG NGỦ' ? 'Phòng ngủ' : 'Phòng khách')}`}
           className={`room-card animate-on-scroll${isVisible ? ' visible' : ''}`}
           key={r.id}
           style={{
@@ -46,19 +43,19 @@ const PhongCamHung = () => {
             textDecoration: 'none'
           }}
         >
-          <div className="room-tag">{r.tag}</div>
           <div className="room-overlay">
-            <div className="room-info">
+            <div className="room-info-left">
               <h3>{r.title}</h3>
               <p className="muted">{r.desc}</p>
+            </div>
+            <div className="room-info-right">
               <div className="from">{r.price}</div>
             </div>
           </div>
         </Link>
       ))}
     </div>
-  )
-}
+  );
+};
 
-
-export default PhongCamHung
+export default PhongCamHung;
