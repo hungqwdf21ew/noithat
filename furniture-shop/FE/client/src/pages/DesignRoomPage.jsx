@@ -40,6 +40,7 @@ const getTransparent = (imagePath) => {
    2. DỮ LIỆU MẪU (phòng preset — giữ nguyên)
 ══════════════════════════════════════════ */
 const ROOM_PRESETS = [
+  { id: 0, name: 'Phòng trống',                style: 'Bắt đầu từ đầu', image: null },
   { id: 1, name: 'Phòng Ngủ Hiện Đại',          style: 'Modern',         image: '/images/noi_that_01_hang1_cot1.png' },
   { id: 2, name: 'Phòng Ngủ Cổ Điển Pháp',       style: 'French Classic', image: '/images/noi_that_02_hang1_cot2.png' },
   { id: 3, name: 'Phòng Khách Tân Cổ Điển',      style: 'Neo Classic',    image: '/images/noi_that_03_hang1_cot3.png' },
@@ -68,6 +69,8 @@ const DesignRoomPage = () => {
   const [totalPrice,     setTotalPrice]     = useState(0);
   const [saving,         setSaving]         = useState(false);
   const [saveMsg,        setSaveMsg]        = useState('');
+  const [uploadMsg,      setUploadMsg]      = useState('');
+  const [uploadedRoomUrl,setUploadedRoomUrl]= useState(null);
   const [projectName,    setProjectName]    = useState('Thiết kế của tôi');
   const [zoom,           setZoom]           = useState(1);
 
@@ -137,6 +140,8 @@ const DesignRoomPage = () => {
   }, []);
 
   /* ── Đặt ảnh nền vào Canvas ── */
+  const getServerBaseUrl = () => API_BASE.replace(/\/api\/?$/, '');
+
   const setCanvasBackground = useCallback((imgSrc) => {
     const canvas = fabricRef.current;
     if (!canvas) return;
@@ -154,27 +159,61 @@ const DesignRoomPage = () => {
     }, { crossOrigin: 'anonymous' });
   }, []);
 
+  const uploadRoomImage = useCallback(async (file) => {
+    if (!file || !file.type.startsWith('image/')) return;
+    setUploadMsg('Đang tải ảnh phòng lên...');
+    setSelectedPreset(ROOM_PRESETS[0]);
+    setUploadedRoomUrl(null);
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch(`${API_BASE}/upload/image`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.message || 'Upload thất bại');
+      }
+
+      const fileUrl = data.url;
+      const baseUrl = getServerBaseUrl();
+      const fullUrl = fileUrl.startsWith('http') ? fileUrl : `${baseUrl}${fileUrl}`;
+      setUploadedRoomUrl(fullUrl);
+      setCanvasBackground(fullUrl);
+      setUploadMsg('Tải ảnh phòng thành công.');
+    } catch (error) {
+      console.error('[DesignRoom] uploadRoomImage', error);
+      setUploadMsg(`Lỗi tải ảnh: ${error.message || 'Không thể tải ảnh.'}`);
+    }
+  }, [setCanvasBackground]);
+
   /* ── Upload ảnh phòng ── */
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setCanvasBackground(ev.target.result);
-    reader.readAsDataURL(file);
+    uploadRoomImage(file);
   };
 
   const handleDrop = useCallback((e) => {
     e.preventDefault();
     const file = e.dataTransfer.files?.[0];
     if (!file || !file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setCanvasBackground(ev.target.result);
-    reader.readAsDataURL(file);
-  }, [setCanvasBackground]);
+    uploadRoomImage(file);
+  }, [uploadRoomImage]);
 
   /* ── Chọn preset ── */
   const handleSelectPreset = (preset) => {
     setSelectedPreset(preset);
+    setUploadedRoomUrl(null);
+    setUploadMsg('');
+    if (!preset.image) {
+      handleReset(false);
+      return;
+    }
     setCanvasBackground(preset.image);
   };
 
@@ -240,7 +279,7 @@ const DesignRoomPage = () => {
   };
 
   /* ── Toolbar: Reset canvas ── */
-  const handleReset = () => {
+  const handleReset = (clearSelection = true) => {
     const canvas = fabricRef.current;
     if (!canvas) return;
     canvas.getObjects().forEach(o => canvas.remove(o));
@@ -248,7 +287,10 @@ const DesignRoomPage = () => {
     canvas.backgroundColor = '#f5f0e8';
     canvas.renderAll();
     setHasBackground(false);
-    setSelectedPreset(null);
+    setUploadedRoomUrl(null);
+    if (clearSelection) {
+      setSelectedPreset(null);
+    }
   };
 
   /* ── Zoom ── */
@@ -310,62 +352,13 @@ const DesignRoomPage = () => {
       } else {
         setSaveMsg(`❌ ${data.message}`);
       }
-    } catch (e) {
+    } catch (error) {
+      console.error('[DesignRoom] saveDesign', error);
       setSaveMsg('❌ Lỗi kết nối máy chủ.');
     } finally {
       setSaving(false);
     }
   };
-
-  /* ── Load thiết kế từ BE ── */
-  const handleLoadDesign = async (id) => {
-    const canvas = fabricRef.current;
-    if (!canvas) return;
-
-    try {
-      const res  = await fetch(`${API_BASE}/design-room/${id}`);
-      const data = await res.json();
-      if (!data.success) return alert(data.message);
-
-      const { duAn, items } = data.data;
-
-      // Xóa canvas cũ
-      canvas.getObjects().forEach(o => canvas.remove(o));
-
-      // Đặt ảnh nền nếu có
-      if (duAn.HinhAnhKhongGian) {
-        const baseUrl = API_BASE.replace(/\/api\/?$/, '');
-        setCanvasBackground(`${baseUrl}${duAn.HinhAnhKhongGian}`);
-      }
-
-      // Load từng sản phẩm theo tọa độ đã lưu
-      for (const item of items) {
-        await new Promise((resolve) => {
-          const imgSrc = item.HinhAnhChinh || '/images/anhghesofa.png';
-          fabric.Image.fromURL(imgSrc, (img) => {
-            img.set({
-              left:   item.ViTriX,
-              top:    item.ViTriY,
-              scaleX: item.TiLe,
-              scaleY: item.TiLe,
-              angle:  item.GocXoay,
-              _furnitureName:  item.TenSanPham,
-              _furniturePrice: item.GiaBan,
-              _maSanPham:      item.MaSanPham,
-              cornerColor:     '#c9973a',
-              borderColor:     '#c9973a',
-            });
-            canvas.add(img);
-            resolve();
-          }, { crossOrigin: 'anonymous' });
-        });
-      }
-      canvas.renderAll();
-    } catch (e) {
-      alert('Không thể tải thiết kế: ' + e.message);
-    }
-  };
-
   /* ── Filter furniture theo tab ── */
   const filteredCategories = furnitureCategories.filter(cat => {
     if (activeRoomTab === 'Tất cả') return true;
@@ -406,13 +399,16 @@ const DesignRoomPage = () => {
 
             {/* A. Upload */}
             <div className="drp-upload-panel">
-              <div className="drp-panel-label">A. TẢI ẢNH PHÒNG CỦA BẠN</div>
+              <div className="drp-panel-label">A. TẢI ẢNH PHÒNG TRỐNG / PHÒNG CỦA BẠN</div>
               <div
                 className="drp-dropzone"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
               >
+                {uploadedRoomUrl && (
+                  <img className="drp-preview-img" src={uploadedRoomUrl} alt="Ảnh phòng đã tải lên" />
+                )}
                 <div className="drp-dropzone-inner">
                   <div className="drp-upload-icon"><Upload size={36} /></div>
                   <p>Kéo và thả ảnh vào đây<br />hoặc nhấp để chọn ảnh</p>
@@ -428,7 +424,8 @@ const DesignRoomPage = () => {
               <button className="drp-upload-btn" onClick={() => fileInputRef.current?.click()}>
                 <Upload size={16} /> TẢI ẢNH LÊN
               </button>
-              <p className="drp-upload-hint">Hỗ trợ JPG, PNG.</p>
+              <p className="drp-upload-hint">Hỗ trợ JPG, PNG. Upload ảnh phòng trống hoặc phòng thực tế để bắt đầu.</p>
+              {uploadMsg && <p className="drp-upload-status">{uploadMsg}</p>}
             </div>
 
             {/* Divider */}
@@ -449,7 +446,14 @@ const DesignRoomPage = () => {
                     onClick={() => handleSelectPreset(preset)}
                   >
                     <div className="drp-preset-img">
-                      <img src={getThumbnail(preset.image.replace('/images/', ''))} alt={preset.name} />
+                      {preset.image ? (
+                        <img src={preset.image} alt={preset.name} />
+                      ) : (
+                        <div className="drp-preset-empty">
+                          <div className="drp-preset-empty-icon">🏠</div>
+                          <div className="drp-preset-empty-label">Phòng trống</div>
+                        </div>
+                      )}
                       {selectedPreset?.id === preset.id && <div className="drp-preset-check">✓</div>}
                     </div>
                     <div className="drp-preset-name">{preset.name}</div>

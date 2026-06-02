@@ -149,6 +149,17 @@
   object-fit: cover;
   position: absolute;
   inset: 0;
+  z-index: 0;
+}
+.drp-dropzone-inner {
+  position: relative;
+  z-index: 1;
+}
+.drp-upload-status {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
 }
 .drp-remove-img {
   position: absolute;
@@ -264,6 +275,27 @@
   height: 100%;
   object-fit: cover;
   transition: transform 0.4s;
+}
+.drp-preset-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  color: var(--text-muted);
+  background: linear-gradient(180deg, rgba(245,240,232,0.8), rgba(245,240,232,0.98));
+  text-align: center;
+}
+.drp-preset-empty-icon {
+  font-size: 32px;
+}
+.drp-preset-empty-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark);
 }
 .drp-preset-card:hover .drp-preset-img img { transform: scale(1.06); }
 .drp-preset-check {
