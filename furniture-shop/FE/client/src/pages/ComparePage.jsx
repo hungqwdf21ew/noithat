@@ -10,7 +10,7 @@ import ChanTrang from '../components/ChanTrang';
 import { useCompare } from '../hooks/useCompare';
 import { useCart } from '../hooks/useCart';
 import { useFavorites } from '../hooks/useFavorites';
-import { getCompareProduct, COMPARE_SUGGESTIONS, SPEC_LABELS } from '../data/compareProducts';
+import { COMPARE_SUGGESTIONS, SPEC_LABELS } from '../data/compareProducts';
 import { formatCurrency } from '../utils/currency.util';
 import { getImageUrl } from '../helpers/image.helper';
 import './ComparePage.css';
@@ -37,13 +37,7 @@ const ComparePage = () => {
   useEffect(() => {
     const addId = searchParams.get('add');
     if (!addId) return;
-
-    const product = getCompareProduct(addId);
-    if (product) {
-      const result = addToCompare(product);
-      if (!result.success) setNotice(result.message);
-    }
-
+    // Sản phẩm đã được add trước khi navigate, không cần xử lý ?add= nữa
     searchParams.delete('add');
     setSearchParams(searchParams, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps

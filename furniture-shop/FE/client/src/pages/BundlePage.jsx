@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Plus, X, ShoppingCart, Download, ChevronLeft, ChevronRight,
@@ -7,43 +7,9 @@ import {
 import DauTrang from '../components/DauTrang';
 import ChanTrang from '../components/ChanTrang';
 import { formatCurrency } from '../utils/currency.util';
+import { getImageUrl } from '../helpers/image.helper';
+import { productApi } from '../apis/product.api';
 import './BundlePage.css';
-
-/* ── Mock data ── */
-const ALL_PRODUCTS = [
-  { id: 1,  name: 'Ghế Bành Louis XV',         subtitle: 'Sang trọng · Tinh tế · Quyền uy tuyệt đối', price: 24800000,  image: '/images/anhghebandenkh.png',  category: 'Ghế bành' },
-  { id: 2,  name: 'Đèn Bàn Imperial',           subtitle: 'Ánh sáng ấm áp · Quý phái · Đẳng cấp',     price: 18900000,  image: '/images/anhbanandai.png',     category: 'Đèn trang trí' },
-  { id: 3,  name: 'Sofa Heritage Royale',        subtitle: 'Kiệt tác phòng khách đẳng cấp',             price: 78500000,  image: '/images/anhghesofa.png',      category: 'Sofa' },
-  { id: 4,  name: 'Bàn Trà Heritage',            subtitle: 'Hài hòa · Tinh tế · Đặc sắc',              price: 29800000,  image: '/images/anhbanan.png',        category: 'Bàn' },
-  { id: 5,  name: 'Bàn Console Majestic',        subtitle: 'Tinh xảo trong từng chi tiết',              price: 62000000,  image: '/images/anhbanghekh.png',     category: 'Bàn console' },
-  { id: 6,  name: 'Giường Imperial Majesty',     subtitle: 'Giấc ngủ hoàng gia đích thực',              price: 98000000,  image: '/images/anhgiuong.png',       category: 'Giường' },
-  { id: 7,  name: 'Giường Trang Trí Imperial',   subtitle: 'Phẩm chuẩn về đẳng cấp sống',              price: 16500000,  image: '/images/anhgiuonghaiden.png', category: 'Giường' },
-  { id: 8,  name: 'Bàn Ăn Grand Palace',         subtitle: 'Kiệt tác dành cho không gian đẳng cấp',    price: 125000000, image: '/images/anhbobanghe.png',     category: 'Bàn ăn' },
-];
-
-const BUNDLE_SUGGESTIONS = [
-  {
-    id: 1,
-    product1: ALL_PRODUCTS[0],
-    product2: ALL_PRODUCTS[3],
-    label: 'Sofa Heritage + Bàn Trà Heritage',
-    combinedImage: '/images/noi_that_01_hang1_cot1.png',
-  },
-  {
-    id: 2,
-    product1: ALL_PRODUCTS[4],
-    product2: ALL_PRODUCTS[5],
-    label: 'Bàn Console Majestic + Giường Imperial',
-    combinedImage: '/images/noi_that_02_hang1_cot2.png',
-  },
-  {
-    id: 3,
-    product1: ALL_PRODUCTS[5],
-    product2: ALL_PRODUCTS[1],
-    label: 'Giường Imperial + Đèn Bàn Imperial',
-    combinedImage: '/images/noi_that_03_hang1_cot3.png',
-  },
-];
 
 const STEPS = [
   { icon: '🪑', label: '1. Chọn Sản Phẩm 1', desc: 'Lựa chọn sản phẩm đầu tiên bạn yêu thích' },
@@ -53,12 +19,12 @@ const STEPS = [
 ];
 
 /* ── Dropdown chọn sản phẩm ── */
-const ProductSelector = ({ label, selected, onSelect, onClear, exclude }) => {
+const ProductSelector = ({ label, selected, onSelect, onClear, exclude, products }) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const ref = useRef(null);
 
-  const filtered = ALL_PRODUCTS.filter(p =>
+  const filtered = products.filter(p =>
     p.id !== exclude?.id &&
     p.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -71,7 +37,7 @@ const ProductSelector = ({ label, selected, onSelect, onClear, exclude }) => {
         <div className="bp-slot-card">
           <button className="bp-slot-clear" onClick={onClear}><X size={16} /></button>
           <div className="bp-slot-img">
-            <img src={selected.image} alt={selected.name} />
+            <img src={getImageUrl(selected.image)} alt={selected.name} />
           </div>
           <div className="bp-slot-info">
             <h3>{selected.name}</h3>
@@ -118,7 +84,7 @@ const ProductSelector = ({ label, selected, onSelect, onClear, exclude }) => {
                     className={`bp-dropdown-item ${selected?.id === p.id ? 'active' : ''}`}
                     onClick={() => { onSelect(p); setOpen(false); setSearch(''); }}
                   >
-                    <img src={p.image} alt={p.name} />
+                    <img src={getImageUrl(p.image)} alt={p.name} />
                     <div>
                       <div className="bp-di-name">{p.name}</div>
                       <div className="bp-di-price">{formatCurrency(p.price)}</div>
@@ -138,35 +104,82 @@ const ProductSelector = ({ label, selected, onSelect, onClear, exclude }) => {
   );
 };
 
+/* ── Lấy tên file từ path, dùng để tìm ảnh images_nen ── */
+const getBaseFileName = (imagePath) => {
+  if (!imagePath) return '';
+  return imagePath.split('/').pop(); // /images/sofa-heritage-royale.png → sofa-heritage-royale.png
+};
+
 /* ── Main Page ── */
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const BundlePage = () => {
-  const [product1, setProduct1] = useState(ALL_PRODUCTS[0]);
-  const [product2, setProduct2] = useState(ALL_PRODUCTS[1]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [product1, setProduct1] = useState(null);
+  const [product2, setProduct2] = useState(null);
   const [generated, setGenerated] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [combinedImageUrl, setCombinedImageUrl] = useState(null);
   const [generateStatus, setGenerateStatus] = useState('');
   const [suggPage, setSuggPage] = useState(0);
 
-  /* ── Ghép 2 ảnh sản phẩm lên nền phòng nội thất ── */
+  // Fetch danh sách sản phẩm từ API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoadingProducts(true);
+        const res = await productApi.getAll();
+        if (res?.success && Array.isArray(res.data?.products)) {
+          const mapped = res.data.products.map(p => ({
+            id: p.id,
+            name: p.name,
+            subtitle: p.description || '',
+            price: p.price || 0,
+            image: p.image || '',
+            category: p.category || '',
+          }));
+          setAllProducts(mapped);
+          // Chọn sẵn 2 sản phẩm đầu tiên
+          if (mapped.length > 0) setProduct1(mapped[0]);
+          if (mapped.length > 1) setProduct2(mapped[1]);
+        }
+      } catch (err) {
+        console.error('[BundlePage] Lỗi fetch sản phẩm:', err);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  /* ── Ghép 2 sản phẩm vào cùng 1 khung phòng nội thất ── */
   const generateCanvasImage = useCallback((p1, p2) => {
     return new Promise((resolve, reject) => {
       const canvas = document.createElement('canvas');
-      const W = 1200, H = 600;
+      const W = 1200, H = 650;
       canvas.width = W; canvas.height = H;
       const ctx = canvas.getContext('2d');
 
-      const loadImg = (src) => new Promise((res) => {
+      // Load ảnh với fallback
+      const loadImg = (src, fallback) => new Promise((res) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => res(img);
-        img.onerror = () => res(null);
+        img.onerror = () => {
+          if (fallback && fallback !== src) {
+            const img2 = new Image();
+            img2.crossOrigin = 'anonymous';
+            img2.onload = () => res(img2);
+            img2.onerror = () => res(null);
+            img2.src = fallback;
+          } else {
+            res(null);
+          }
+        };
         img.src = src;
       });
 
-      // Chọn ảnh nền phòng ngẫu nhiên từ bộ có sẵn
       const bgImages = [
         '/images/noi_that_cao_cap_boi_canh_01.png',
         '/images/noi_that_cao_cap_boi_canh_02.png',
@@ -175,107 +188,73 @@ const BundlePage = () => {
       ];
       const bgSrc = bgImages[Math.floor(Math.random() * bgImages.length)];
 
-      Promise.all([loadImg(bgSrc), loadImg(p1.image), loadImg(p2.image)])
+      // Ảnh images_nen (trong suốt) ưu tiên hơn, fallback về ảnh gốc
+      const src1 = p1.image;
+      const src2 = p2.image;
+      const fb1 = p1.imageFallback ? getImageUrl(p1.imageFallback) : getImageUrl(p1.image);
+      const fb2 = p2.imageFallback ? getImageUrl(p2.imageFallback) : getImageUrl(p2.image);
+
+      Promise.all([loadImg(bgSrc, null), loadImg(src1, fb1), loadImg(src2, fb2)])
         .then(([bgImg, img1, img2]) => {
 
-          // 1. Vẽ nền phòng full canvas
+          // 1. Vẽ nền phòng full canvas (cover)
           if (bgImg) {
-            // Cover fit
             const scale = Math.max(W / bgImg.width, H / bgImg.height);
             const bw = bgImg.width * scale, bh = bgImg.height * scale;
             ctx.drawImage(bgImg, (W - bw) / 2, (H - bh) / 2, bw, bh);
           } else {
-            // Fallback gradient nếu không load được nền
             const bg = ctx.createLinearGradient(0, 0, W, H);
-            bg.addColorStop(0, '#2a1f15');
-            bg.addColorStop(1, '#3d2e1e');
+            bg.addColorStop(0, '#1a1008');
+            bg.addColorStop(1, '#2e1e0e');
             ctx.fillStyle = bg;
             ctx.fillRect(0, 0, W, H);
           }
 
-          // 2. Overlay tối nhẹ để sản phẩm nổi bật hơn
-          ctx.fillStyle = 'rgba(20, 12, 5, 0.35)';
+          // 2. Overlay nhẹ để sản phẩm nổi bật trên nền
+          ctx.fillStyle = 'rgba(10, 5, 0, 0.22)';
           ctx.fillRect(0, 0, W, H);
 
-          // 3. Vẽ sản phẩm 1 — bên trái, hơi nghiêng vào giữa
-          const drawProduct = (img, cx, cy, maxW, maxH, label) => {
+          // 3. Hàm vẽ sản phẩm với bóng đổ tự nhiên (không viền/khung)
+          const drawProduct = (img, cx, bottomY, maxW, maxH) => {
             if (!img) return;
-
             const scale = Math.min(maxW / img.width, maxH / img.height);
-            const sw = img.width * scale, sh = img.height * scale;
-            const sx = cx - sw / 2, sy = cy - sh / 2;
+            const sw = img.width * scale;
+            const sh = img.height * scale;
+            const sx = cx - sw / 2;
+            const sy = bottomY - sh;
 
-            // Đổ bóng
+            // Bóng đổ mềm
             ctx.save();
-            ctx.shadowColor = 'rgba(0,0,0,0.6)';
-            ctx.shadowBlur = 30;
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.50)';
+            ctx.shadowBlur = 40;
             ctx.shadowOffsetX = 8;
-            ctx.shadowOffsetY = 12;
-
-            // Bo góc cho ảnh sản phẩm
-            ctx.beginPath();
-            ctx.roundRect(sx, sy, sw, sh, 10);
-            ctx.clip();
+            ctx.shadowOffsetY = 18;
             ctx.drawImage(img, sx, sy, sw, sh);
             ctx.restore();
 
-            // Viền vàng sang trọng
-            ctx.strokeStyle = 'rgba(201,151,58,0.8)';
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            ctx.roundRect(sx, sy, sw, sh, 10);
-            ctx.stroke();
-
-            // Label tên sản phẩm phía dưới
-            const labelW = Math.min(sw + 20, 280);
-            const labelH = 38;
-            const lx = cx - labelW / 2;
-            const ly = sy + sh + 10;
-
-            ctx.fillStyle = 'rgba(20,12,5,0.85)';
-            ctx.beginPath();
-            ctx.roundRect(lx, ly, labelW, labelH, 8);
-            ctx.fill();
-
-            ctx.strokeStyle = 'rgba(201,151,58,0.5)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.roundRect(lx, ly, labelW, labelH, 8);
-            ctx.stroke();
-
-            ctx.fillStyle = '#f5e6c8';
-            ctx.font = 'bold 13px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            // Cắt tên nếu quá dài
-            let txt = label;
-            while (ctx.measureText(txt).width > labelW - 16 && txt.length > 0) txt = txt.slice(0, -1);
-            if (txt !== label) txt += '…';
-            ctx.fillText(txt, cx, ly + labelH / 2);
+            // Bóng phản chiếu mờ trên sàn
+            ctx.save();
+            ctx.globalAlpha = 0.10;
+            ctx.translate(0, bottomY * 2);
+            ctx.scale(1, -0.25);
+            ctx.drawImage(img, sx, sy, sw, sh);
+            ctx.restore();
           };
 
-          // Sản phẩm 1: bên trái
-          drawProduct(img1, W * 0.27, H * 0.44, 340, 340, p1.name);
+          // SP1 lớn bên trái, SP2 nhỏ hơn bên phải — cùng đường sàn
+          const bottomLine = H * 0.92;
+          drawProduct(img1, W * 0.33, bottomLine, W * 0.46, H * 0.80);
+          drawProduct(img2, W * 0.73, bottomLine - H * 0.04, W * 0.30, H * 0.56);
 
-          // Dấu "+" ở giữa
-          ctx.fillStyle = 'rgba(201,151,58,0.95)';
-          ctx.font = 'bold 36px serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.shadowColor = 'rgba(0,0,0,0.5)';
-          ctx.shadowBlur = 8;
-          ctx.fillText('+', W / 2, H * 0.44);
-          ctx.shadowBlur = 0;
-
-          // Sản phẩm 2: bên phải
-          drawProduct(img2, W * 0.73, H * 0.44, 340, 340, p2.name);
-
-          // Watermark nhỏ góc dưới phải
-          ctx.fillStyle = 'rgba(201,151,58,0.5)';
-          ctx.font = '11px serif';
+          // 4. Watermark góc dưới phải
+          ctx.save();
+          ctx.globalAlpha = 0.50;
+          ctx.fillStyle = '#c9973a';
+          ctx.font = '600 12px serif';
           ctx.textAlign = 'right';
           ctx.textBaseline = 'bottom';
-          ctx.fillText('✦ LAVISH HERITAGE', W - 16, H - 12);
+          ctx.fillText('✦ LAVISH HERITAGE', W - 18, H - 14);
+          ctx.restore();
 
           resolve(canvas.toDataURL('image/png'));
         })
@@ -283,7 +262,7 @@ const BundlePage = () => {
     });
   }, []);
 
-  /* ── Tạo ảnh: thử AI trước, fallback Canvas ── */
+  /* ── Tạo ảnh: gọi BE AI (gửi productId), fallback Canvas dùng ảnh images_nen ── */
   const handleGenerate = async () => {
     if (!product1 || !product2) {
       alert('Vui lòng chọn đủ 2 sản phẩm!');
@@ -294,14 +273,14 @@ const BundlePage = () => {
     setCombinedImageUrl(null);
     setGenerateStatus('🤖 Đang tạo ảnh AI... (20-40 giây)');
 
-    // Thử gọi AI BE
+    // Gọi BE: gửi productId để BE tự lấy thông tin từ DB
     try {
       const res = await fetch(`${API_BASE}/ai/bundle-image`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          product1: { name: product1.name, category: product1.category },
-          product2: { name: product2.name, category: product2.category },
+          productId1: product1.id,
+          productId2: product2.id,
         }),
       });
       const data = await res.json();
@@ -319,9 +298,19 @@ const BundlePage = () => {
       setGenerateStatus('⚠️ Không kết nối AI — đang ghép ảnh thủ công...');
     }
 
-    // Fallback Canvas
+    // Fallback Canvas: ưu tiên dùng ảnh images_nen (trong suốt) nếu có
     try {
-      const url = await generateCanvasImage(product1, product2);
+      const p1WithNen = {
+        ...product1,
+        image: `/images_nen/${getBaseFileName(product1.image)}` ,
+        imageFallback: product1.image,
+      };
+      const p2WithNen = {
+        ...product2,
+        image: `/images_nen/${getBaseFileName(product2.image)}`,
+        imageFallback: product2.image,
+      };
+      const url = await generateCanvasImage(p1WithNen, p2WithNen);
       setCombinedImageUrl(url);
       setGenerated(true);
       setGenerateStatus('🖼️ Ảnh ghép hoàn thành');
@@ -381,6 +370,11 @@ const BundlePage = () => {
               PRODUCT SELECTOR SECTION
           ══════════════════════════════════ */}
           <div className="bp-selector-section">
+            {loadingProducts ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+                Đang tải danh sách sản phẩm...
+              </div>
+            ) : (
             <div className="bp-selector-grid">
               {/* Product 1 */}
               <ProductSelector
@@ -389,6 +383,7 @@ const BundlePage = () => {
                 onSelect={setProduct1}
                 onClear={() => setProduct1(null)}
                 exclude={product2}
+                products={allProducts}
               />
 
               {/* Center connector */}
@@ -408,8 +403,10 @@ const BundlePage = () => {
                 onSelect={setProduct2}
                 onClear={() => setProduct2(null)}
                 exclude={product1}
+                products={allProducts}
               />
             </div>
+            )}
 
             {/* Generate button */}
             <div className="bp-generate-wrap">
@@ -466,13 +463,13 @@ const BundlePage = () => {
                 {/* Overlay product tags */}
                 {generated && product1 && (
                   <div className="bp-img-tag left">
-                    <img src={product1.image} alt={product1.name} />
+                    <img src={getImageUrl(product1.image)} alt={product1.name} />
                     <span>{product1.name}</span>
                   </div>
                 )}
                 {generated && product2 && (
                   <div className="bp-img-tag right">
-                    <img src={product2.image} alt={product2.name} />
+                    <img src={getImageUrl(product2.image)} alt={product2.name} />
                     <span>{product2.name}</span>
                   </div>
                 )}
@@ -532,52 +529,58 @@ const BundlePage = () => {
               </button>
 
               <div className="bp-sugg-grid">
-                {BUNDLE_SUGGESTIONS.map((bundle, idx) => (
-                  <div key={bundle.id} className="bp-sugg-card" style={{ animationDelay: `${idx * 0.1}s` }}>
-                    {/* Combined preview */}
-                    <div className="bp-sugg-imgs">
-                      <div className="bp-sugg-img">
-                        <img src={bundle.product1.image} alt={bundle.product1.name} />
+                {allProducts.length >= 2 &&
+                  (() => {
+                    // Tạo gợi ý động từ các cặp sản phẩm thực tế
+                    const suggestions = [];
+                    for (let i = 0; i < allProducts.length - 1 && suggestions.length < 6; i += 2) {
+                      suggestions.push({ id: i, product1: allProducts[i], product2: allProducts[i + 1] });
+                    }
+                    const paginated = suggestions.slice(suggPage * SUGG_PER_PAGE, (suggPage + 1) * SUGG_PER_PAGE);
+                    return paginated.map((bundle, idx) => (
+                      <div key={bundle.id} className="bp-sugg-card" style={{ animationDelay: `${idx * 0.1}s` }}>
+                        <div className="bp-sugg-imgs">
+                          <div className="bp-sugg-img">
+                            <img src={getImageUrl(bundle.product1.image)} alt={bundle.product1.name} />
+                          </div>
+                          <div className="bp-sugg-plus">+</div>
+                          <div className="bp-sugg-img">
+                            <img src={getImageUrl(bundle.product2.image)} alt={bundle.product2.name} />
+                          </div>
+                        </div>
+                        <div className="bp-sugg-info">
+                          <div className="bp-sugg-names">
+                            <span>{bundle.product1.name}</span>
+                            <span className="bp-sugg-sep">+</span>
+                            <span>{bundle.product2.name}</span>
+                          </div>
+                          <div className="bp-sugg-prices">
+                            <span>{formatCurrency(bundle.product1.price)}</span>
+                            <span className="bp-sugg-sep">+</span>
+                            <span>{formatCurrency(bundle.product2.price)}</span>
+                          </div>
+                        </div>
+                        <button
+                          className="bp-sugg-try-btn"
+                          onClick={() => {
+                            setProduct1(bundle.product1);
+                            setProduct2(bundle.product2);
+                            setGenerated(false);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                        >
+                          THỬ KẾT HỢP
+                        </button>
                       </div>
-                      <div className="bp-sugg-plus">+</div>
-                      <div className="bp-sugg-img">
-                        <img src={bundle.product2.image} alt={bundle.product2.name} />
-                      </div>
-                    </div>
-
-                    {/* Info */}
-                    <div className="bp-sugg-info">
-                      <div className="bp-sugg-names">
-                        <span>{bundle.product1.name}</span>
-                        <span className="bp-sugg-sep">+</span>
-                        <span>{bundle.product2.name}</span>
-                      </div>
-                      <div className="bp-sugg-prices">
-                        <span>{formatCurrency(bundle.product1.price)}</span>
-                        <span className="bp-sugg-sep">+</span>
-                        <span>{formatCurrency(bundle.product2.price)}</span>
-                      </div>
-                    </div>
-
-                    <button
-                      className="bp-sugg-try-btn"
-                      onClick={() => {
-                        setProduct1(bundle.product1);
-                        setProduct2(bundle.product2);
-                        setGenerated(false);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                      }}
-                    >
-                      THỬ KẾT HỢP
-                    </button>
-                  </div>
-                ))}
+                    ));
+                  })()
+                }
               </div>
 
               <button
                 className="bp-sugg-nav"
                 onClick={() => setSuggPage(p => p + 1)}
-                disabled={(suggPage + 1) * SUGG_PER_PAGE >= BUNDLE_SUGGESTIONS.length}
+                disabled={(suggPage + 1) * SUGG_PER_PAGE >= Math.floor(allProducts.length / 2)}
               >
                 <ChevronRight size={20} />
               </button>

@@ -146,25 +146,30 @@ export const getCompareProduct = (id) => {
 };
 
 export const normalizeCompareProduct = (product) => {
-  const fromCatalog = getCompareProduct(product.id);
-  if (fromCatalog) return fromCatalog;
+  // Lấy ảnh từ product thực tế (API trả về field 'image' = HinhAnhChinh)
+  const rawImage =
+    product.image ||
+    product.HinhAnhChinh ||
+    product.hinhAnhChinh ||
+    (Array.isArray(product.images) ? product.images[0] : null) ||
+    '/images/sofa-heritage-royale.png';
 
   return {
-    id: product.id,
-    name: product.name || product.title,
+    id: product.id || product.MaSanPham,
+    name: product.name || product.TenSanPham || product.title || '',
     subtitle: product.subtitle || '',
-    price: product.price || 0,
-    image: product.images?.[0] || product.image || '/images/anhghesofa.png',
-    category: product.category || '',
-    style: product.style || '—',
-    highlight: product.description || product.subtitle || '',
+    price: product.price || product.GiaBan || 0,
+    image: rawImage,
+    category: product.category || product.TenDanhMuc || '',
+    style: product.style || product.TenPhongCach || '—',
+    highlight: product.description || product.MoTa || '',
     specs: product.specs || {
-      'Kích thước': product.dimensions || '—',
-      'Chất liệu khung': '—',
-      'Chất liệu bọc': product.material || '—',
-      'Màu sắc': '—',
-      'Phong cách': product.style || '—',
-      'Trọng lượng': '—',
+      'Kích thước': product.size || product.KichThuoc || product.dimensions || '—',
+      'Chất liệu khung': product.material || product.ChatLieu || '—',
+      'Chất liệu bọc': product.material || product.ChatLieu || '—',
+      'Màu sắc': product.color || product.MauSac || '—',
+      'Phong cách': product.style || product.TenPhongCach || '—',
+      'Trọng lượng': product.KhoiLuong ? `${product.KhoiLuong} kg` : '—',
       'Xuất xứ': '—',
       'Bảo hành': '—',
     },
