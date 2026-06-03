@@ -25,7 +25,7 @@ const BannerKhuyenMai = () => {
             
             {/* ĐÃ SỬA: Thay button thành thẻ Link */}
             <Link to="/collections" className="btn primary">Xem Ưu Đãi Ngay →</Link>
-            <Link to="/lien-he" className="btn outline-light">Đặt Lịch Tư Vấn</Link>
+            <Link to="/#contact" className="btn outline-light">Đặt Lịch Tư Vấn</Link>
             
           </div>
           {/* Bộ đếm ngược dummy */}

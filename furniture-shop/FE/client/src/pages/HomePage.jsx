@@ -72,7 +72,7 @@ const HomePage = () => {
                 Không Gian Truyền Cảm Hứng
               </h2>
             </div>
-            <Link className="link-all" to="/cam-hung">Xem Thêm Ý Tưởng →</Link>
+            <Link className="link-all" to="/products?room=Phòng khách">Xem Thêm Ý Tưởng →</Link>
           </div>
           <PhongCamHung />
         </section>

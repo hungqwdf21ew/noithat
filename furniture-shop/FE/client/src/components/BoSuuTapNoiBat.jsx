@@ -75,7 +75,7 @@ const BoSuuTapNoiBat = () => {
           key={c.id}
           style={{ transitionDelay: `${i * 0.12}s` }}
         >
-          <Link to={`/product?collection=${c.id}`} style={{ display: 'block', textDecoration: 'none' }}>
+          <Link to="/collections" style={{ display: 'block', textDecoration: 'none' }}>
             <div
               className="collection-media"
               style={{ backgroundImage: `url(${getImageUrl(c.img)})` }}

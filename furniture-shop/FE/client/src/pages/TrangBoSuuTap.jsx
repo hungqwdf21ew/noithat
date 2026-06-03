@@ -8,80 +8,80 @@ import collectionApi from '../apis/collection.api';
 import { getImageUrl } from '../helpers/image.helper';
 import './collections.css';
 
-/* ── DATA ─────────────────────────────────────────────────── */
+/* ── DATA CHUẨN ĐÃ ĐƯỢC PHÂN TAG CHÍNH XÁC ─────────────────── */
 const FILTERS = ['Tất cả', 'Cổ điển', 'Tủ & Đèn', 'Phòng khách', 'Phòng ngủ', 'Decor', 'Luxury'];
 
 const COLLECTIONS = [
   {
     id: 1,
-    title: 'Heritage Royale',
-    subtitle: 'Vẻ đẹp vương giả thời gian',
-    desc: 'Bộ sưu tập tiêu biểu của Lavish Heritage với những đường nét chạm khắc tinh xảo, chất liệu cao cấp và phong cách châu Âu thế kỷ 18 đem đến không gian giàu giá trị di sản.',
+    title: 'Sofa Tân Cổ Điển Hoàng Gia',
+    subtitle: 'Tâm điểm của sự sang trọng',
+    desc: 'Bộ sofa phòng khách với các chi tiết chạm trổ thủ công tỉ mỉ, bọc da cao cấp mang lại vẻ quyền uy cho không gian.',
     img: '/images/bst1.png',
-    tags: ['Cổ điển', 'Phòng khách', 'Luxury'],
+    tags: ['Phòng khách', 'Cổ điển', 'Luxury'],
     size: 'large',
   },
   {
     id: 2,
-    title: 'Imperial Majesty',
-    subtitle: 'Không gian nghỉ ngơi đẳng cấp quý tộc',
-    desc: 'Sang trọng và đậm chất hoàng gia.',
+    title: 'Giường Ngủ Imperial',
+    subtitle: 'Không gian tĩnh lặng đẳng cấp',
+    desc: 'Chiếc giường ngủ mang phong cách quý tộc châu Âu, kết hợp đầu giường bọc nhung êm ái cho giấc ngủ trọn vẹn.',
     img: '/images/bst2.png',
-    tags: ['Phòng ngủ', 'Cổ điển'],
+    tags: ['Phòng ngủ', 'Cổ điển', 'Luxury'],
     size: 'normal',
   },
   {
     id: 3,
-    title: 'Grand Palace Dining',
-    subtitle: 'Nghệ thuật ẩm thực đẳng cấp hoàng gia',
-    desc: 'Thiết kế lộng lẫy, tỉ mỉ từng đường nét, tạo nên không gian ăn uống sang trọng và đẳng cấp.',
+    title: 'Tủ Rượu & Kính Trưng Bày',
+    subtitle: 'Lưu giữ hương vị thời gian',
+    desc: 'Thiết kế kính cường lực kết hợp viền gỗ nguyên khối, tôn vinh những chai vang thượng hạng của gia chủ.',
     img: '/images/bst3.png',
-    tags: ['Phòng khách', 'Cổ điển'],
+    tags: ['Tủ & Đèn', 'Phòng khách'],
     size: 'normal',
   },
   {
     id: 4,
-    title: 'Royal Moments',
-    subtitle: 'Điểm nhấn trang trí thượng lưu',
-    desc: 'Những món decor tinh tuyển, chắt lọc từ nghệ thuật trang trí nội thất cổ điển châu Âu.',
+    title: 'Đèn Chùm Pha Lê Baccarat',
+    subtitle: 'Ánh sáng lộng lẫy xa hoa',
+    desc: 'Kiệt tác chiếu sáng với hàng ngàn viên pha lê lấp lánh, tạo điểm nhấn rực rỡ cho trần nhà phòng khách.',
     img: '/images/bst4.png',
-    tags: ['Decor', 'Luxury'],
+    tags: ['Tủ & Đèn', 'Decor', 'Luxury'],
     size: 'normal',
   },
   {
     id: 5,
-    title: 'Louis Heritage',
-    subtitle: 'Cổ điển Pháp — Vẻ đẹp trường tồn',
-    desc: 'Cảm hứng từ phong cách Louis XV với đường cong mềm mại, chạm khắc tinh xảo và màu sắc ấm áp.',
+    title: 'Bàn Trà Mặt Đá Khổng Tước',
+    subtitle: 'Giao thoa giữa tự nhiên và nghệ thuật',
+    desc: 'Mặt bàn chế tác từ đá tự nhiên nguyên phiến, chân đồng đúc tinh xảo dành riêng cho không gian phòng khách.',
     img: '/images/bst5.png',
-    tags: ['Cổ điển', 'Luxury'],
-    size: 'normal',
-  },
-  {
-    id: 6,
-    title: 'Velvet Noir',
-    subtitle: 'Bí ẩn & Quyến rũ',
-    desc: 'Tông màu tối huyền bí kết hợp nhung cao cấp và đồng thau.',
-    img: '/images/bst6.png',
     tags: ['Phòng khách', 'Luxury'],
     size: 'normal',
   },
   {
+    id: 6,
+    title: 'Bàn Trang Điểm Louis',
+    subtitle: 'Góc làm đẹp duyên dáng',
+    desc: 'Đường cong uyển chuyển đậm chất Pháp, là món đồ nội thất không thể thiếu trong phòng ngủ của các quý cô.',
+    img: '/images/bst6.png',
+    tags: ['Phòng ngủ', 'Cổ điển'],
+    size: 'normal',
+  },
+  {
     id: 7,
-    title: 'Cabinet Royale',
-    subtitle: 'Tủ kính & Đá cẩm thạch',
-    desc: 'Bộ tủ kính cao cấp với khung đồng thau và mặt đá cẩm thạch.',
+    title: 'Tranh Tráng Gương Phục Hưng',
+    subtitle: 'Thổi hồn vào bức tường trống',
+    desc: 'Những tác phẩm hội họa kinh điển được phục dựng sắc nét, viền khung vàng gold mang đậm chất nghệ thuật.',
     img: '/images/bst7.png',
-    tags: ['Tủ & Đèn', 'Cổ điển'],
+    tags: ['Decor', 'Cổ điển'],
     size: 'normal',
   },
   {
     id: 8,
-    title: "Lumière d'Or",
-    subtitle: 'Ánh sáng vàng son',
-    desc: 'Bộ sưu tập đèn trang trí lấy cảm hứng từ đèn chùm cung điện Versailles.',
+    title: 'Đồng Hồ Quả Lắc Cổ',
+    subtitle: 'Thước đo của di sản',
+    desc: 'Sự kết hợp hoàn hảo giữa cơ khí thủ công và nghệ thuật chạm gỗ, âm vang mang dấu ấn của thời gian.',
     img: '/images/bst8.png',
-    tags: ['Tủ & Đèn', 'Decor'],
+    tags: ['Decor', 'Phòng khách', 'Cổ điển'],
     size: 'normal',
   },
 ];
@@ -114,33 +114,46 @@ const TrangBoSuuTap = () => {
   const [activeFilter, setActiveFilter] = useState('Tất cả');
   const [gridRef,  gridVisible]  = useScrollReveal();
   const [roomsRef, roomsVisible] = useScrollReveal();
-  const [collections, setCollections] = useState([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Dùng COLLECTIONS làm dữ liệu gốc ban đầu
+  const [collections, setCollections] = useState(COLLECTIONS); 
 
   useEffect(() => {
-    const fetchCollections = async () => {
-      try {
-        setLoading(true);
-        const res = await collectionApi.getAll();
-        if (res && res.success) {
-          const mapped = res.data.map((col, idx) => ({
-            id: col.id || col.MaBoSuuTap,
-            title: col.title || col.TenBoSuuTap,
-            subtitle: col.subtitle || 'Kiệt tác không gian sống quý tộc',
-            desc: col.desc || col.MoTa,
-            img: getImageUrl(col.img || col.HinhAnh),
-            tags: col.tags || ['Tất cả', idx % 2 === 0 ? 'Cổ điển' : 'Luxury'],
-            size: idx === 0 ? 'large' : 'normal'
-          }));
-          setCollections(mapped);
-        }
-      } catch (err) {
-        console.error('Error fetching collections:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCollections();
+    /* TẠM THỜI TẮT GỌI API ĐỂ TRÁNH DỮ LIỆU BACKEND GÁN SAI TAG 
+      LÀM GÃY GIAO DIỆN. KHI NÀO BACKEND SỬA XONG DATA THÌ BẠN MỞ LẠI.
+    */
+    
+    // const fetchCollections = async () => {
+    //   try {
+    //     const res = await collectionApi.getAll();
+    //     if (res && res.success && res.data.length > 0) {
+    //       const mapped = res.data.map((col, idx) => {
+    //         let safeTags = [];
+    //         if (Array.isArray(col.tags)) {
+    //           safeTags = col.tags; 
+    //         } else if (typeof col.tags === 'string' && col.tags.trim() !== '') {
+    //           safeTags = col.tags.split(',').map(t => t.trim()); 
+    //         } else {
+    //           safeTags = COLLECTIONS[idx] ? COLLECTIONS[idx].tags : ['Tất cả', 'Cổ điển'];
+    //         }
+    //         return {
+    //           id: col.id || col.MaBoSuuTap,
+    //           title: col.title || col.TenBoSuuTap,
+    //           subtitle: col.subtitle || 'Kiệt tác không gian sống quý tộc',
+    //           desc: col.desc || col.MoTa,
+    //           img: getImageUrl(col.img || col.HinhAnh),
+    //           tags: safeTags, 
+    //           size: idx === 0 ? 'large' : 'normal'
+    //         };
+    //       });
+    //       setCollections(mapped);
+    //     }
+    //   } catch (err) {
+    //     console.error('Lỗi khi tải bộ sưu tập:', err);
+    //   }
+    // };
+    // fetchCollections();
+    
   }, []);
 
   const displayed = useMemo(

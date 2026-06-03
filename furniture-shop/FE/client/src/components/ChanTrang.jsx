@@ -58,23 +58,23 @@ const ChanTrang = () => {
         <div className="col">
           <h4>Danh Mục</h4>
           <Link to="/collections">Bộ sưu tập</Link>
-          <a href="#">Phòng khách</a>
-          <a href="#">Phòng ngủ</a>
-          <a href="#">Phòng ăn</a>
-          <a href="#">Văn phòng</a>
-          <a href="#">So sánh sản phẩm</a>
-          <a href="#">Cá nhân hóa không gian</a>
+          <Link to="/products?room=Phòng khách">Phòng khách</Link>
+          <Link to="/products?room=Phòng ngủ">Phòng ngủ</Link>
+          <Link to="/products?room=Phòng bếp">Phòng ăn</Link>
+          <Link to="/products?room=Phòng làm việc">Văn phòng</Link>
+          <Link to="/compare">So sánh sản phẩm</Link>
+          <Link to="/design-room">Cá nhân hóa không gian</Link>
         </div>
 
         {/* Dịch vụ */}
         <div className="col">
           <h4>Dịch Vụ</h4>
-          <a href="#">Tư vấn thiết kế</a>
-          <a href="#">Đặt lịch showroom</a>
-          <a href="#">Thiết kế 3D nội thất</a>
-          <a href="#">Lắp đặt &amp; thi công</a>
-          <a href="#">Bảo hành sản phẩm</a>
-          <a href="#">Chính sách đổi trả</a>
+          <Link to="/#contact">Tư vấn thiết kế</Link>
+          <Link to="/#contact">Đặt lịch showroom</Link>
+          <Link to="/#contact">Thiết kế 3D nội thất</Link>
+          <Link to="/#contact">Lắp đặt &amp; thi công</Link>
+          <Link to="/#contact">Bảo hành sản phẩm</Link>
+          <Link to="/#contact">Chính sách đổi trả</Link>
         </div>
 
         {/* Chính sách */}
