@@ -37,15 +37,22 @@ const getTransparent = (imagePath) => {
 };
 
 /* ══════════════════════════════════════════
-   2. DỮ LIỆU MẪU (phòng preset — giữ nguyên)
+   2. DỮ LIỆU MẪU (phòng preset)
+   Ảnh lấy từ /images_PHONG/ — 5 ảnh có sẵn, xoay vòng nếu thiếu
 ══════════════════════════════════════════ */
 const ROOM_PRESETS = [
-  { id: 1, name: 'Phòng Ngủ Hiện Đại',          style: 'Modern',         image: '/images/noi_that_01_hang1_cot1.png' },
-  { id: 2, name: 'Phòng Ngủ Cổ Điển Pháp',       style: 'French Classic', image: '/images/noi_that_02_hang1_cot2.png' },
-  { id: 3, name: 'Phòng Khách Tân Cổ Điển',      style: 'Neo Classic',    image: '/images/noi_that_03_hang1_cot3.png' },
-  { id: 4, name: 'Phòng Khách Sang Trọng',        style: 'Modern Luxury',  image: '/images/noi_that_05_hang1_cot5.png' },
-  { id: 5, name: 'Phòng Ăn',                      style: 'Luxury',         image: '/images/noi_that_06_hang1_cot6.png' },
-  { id: 6, name: 'Góc Làm Việc',                  style: 'Indochine',      image: '/images/noi_that_07_hang1_cot7.png' },
+  { id: 1,  name: 'Phòng Khách Sang Trọng',     style: 'Luxury Classic',  image: '/images_PHONG/PhongKhachSangTrong.png' },
+  { id: 2,  name: 'Phòng Khách Tân Cổ Điển',    style: 'Neo Classic',     image: '/images_PHONG/PhongKhachTanCoDien.png' },
+  { id: 3,  name: 'Phòng Ngủ Hiện Đại',         style: 'Modern',          image: '/images_PHONG/PhongNguHienDai.png'     },
+  { id: 4,  name: 'Phòng Ngủ Cổ Điển',          style: 'Classic',         image: '/images_PHONG/PhongNguCoDien.png'      },
+  { id: 5,  name: 'Phòng Ăn Cao Cấp',           style: 'Luxury',          image: '/images_PHONG/PhongAnCaoCap.png'       },
+  { id: 6,  name: 'Phòng Khách Hiện Đại',       style: 'Modern Luxury',   image: '/images_PHONG/PhongKhachSangTrong.png' },
+  { id: 7,  name: 'Phòng Ngủ Sang Trọng',       style: 'Royal',           image: '/images_PHONG/PhongNguCoDien.png'      },
+  { id: 8,  name: 'Phòng Ăn Cổ Điển',           style: 'French Classic',  image: '/images_PHONG/PhongAnCaoCap.png'       },
+  { id: 9,  name: 'Phòng Khách Tối Giản',       style: 'Minimalist',      image: '/images_PHONG/PhongKhachTanCoDien.png' },
+  { id: 10, name: 'Phòng Ngủ Japandi',          style: 'Japandi',         image: '/images_PHONG/PhongNguHienDai.png'     },
+  { id: 11, name: 'Không Gian Đọc Sách',        style: 'Classic',         image: '/images_PHONG/PhongNguCoDien.png'      },
+  { id: 12, name: 'Phòng Khách Luxury',         style: 'Luxury',          image: '/images_PHONG/PhongKhachSangTrong.png' },
 ];
 
 const SAMPLE_ROOMS = ROOM_PRESETS;
@@ -449,7 +456,7 @@ const DesignRoomPage = () => {
                     onClick={() => handleSelectPreset(preset)}
                   >
                     <div className="drp-preset-img">
-                      <img src={getThumbnail(preset.image.replace('/images/', ''))} alt={preset.name} />
+                      <img src={preset.image} alt={preset.name} />
                       {selectedPreset?.id === preset.id && <div className="drp-preset-check">✓</div>}
                     </div>
                     <div className="drp-preset-name">{preset.name}</div>
